@@ -23,7 +23,7 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 <input id="password" type="password" autocomplete="current-password" placeholder="Inserisci la password">
 <button id="loginBtn">Accedi e carica risultati</button>
 <p class="status" id="loginStatus" role="status"></p>
-<p class="muted">Il collegamento al servizio è già configurato. La password non viene salvata.</p>
+<p class="muted">La password resta memorizzata solo nella sessione di questa scheda e viene cancellata quando premi Esci o chiudi la sessione del browser.</p>
 </section>
 <section class="panel" id="matchesPanel" hidden>
 <div class="section-heading"><h2>Partite (dalla prima all'ultima)</h2></div>
@@ -85,20 +85,35 @@ function render(){
   if(activeEditId!==null && String(activeEditId)===String(m.id)){const inline=document.createElement("div");inline.className="editor-inline";div.append(inline);inline.append(editor);}
  }
 }
-$("loginBtn").onclick=async()=>{
- password=$("password").value.trim();
- if(!password){$("loginStatus").textContent="Inserisci la password.";return;}
- $("loginStatus").textContent="Verifica password in corso…";
+async function loginWithPassword(candidate, automatic=false){
+ password=String(candidate||"").trim();
+ if(!password){$("loginStatus").textContent="Inserisci la password.";return false;}
+ $("loginStatus").textContent=automatic?"Ripristino della sessione…":"Verifica password in corso…";
+ $("loginBtn").disabled=true;
  try{
   await request("auth",{method:"POST",body:JSON.stringify({password})});
   const d=await request("results");
   matches=Array.isArray(d.partite)?d.partite:[];
+  // Conserva la password soltanto nella sessione della scheda, non in modo permanente.
+  try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
+  $("password").value="";
   $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;
   $("loginStatus").textContent="";
   render();
- }
- catch(e){$("loginStatus").textContent="Accesso non riuscito: "+e.message;}
-};
+  return true;
+ }catch(e){
+  password="";
+  try{sessionStorage.removeItem("lvtAdminPassword");}catch{}
+  $("loginStatus").textContent=(automatic?"Sessione scaduta, inserisci nuovamente la password. ":"Accesso non riuscito: ")+e.message;
+  return false;
+ }finally{$("loginBtn").disabled=false;}
+}
+$("loginBtn").onclick=()=>loginWithPassword($("password").value);
+// Ripristina l'accesso al ricaricamento della pagina, finché la sessione della scheda è attiva.
+try{
+ const savedPassword=sessionStorage.getItem("lvtAdminPassword");
+ if(savedPassword) loginWithPassword(savedPassword,true);
+}catch{}
 $("matchForm").onsubmit=async e=>{
  e.preventDefault();
  const id=$("matchId").value||((matches.reduce((n,m)=>Math.max(n,Number(m.id)||0),0))+1);
@@ -117,5 +132,5 @@ async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;c
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 $("resetBtn").onclick=resetForm;
-$("logoutBtn").onclick=()=>{password="";matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
 </script></body></html>
