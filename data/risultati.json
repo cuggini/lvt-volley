@@ -291,6 +291,19 @@
       "setOspite": 0,
       "punteggiSet": [],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
+    },
+    {
+      "id": 23,
+      "data": "2027-11-16",
+      "ora": "10:00",
+      "gara": "ffd",
+      "competizione": "",
+      "squadraCasa": "LVT LISSONE VOLLEY TEAM",
+      "squadraOspite": "fd",
+      "setCasa": 1,
+      "setOspite": 0,
+      "punteggiSet": [],
+      "campo": "via po 4 roma"
     }
   ]
 }
