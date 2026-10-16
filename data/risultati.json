@@ -291,23 +291,6 @@
       "setOspite": 0,
       "punteggiSet": [],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
-    },
-    {
-      "id": 23,
-      "data": "2027-07-23",
-      "ora": "",
-      "gara": "ffd",
-      "competizione": "",
-      "squadraCasa": "LVT LISSONE VOLLEY TEAM",
-      "squadraOspite": "milan",
-      "setCasa": 3,
-      "setOspite": 0,
-      "punteggiSet": [
-        "25-20",
-        "25-20",
-        "25-20"
-      ],
-      "campo": "via Lazzaro Spallanzani 46 lissone"
     }
   ]
 }
