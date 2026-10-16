@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin LVT Volley</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172033;background:#f3f5f8}
+body{margin:0;padding:24px}.wrap{max-width:900px;margin:auto}.panel{background:white;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 2px 12px #15223812}
+h1{margin-top:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:14px;font-weight:650;margin-bottom:5px}input,button{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box}
+button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;margin-top:10px}button.secondary{background:#e7edf5;color:#172033}button.danger{background:#a72c35}
+.actions{display:flex;gap:8px}.actions button{width:auto;flex:1}
+.item{border:1px solid #dce2eb;border-radius:10px;padding:14px;margin:10px 0}.muted{color:#647086;font-size:14px}.status{white-space:pre-wrap;margin-top:10px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}}
+</style>
+</head>
+<body><main class="wrap">
+<h1>Amministrazione LVT Volley</h1>
+<p class="muted">Accedi per gestire i risultati. Le modifiche vengono salvate nel file data/risultati.json del repository.</p>
+<section class="panel" id="loginPanel">
+<label for="password">Password amministratore</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Inserisci la password">
+<label for="endpoint" style="margin-top:12px">URL del servizio Worker</label>
+<input id="endpoint" type="url" placeholder="https://lvt-volley-admin.NOME.workers.dev">
+<button id="loginBtn">Accedi e carica risultati</button>
+<p class="muted">L'URL del Worker si configura una volta sola su questo dispositivo. La password non viene salvata.</p>
+</section>
+<section class="panel" id="editor" hidden>
+<h2 id="formTitle">Aggiungi partita</h2>
+<form id="matchForm">
+<input type="hidden" id="matchId">
+<div class="grid">
+<div><label for="date">Data</label><input id="date" type="date" required></div>
+<div><label for="time">Ora</label><input id="time" placeholder="18.00"></div>
+<div><label for="game">Numero gara</label><input id="game" placeholder="1443"></div>
+<div><label for="competition">Competizione</label><input id="competition" placeholder="PGS oppure FIPAV"></div>
+<div><label for="home">Squadra casa</label><input id="home" required></div>
+<div><label for="away">Squadra ospite</label><input id="away" required></div>
+<div><label for="homeSets">Set squadra casa</label><input id="homeSets" type="number" min="0" max="5" required></div>
+<div><label for="awaySets">Set squadra ospite</label><input id="awaySets" type="number" min="0" max="5" required></div>
+<div style="grid-column:1/-1"><label for="setScores">Punteggi set (facoltativo)</label><input id="setScores" placeholder="25-20, 22-25, 25-18, 25-21"></div>
+<div style="grid-column:1/-1"><label for="venue">Palestra / indirizzo</label><input id="venue" placeholder="Palestra e indirizzo"></div>
+</div>
+<div class="actions"><button type="submit">Salva partita</button><button class="secondary" type="button" id="resetBtn">Pulisci modulo</button></div>
+</form>
+<div class="status" id="status" role="status"></div>
+</section>
+<section class="panel" id="matchesPanel" hidden><h2>Partite inserite</h2><div id="matches"></div><button class="secondary" id="logoutBtn">Esci</button></section>
+</main>
+<script>
+let matches=[], password="", endpoint="";
+const $=id=>document.getElementById(id);
+function apiUrl(){return endpoint.replace(/\/+$/,"")+"/";}
+function showStatus(msg){$("status").textContent=msg;}
+async function request(path, options={}) {
+  const response=await fetch(apiUrl()+path,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+  const data=await response.json().catch(()=>({error:"Risposta non valida dal servizio"}));
+  if(!response.ok) throw new Error(data.error||("Errore HTTP "+response.status));
+  return data;
+}
+function render(){
+ const box=$("matches"); box.innerHTML="";
+ if(!matches.length){box.textContent="Nessuna partita inserita.";return;}
+ matches.sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+ for(const m of matches){
+  const div=document.createElement("div");div.className="item";
+  const title=document.createElement("strong");title.textContent=`${m.squadraCasa} ${m.setCasa} - ${m.setOspite} ${m.squadraOspite}`;div.append(title);
+  const info=document.createElement("p");info.className="muted";info.textContent=[m.data,m.competizione,(m.punteggiSet||[]).join(" · ")].filter(Boolean).join(" | ");div.append(info);
+  const actions=document.createElement("div");actions.className="actions";
+  const edit=document.createElement("button");edit.className="secondary";edit.textContent="Modifica";edit.onclick=()=>editMatch(m.id);
+  const del=document.createElement("button");del.className="danger";del.textContent="Elimina";del.onclick=()=>deleteMatch(m.id);
+  actions.append(edit,del);div.append(actions);box.append(div);
+ }
+}
+$("loginBtn").onclick=async()=>{
+ endpoint=$("endpoint").value.trim();password=$("password").value;
+ if(!endpoint||!password){alert("Inserisci URL del Worker e password.");return;}
+ try{const d=await request("results");matches=Array.isArray(d.partite)?d.partite:[];$("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;render();}
+ catch(e){showStatus("Accesso/caricamento non riuscito: "+e.message);}
+};
+$("matchForm").onsubmit=async e=>{
+ e.preventDefault();
+ const id=$("matchId").value||((matches.reduce((n,m)=>Math.max(n,Number(m.id)||0),0))+1);
+ const existing=matches.find(x=>String(x.id)===String(id))||{};\n const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
+ const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
+ try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches})});showStatus("Risultati salvati su GitHub.");render();resetForm();}
+ catch(err){if(idx>=0)matches[idx]=matches[idx];else matches=matches.filter(x=>String(x.id)!==String(m.id));showStatus("Salvataggio non riuscito: "+err.message);}
+};
+function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
+ $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";window.scrollTo({top:0,behavior:"smooth"});}
+async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=matches;matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches})});render();showStatus("Partita eliminata.");}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+function resetForm(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
+$("resetBtn").onclick=resetForm;
+$("logoutBtn").onclick=()=>{password="";matches=[];$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("loginPanel").hidden=false;showStatus("");};
+</script></body></html>
