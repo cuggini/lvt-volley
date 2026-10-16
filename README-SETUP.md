@@ -25,4 +25,4 @@ Il link ADMIN è già incluso nell'index aggiornato. Il sito pubblico carica il 
 Nota: la pagina admin e il Worker sono predisposti per conservare data, ora, numero gara, competizione, squadre, risultato in set, parziali e palestra. Dopo aver caricato i file, verifica che il branch sia quello corretto e che il Worker sia configurato.
 
 
-URL Worker configurato nella pagina ADMIN: `https://lvt-volley.cicciodesimone.workers.dev`. Se la distribuzione Cloudflare non contiene ancora il codice di `cloudflare-worker/worker.js` e i segreti richiesti, il salvataggio non funzionerà finché non completi quella configurazione.
+URL Worker configurato nella pagina ADMIN: `https://lvt.cicciodesimone.workers.dev`. Se la distribuzione Cloudflare non contiene ancora il codice di `cloudflare-worker/worker.js` e i segreti richiesti, il salvataggio non funzionerà finché non completi quella configurazione.

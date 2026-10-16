@@ -47,7 +47,7 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 <section class="panel" id="matchesPanel" hidden><h2>Partite inserite</h2><div id="matches"></div><button class="secondary" id="logoutBtn">Esci</button></section>
 </main>
 <script>
-const endpoint="https://lvt-volley.cicciodesimone.workers.dev";
+const endpoint="https://lvt.cicciodesimone.workers.dev";
 let matches=[], password="";
 const $=id=>document.getElementById(id);
 function apiUrl(){return endpoint.replace(/\/+$/,"")+"/";}

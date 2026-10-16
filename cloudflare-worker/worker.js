@@ -16,7 +16,7 @@ export default {
     if (request.method === "GET") {
       try {
         const file = await githubFile(env);
-        return json(JSON.parse(atob(file.content.replace(/\n/g, ""))), 200, cors);
+        return json(JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, ""))))), 200, cors);
       } catch (e) {
         return json({ error: "Impossibile leggere risultati.json: " + e.message }, 502, cors);
       }
