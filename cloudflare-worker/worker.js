@@ -6,12 +6,21 @@ export default {
     const allowed = env.ALLOWED_ORIGIN || "";
     const cors = {
       "Access-Control-Allow-Origin": allowed && origin === allowed ? origin : allowed,
-      "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Vary": "Origin"
     };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     const url = new URL(request.url);
+    if (url.pathname === "/auth") {
+      if (request.method !== "POST") return json({ error: "Metodo non consentito" }, 405, cors);
+      let authBody;
+      try { authBody = await request.json(); } catch { return json({ error: "JSON non valido" }, 400, cors); }
+      const supplied = String(authBody.password || "").trim();
+      const configured = String(env.ADMIN_PASSWORD || "").trim();
+      if (!configured || supplied !== configured) return json({ error: "Password errata" }, 401, cors);
+      return json({ ok: true }, 200, cors);
+    }
     if (url.pathname !== "/results") return json({ error: "Endpoint non trovato" }, 404, cors);
     if (request.method === "GET") {
       try {
@@ -24,7 +33,7 @@ export default {
     if (request.method !== "PUT") return json({ error: "Metodo non consentito" }, 405, cors);
     let body;
     try { body = await request.json(); } catch { return json({ error: "JSON non valido" }, 400, cors); }
-    if (!env.ADMIN_PASSWORD || body.password !== env.ADMIN_PASSWORD) {
+    if (!env.ADMIN_PASSWORD || String(body.password || "").trim() !== String(env.ADMIN_PASSWORD).trim()) {
       return json({ error: "Password errata" }, 401, cors);
     }
     if (!Array.isArray(body.partite)) return json({ error: "Il campo partite deve essere un array" }, 400, cors);

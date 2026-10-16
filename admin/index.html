@@ -22,6 +22,7 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 <label for="password">Password amministratore</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="Inserisci la password">
 <button id="loginBtn">Accedi e carica risultati</button>
+<p class="status" id="loginStatus" role="status"></p>
 <p class="muted">Il collegamento al servizio è già configurato. La password non viene salvata.</p>
 </section>
 <section class="panel" id="matchesPanel" hidden>
@@ -85,10 +86,18 @@ function render(){
  }
 }
 $("loginBtn").onclick=async()=>{
- password=$("password").value;
- if(!password){alert("Inserisci la password.");return;}
- try{const d=await request("results");matches=Array.isArray(d.partite)?d.partite:[];$("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;render();}
- catch(e){showStatus("Accesso/caricamento non riuscito: "+e.message);}
+ password=$("password").value.trim();
+ if(!password){$("loginStatus").textContent="Inserisci la password.";return;}
+ $("loginStatus").textContent="Verifica password in corso…";
+ try{
+  await request("auth",{method:"POST",body:JSON.stringify({password})});
+  const d=await request("results");
+  matches=Array.isArray(d.partite)?d.partite:[];
+  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;
+  $("loginStatus").textContent="";
+  render();
+ }
+ catch(e){$("loginStatus").textContent="Accesso non riuscito: "+e.message;}
 };
 $("matchForm").onsubmit=async e=>{
  e.preventDefault();
@@ -98,7 +107,9 @@ $("matchForm").onsubmit=async e=>{
  const oldMatches=JSON.parse(JSON.stringify(matches));
  const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
  try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");}
- catch(err){matches=oldMatches;render();showStatus("Salvataggio non riuscito: "+err.message);}
+ catch(err){matches=oldMatches;render();showStatus(err.message==="Password errata"
+  ? "Salvataggio non riuscito: password non riconosciuta dal Worker. Esci e accedi di nuovo verificando la password."
+  : "Salvataggio non riuscito: "+err.message);}
 };
 function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
  $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
