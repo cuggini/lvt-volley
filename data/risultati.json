@@ -291,6 +291,23 @@
       "setOspite": 0,
       "punteggiSet": [],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
+    },
+    {
+      "id": 23,
+      "data": "2028-07-16",
+      "ora": "18:00",
+      "gara": "354",
+      "competizione": "PGS",
+      "squadraCasa": "PROVA 1",
+      "squadraOspite": "PROVA 2",
+      "setCasa": 3,
+      "setOspite": 0,
+      "punteggiSet": [
+        "25-20",
+        "25-20",
+        "25-20"
+      ],
+      "campo": "VIA LAZZARO SPALLANZANI 46 LISSONE (MB)"
     }
   ]
 }
