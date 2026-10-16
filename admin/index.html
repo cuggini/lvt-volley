@@ -21,10 +21,8 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 <section class="panel" id="loginPanel">
 <label for="password">Password amministratore</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="Inserisci la password">
-<label for="endpoint" style="margin-top:12px">URL del servizio Worker</label>
-<input id="endpoint" type="url" placeholder="https://lvt-volley-admin.NOME.workers.dev">
 <button id="loginBtn">Accedi e carica risultati</button>
-<p class="muted">L'URL del Worker si configura una volta sola su questo dispositivo. La password non viene salvata.</p>
+<p class="muted">Il collegamento al servizio è già configurato. La password non viene salvata.</p>
 </section>
 <section class="panel" id="editor" hidden>
 <h2 id="formTitle">Aggiungi partita</h2>
@@ -49,7 +47,8 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 <section class="panel" id="matchesPanel" hidden><h2>Partite inserite</h2><div id="matches"></div><button class="secondary" id="logoutBtn">Esci</button></section>
 </main>
 <script>
-let matches=[], password="", endpoint="";
+const endpoint="https://lvt-volley.cicciodesimone.workers.dev";
+let matches=[], password="";
 const $=id=>document.getElementById(id);
 function apiUrl(){return endpoint.replace(/\/+$/,"")+"/";}
 function showStatus(msg){$("status").textContent=msg;}
@@ -74,15 +73,16 @@ function render(){
  }
 }
 $("loginBtn").onclick=async()=>{
- endpoint=$("endpoint").value.trim();password=$("password").value;
- if(!endpoint||!password){alert("Inserisci URL del Worker e password.");return;}
+ password=$("password").value;
+ if(!password){alert("Inserisci la password.");return;}
  try{const d=await request("results");matches=Array.isArray(d.partite)?d.partite:[];$("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;render();}
  catch(e){showStatus("Accesso/caricamento non riuscito: "+e.message);}
 };
 $("matchForm").onsubmit=async e=>{
  e.preventDefault();
  const id=$("matchId").value||((matches.reduce((n,m)=>Math.max(n,Number(m.id)||0),0))+1);
- const existing=matches.find(x=>String(x.id)===String(id))||{};\n const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
+ const existing=matches.find(x=>String(x.id)===String(id))||{};
+ const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
  const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
  try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches})});showStatus("Risultati salvati su GitHub.");render();resetForm();}
  catch(err){if(idx>=0)matches[idx]=matches[idx];else matches=matches.filter(x=>String(x.id)!==String(m.id));showStatus("Salvataggio non riuscito: "+err.message);}
