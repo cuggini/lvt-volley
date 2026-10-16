@@ -389,7 +389,7 @@
 
   let datiJSON;
   try {
-    const response = await fetch("data/risultati.json?ts=" + Date.now(), { cache: "no-store" });
+    const response = await fetch("data/risultati.json?ts=" + Date.now() + "-" + Math.random().toString(36).slice(2), { cache: "reload", headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" } });
     if (!response.ok) throw new Error("HTTP " + response.status);
     datiJSON = await response.json();
   } catch (error) {
@@ -667,6 +667,17 @@
   render();
   setRetro(retroIniziale);
   document.getElementById("footer").textContent = `${partite.length} partite in calendario`;
+
+  // Se la pagina rimane aperta mentre si aggiornano i risultati, ricaricala
+  // quando l'utente torna sulla scheda dopo almeno 30 secondi in background.
+  let nascostaDa = 0;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      nascostaDa = Date.now();
+    } else if (nascostaDa && Date.now() - nascostaDa > 30000) {
+      window.location.reload();
+    }
+  });
 })();
 </script>
 </body>

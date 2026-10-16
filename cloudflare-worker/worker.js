@@ -90,5 +90,5 @@ async function githubFile(env) {
   return await resp.json();
 }
 function json(data, status, cors) {
-  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...cors } });
+  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0", "CDN-Cache-Control": "no-store", "Pragma": "no-cache", "Expires": "0", ...cors } });
 }
