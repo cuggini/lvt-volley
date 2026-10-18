@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-18T16:37:32.977Z",
+  "aggiornato": "2026-10-18T19:03:31.144Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -26,6 +26,18 @@
       "setPersi": "1",
       "puntiFatti": "94",
       "puntiSubiti": "82"
+    },
+    {
+      "squadra": "CA GROUP NET VOLLEY",
+      "societa": "NET VOLLEY CINISELLO A.S.D.",
+      "punti": "3",
+      "giocate": "1",
+      "vinte": "1",
+      "perse": "0",
+      "setVinti": "3",
+      "setPersi": "1",
+      "puntiFatti": "0",
+      "puntiSubiti": "0"
     },
     {
       "squadra": "COOP LA VIGNETTA VOLLEY CORMANO",
@@ -55,23 +67,11 @@
       "squadra": "ASD POLISPORTIVA DI NOVA",
       "societa": "POLISPORTIVA DI NOVA",
       "punti": "0",
-      "giocate": "0",
+      "giocate": "1",
       "vinte": "0",
-      "perse": "0",
-      "setVinti": "0",
-      "setPersi": "0",
-      "puntiFatti": "0",
-      "puntiSubiti": "0"
-    },
-    {
-      "squadra": "CA GROUP NET VOLLEY",
-      "societa": "NET VOLLEY CINISELLO A.S.D.",
-      "punti": "0",
-      "giocate": "0",
-      "vinte": "0",
-      "perse": "0",
-      "setVinti": "0",
-      "setPersi": "0",
+      "perse": "1",
+      "setVinti": "1",
+      "setPersi": "3",
       "puntiFatti": "0",
       "puntiSubiti": "0"
     },
