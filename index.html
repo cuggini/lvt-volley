@@ -11,55 +11,11 @@
 <title>LVT Lissone Volley Team · U15F</title>
 
 <!--
-  ================================================================
-  COME AGGIORNARE
-  ================================================================
-  Modifica solo il blocco qui sotto (dentro <script id="dati">).
-  Una partita per riga:
-
-    data | ora | gara | campionato | Casa - Ospite | risultato | campo
-
-  - campionato: PGS oppure FIPAV
-  - campo (facoltativo): palestra e indirizzo, es.
-      Scuola Media, Via G. B. Vico 4, 20851 Lissone
-    compare con il pulsante "Naviga" che apre Google Maps.
-  - risultato: lascialo VUOTO finché la partita non è giocata.
-    Poi scrivi i parziali, es:  25-12, 23-25, 25-20, 18-25, 16-14
-    Il punteggio in set (3-2) viene calcolato da solo.
-    Puoi anche scrivere 3-2 (25-12, ...) oppure solo 3-0 (es. forfait).
-    PARTITA IN CORSO: scrivi i parziali giocati fin qui, anche il set
-    che si sta giocando, es:  25-20, 18-25, 12-9
-    Finché nessuna squadra arriva a 3 set compare "IN CORSO"
-    (non conta come vinta o persa). Un set è chiuso a 25 (15 il quinto)
-    con 2 punti di scarto.
-  - Righe che iniziano con # = commenti, ignorate.
-  ================================================================
+  I risultati si gestiscono dalla pagina ADMIN (admin/index.html),
+  che salva le partite in data/risultati.json.
+  Partita in corso: inserisci i parziali giocati fin qui (anche il set in corso);
+  finché nessuna squadra arriva a 3 set compare "IN CORSO".
 -->
-<script id="dati" type="text/plain">
-# data   | ora   | gara  | camp. | partita                                                   | risultato | campo (indirizzo)
-11/10/26 | 18.00 | 1443  | PGS   | LVT LISSONE VOLLEY TEAM - NET VOLLEY CINISELLO BLU        | 3-2 (25-22, 26-24, 20-25, 21-25, 16-14) | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-18/10/26 | 11.00 | 50563 | FIPAV | COOP LA VIGNETTA VOLLEY CORMANO - LVT LISSONE VOLLEY TEAM |  | Palazzetto Brusuglio, Via Bizzozzero 14, 20032 Cormano
-24/10/26 | 15.30 | 1445  | PGS   | LVT LISSONE VOLLEY TEAM - PLESIOS VOLLEY                  |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-25/10/26 | 10.00 | 1447  | PGS   | PAL. CONCOREZZO SSD - LVT LISSONE VOLLEY TEAM             |  | Palazzetto dello Sport, Via Giorgio La Pira 12, 20863 Concorezzo
-31/10/26 | 18.00 | 50571 | FIPAV | PRO VICTORIA PALLAVOLO FUCSIA - LVT LISSONE VOLLEY TEAM   |  | Scuola Media Bellani, Via Silvio Pellico, 20900 Monza
-07/11/26 | 18.00 | 50575 | FIPAV | LVT LISSONE VOLLEY TEAM - CA GROUP NET VOLLEY             |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-08/11/26 | 15.00 | 1453  | PGS   | PGS DOMANI - LVT LISSONE VOLLEY TEAM                      |  |
-14/11/26 | 18.30 | 50579 | FIPAV | ASD POLISPORTIVA DI NOVA - LVT LISSONE VOLLEY TEAM        |  | Palestra Scuola Elementare, Via Venezia, 20834 Nova Milanese
-15/11/26 | 15.00 | 1458  | PGS   | NET VOLLEY CINISELLO BLU - LVT LISSONE VOLLEY TEAM        |  |
-20/11/26 | 20.30 | 1460  | PGS   | PLESIOS VOLLEY - LVT LISSONE VOLLEY TEAM                  |  |
-21/11/26 | 18.00 | 50583 | FIPAV | LVT LISSONE VOLLEY TEAM - POLISPORTIVA ARDOR BOLLATE A.S.D. |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-22/11/26 | 15.00 | 1451  | PGS   | LVT LISSONE VOLLEY TEAM - MOTTASTAMPI AGRATE              |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-28/11/26 | 18.30 | 50587 | FIPAV | VOLLEY CUSANO - LVT LISSONE VOLLEY TEAM                   |  | Centro Polisportivo Comunale, Viale Roma 2, 20095 Cusano Milanino
-29/11/26 | 18.00 | 1462  | PGS   | LVT LISSONE VOLLEY TEAM - PAL. CONCOREZZO SSD             |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-05/12/26 | 18.00 | 50591 | FIPAV | LVT LISSONE VOLLEY TEAM - COOP LA VIGNETTA VOLLEY CORMANO |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-12/12/26 | 19.00 | 1466  | PGS   | MOTTASTAMPI AGRATE - LVT LISSONE VOLLEY TEAM              |  |
-19/12/26 | 18.00 | 50599 | FIPAV | LVT LISSONE VOLLEY TEAM - PRO VICTORIA PALLAVOLO FUCSIA   |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-20/12/26 | 18.00 | 1468  | PGS   | LVT LISSONE VOLLEY TEAM - PGS DOMANI                      |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-10/01/27 | 18.00 | 50603 | FIPAV | CA GROUP NET VOLLEY - LVT LISSONE VOLLEY TEAM             |  | PalaCooper, Via Diaz 39/41, 20092 Cinisello Balsamo
-16/01/27 | 18.00 | 50607 | FIPAV | LVT LISSONE VOLLEY TEAM - ASD POLISPORTIVA DI NOVA        |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-23/01/27 | 17.30 | 50611 | FIPAV | POLISPORTIVA ARDOR BOLLATE A.S.D. - LVT LISSONE VOLLEY TEAM |  | Centro Sportivo Mons. Sala, Viale Repubblica 6, 20021 Bollate
-30/01/27 | 18.00 | 50615 | FIPAV | LVT LISSONE VOLLEY TEAM - VOLLEY CUSANO                   |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
-</script>
 
 <script>
   const MIA_SQUADRA = "LVT Lissone Volley Team";   // per colorare vittorie/sconfitte e casa/trasferta
@@ -338,9 +294,17 @@
   body.retro .classifica .pt, body.retro .classifica .sq { font-weight: 400; }
   body.retro .classifica tr.noi td { color: var(--rosso); background: linear-gradient(transparent 50%, rgba(255,226,60,.6) 50%, rgba(255,226,60,.6) 90%, transparent 90%); }
   body.retro .fonte { font-size: .95rem; text-transform: uppercase; }
+  /* Link rapido alla pagina di amministrazione */
+  .admin-link { position: fixed; top: 12px; left: 12px; z-index: 10000; display: inline-block;
+    padding: 8px 13px; border-radius: 7px; background: #153b72; color: #fff;
+    font: 700 12px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .06em;
+    text-decoration: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .18); }
+  .admin-link:hover, .admin-link:focus-visible { background: #24569a; color: #fff; outline: 2px solid #fff; outline-offset: 2px; }
+  @media (max-width: 480px) { .admin-link { top: 8px; left: 8px; padding: 7px 10px; font-size: 11px; } }
 </style>
 </head>
 <body>
+<a class="admin-link" href="/lvt-volley/admin/" aria-label="Apri amministrazione LVT Volley">ADMIN</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <filter id="matita" x="-2%" y="-10%" width="104%" height="120%">
     <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="onda"/>
@@ -388,7 +352,7 @@
 </div>
 
 <script>
-(function () {
+(async function () {
   document.getElementById("titolo").textContent = TITOLO;
   document.getElementById("sottotitolo").textContent = SOTTOTITOLO;
   document.title = TITOLO;
@@ -400,7 +364,10 @@
   const key = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
   function parseData(s) {
-    const m = s.trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+    s = s.trim();
+    const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+    const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
     if (!m) return null;
     let y = +m[3]; if (y < 100) y += 2000;
     return new Date(y, +m[2] - 1, +m[1]);
@@ -425,18 +392,34 @@
     return { score, parziali, nonTorna, calc, finita };
   }
 
-  const partite = document.getElementById("dati").textContent.split("\n")
-    .map(r => r.trim()).filter(r => r && !r.startsWith("#"))
-    .map(riga => {
-      const p = riga.split("|").map(x => x.trim());
-      if (p.length < 5) return null;
-      const [data, ora, gara, camp, squadre, ris, campo] = p;
-      const sq = squadre.split(/\s+-\s+/);
-      const d = parseData(data);
-      if (sq.length !== 2 || !d) return null;
-      return { d, ora, gara, camp: norm(camp) === "PGS" ? "PGS" : "FIPAV",
-               casa: sq[0].trim(), ospite: sq[1].trim(), ris: parseRisultato(ris),
-               campo: (campo || "").trim() };
+  let datiJSON;
+  try {
+    const response = await fetch("data/risultati.json?ts=" + Date.now() + "-" + Math.random().toString(36).slice(2), { cache: "reload", headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" } });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    datiJSON = await response.json();
+  } catch (error) {
+    console.error("Errore caricamento data/risultati.json:", error);
+    const avviso = document.createElement("p");
+    avviso.textContent = "Impossibile caricare il calendario. Riprova più tardi.";
+    avviso.style.cssText = "margin:20px;padding:14px;border-radius:10px;background:#fff1f1;color:#8b1d1d";
+    document.body.prepend(avviso);
+    return;
+  }
+
+  const partite = (Array.isArray(datiJSON.partite) ? datiJSON.partite : [])
+    .map(p => {
+      const d = parseData(String(p.data || ""));
+      if (!d) return null;
+      const sc = Number(p.setCasa || 0), so = Number(p.setOspite || 0);
+      const parz = Array.isArray(p.punteggiSet) ? p.punteggiSet.filter(Boolean) : [];
+      // con i set a 0-0 ma parziali presenti (partita appena iniziata) il punteggio si calcola dai parziali
+      const risultato = (sc || so) ? `${sc}-${so}${parz.length ? " (" + parz.join(", ") + ")" : ""}` : parz.join(", ");
+      return {
+        d, ora: String(p.ora || ""), gara: String(p.gara || ""),
+        camp: norm(String(p.competizione || "FIPAV")) === "PGS" ? "PGS" : "FIPAV",
+        casa: String(p.squadraCasa || ""), ospite: String(p.squadraOspite || ""),
+        ris: parseRisultato(risultato), campo: String(p.campo || "")
+      };
     }).filter(Boolean).sort((a, b) => a.d - b.d);
 
   const me = norm(MIA_SQUADRA || "");
@@ -756,7 +739,15 @@
   setRetro(retroIniziale);
   document.getElementById("footer").textContent = `${partite.length} partite in calendario`;
 
-  // ultimo aggiornamento: data dell'ultima modifica del file su GitHub
+  // Se la pagina rimane aperta mentre si aggiornano i risultati, ricaricala
+  // quando l'utente torna sulla scheda dopo almeno 30 secondi in background.
+  let nascostaDa = 0;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) nascostaDa = Date.now();
+    else if (nascostaDa && Date.now() - nascostaDa > 30000) window.location.reload();
+  });
+
+  // ultimo aggiornamento: data dell'ultima modifica dei risultati su GitHub
   (function () {
     const el = document.getElementById("aggiornato");
     const scrivi = d => {
@@ -771,7 +762,7 @@
     const m = location.hostname.match(/^([\w-]+)\.github\.io$/);
     const repo = location.pathname.split("/").filter(Boolean)[0];
     if (!m || !repo) return daServer();
-    fetch(`https://api.github.com/repos/${m[1]}/${repo}/commits?path=index.html&per_page=1`)
+    fetch(`https://api.github.com/repos/${m[1]}/${repo}/commits?path=data/risultati.json&per_page=1`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(c => scrivi(new Date(c[0].commit.committer.date)))
       .catch(daServer);
