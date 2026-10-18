@@ -28,11 +28,12 @@
       "squadraCasa": "COOP LA VIGNETTA VOLLEY CORMANO",
       "squadraOspite": "LVT LISSONE VOLLEY TEAM",
       "setCasa": 1,
-      "setOspite": 2,
+      "setOspite": 3,
       "punteggiSet": [
         "25-19",
         "22-25",
-        "23-25"
+        "23-25",
+        "12-25"
       ],
       "campo": "Palazzetto Brusuglio, Via Bizzozzero 14, 20032 Cormano"
     },
