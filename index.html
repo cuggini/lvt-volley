@@ -27,6 +27,8 @@
     // PGS: letta in diretta dal sito PGS Milano ogni volta che si apre la classifica
     { camp: "PGS", pgs: { campionato: "invernale_2026-2027", categoria: "U15F", girone: "8" } },
   ];
+  // Risultati di tutte le partite dei gironi (sezione "Altre partite")
+  const PARTITE_FIPAV = "partite-fipav.json";   // aggiornato dall'automatismo GitHub
   const MIA_SOCIETA = /LISSONE VOLLEY TEAM|BAREGGIA|\bLVT\b/i;   // per evidenziare la nostra riga
 </script>
 
@@ -69,6 +71,11 @@
     border-radius: 999px; font-size: .95rem; font-weight: 600; cursor: pointer; }
   .seg button.active { background: var(--text); color: var(--bg); }
   .seg.views button.active { background: var(--accent); color: #fff; }
+  .seg.views { max-width: 520px; }
+  .seg.views button { font-size: .82rem; padding: 9px 4px; white-space: nowrap; }
+  @media (min-width: 600px) { .seg.views button { font-size: .95rem; } }
+  .seg.views button { min-width: 0; }
+  body.retro .seg.views button { font-size: .92rem; white-space: normal; line-height: 1.05; padding: 7px 3px; }
 
   .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0 6px; }
   .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
@@ -333,6 +340,7 @@
     <button data-v="agenda" class="active">Agenda</button>
     <button data-v="calendario">Calendario</button>
     <button data-v="classifica">Classifica</button>
+    <button data-v="altre">Altre partite</button>
   </div>
   <div class="summary" id="summary"></div>
   <p class="aggiornato" id="aggiornato"></p>
@@ -344,6 +352,7 @@
   </div>
   <div id="vista-calendario" hidden></div>
   <div id="vista-classifica" hidden></div>
+  <div id="vista-altre" hidden></div>
 </main>
 <footer id="footer"></footer>
 
@@ -617,14 +626,22 @@
   // ---------- CLASSIFICA ----------
   const cacheClassifiche = {};
   const API_PGS = "https://volley.pgsmilano.org/api";
-  function leggiPgs({ campionato, categoria, girone }) {
-    const json = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status));
-    return Promise.all([json(`${API_PGS}/classifiche/campionato/${campionato}`),
-                        json(`${API_PGS}/iscrizioni/campionato/${campionato}/light`)])
-      .then(([classifiche, iscritte]) => {
+  const jsonNoCache = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status));
+  let basePgs = null;
+  function leggiBasePgs({ campionato }) {      // classifiche + nomi squadre, riusati per un minuto
+    if (basePgs && Date.now() - basePgs.t < 60000) return basePgs.p;
+    const p = Promise.all([jsonNoCache(`${API_PGS}/classifiche/campionato/${campionato}`),
+                           jsonNoCache(`${API_PGS}/iscrizioni/campionato/${campionato}/light`)])
+      .then(([classifiche, iscritte]) => ({ classifiche, nomi: Object.fromEntries(iscritte.map(x => [x.id || x._id, x.nomeSquadra])) }));
+    basePgs = { t: Date.now(), p };
+    return p;
+  }
+  function leggiPgs(cfg) {
+    const { categoria, girone } = cfg;
+    return leggiBasePgs(cfg)
+      .then(({ classifiche, nomi }) => {
         const g = classifiche.find(x => x.categoria === categoria && String(x.girone) === String(girone));
         if (!g) return null;
-        const nomi = Object.fromEntries(iscritte.map(x => [x.id || x._id, x.nomeSquadra]));
         const righe = [...g.squadre].sort((a, b) => a.ranking - b.ranking).map(s => ({
           squadra: nomi[s.squadraID] || "?", punti: s.punteggio,
           giocate: s.partiteVinte + s.partitePerse + (s.partitePareggiate || 0),
@@ -680,13 +697,82 @@
     });
   }
 
+  // ---------- PARTITE DAI SITI UFFICIALI ----------
+  function partitaUfficiale(camp, x) {
+    const d = parseData(String(x.data || ""));
+    if (!d) return null;
+    const parz = x.parziali || [];
+    const risTxt = x.setCasa != null ? `${x.setCasa}-${x.setOspite}${parz.length ? ` (${parz.join(", ")})` : ""}` : parz.join(", ");
+    return { d, ora: String(x.ora || "").replace(":", "."), gara: String(x.gara || ""), camp,
+             casa: x.casa, ospite: x.ospite, ris: parseRisultato(risTxt), campo: x.campo || "" };
+  }
+  function leggiPartitePgs(cfg) {
+    return leggiBasePgs(cfg).then(({ classifiche, nomi }) => {
+      const g = classifiche.find(x => x.categoria === cfg.categoria && String(x.girone) === String(cfg.girone));
+      if (!g) return [];
+      return Promise.all(g.squadre.map(s => jsonNoCache(`${API_PGS}/calendari/team/${s.squadraID}`).catch(() => [])))
+        .then(liste => {
+          const viste = new Set();
+          return liste.flat().filter(c => c.codiceCampionato === cfg.campionato && c.categoria === cfg.categoria &&
+                                          String(c.girone) === String(cfg.girone) && !viste.has(c.id) && viste.add(c.id))
+            .map(c => partitaUfficiale("PGS", {
+              gara: c.numeroGara, data: c.data, ora: c.ora,
+              casa: nomi[c.squadraCasaID] || "?", ospite: nomi[c.squadraTrasfertaID] || "?",
+              setCasa: c.setVintiCasa, setOspite: c.setVintiTrasferta,
+              parziali: (c.parzialiCasa || []).map((v, i) => `${v}-${(c.parzialiTrasferta || [])[i]}`) }));
+        });
+    });
+  }
+  let cachePartite = null;
+  function caricaPartiteUfficiali() {
+    if (cachePartite && Date.now() - cachePartite.t < 60000) return cachePartite.p;
+    const cfgPgs = (CLASSIFICHE.find(c => c.pgs) || {}).pgs;
+    const p = Promise.all([
+      fetch(`${PARTITE_FIPAV}?t=${Date.now()}`, { cache: "no-store" }).then(r => r.ok ? r.json() : null)
+        .then(j => (j && j.partite || []).map(x => partitaUfficiale("FIPAV", x))).catch(() => null),
+      cfgPgs ? leggiPartitePgs(cfgPgs).catch(() => null) : Promise.resolve([]),
+    ]).then(([fipav, pgs]) => ({ fipav, pgs, tutte: [...(fipav || []), ...(pgs || [])].filter(Boolean) }));
+    cachePartite = { t: Date.now(), p };
+    return p;
+  }
+  const eNoi = nome => MIA_SOCIETA.test(nome || "");
+
+  function renderAltre() {
+    const box = document.getElementById("vista-altre");
+    box.innerHTML = '<div class="empty">Caricamento risultati…</div>';
+    caricaPartiteUfficiali().then(({ fipav, pgs, tutte }) => {
+      if (stato.vista !== "altre") return;
+      const lista = tutte.filter(p => p.ris && !eNoi(p.casa) && !eNoi(p.ospite) && passa(p)).sort((a, b) => b.d - a.d);
+      const mancano = [stato.filtro !== "PGS" && !fipav && "FIPAV", stato.filtro !== "FIPAV" && !pgs && "PGS"].filter(Boolean);
+      box.innerHTML = `<h2>Altre partite</h2>
+        <p class="fonte">ℹ️ Risultati delle altre squadre dei nostri gironi, presi dai siti ufficiali:
+          <b>FIPAV</b> controllato ogni 30 minuti, <b>PGS</b> letto in tempo reale.</p>
+        ${mancano.length ? `<div class="empty">Risultati ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
+        ${lista.length ? lista.map(p => card(p, false)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}`;
+      if (document.body.classList.contains("retro")) box.querySelectorAll("h2").forEach(x => x.classList.add("matita"));
+    });
+  }
+
+  // partite LVT senza risultato nell'admin: lo prendo dal sito ufficiale (stesso numero gara)
+  caricaPartiteUfficiali().then(({ tutte }) => {
+    const perGara = Object.fromEntries(tutte.filter(p => p.ris).map(p => [`${p.camp}-${p.gara}`, p]));
+    let cambiate = 0;
+    partite.forEach(p => {
+      const u = !p.ris && perGara[`${p.camp}-${p.gara}`];
+      if (u) { p.ris = u.ris; p.risUfficiale = true; cambiate++; }
+    });
+    if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
+  });
+
   function render() {
     const lista = partite.filter(passa);
     renderSummary(lista);
     document.getElementById("vista-agenda").hidden = stato.vista !== "agenda";
     document.getElementById("vista-calendario").hidden = stato.vista !== "calendario";
     document.getElementById("vista-classifica").hidden = stato.vista !== "classifica";
+    document.getElementById("vista-altre").hidden = stato.vista !== "altre";
     if (stato.vista === "classifica") return renderClassifica();
+    if (stato.vista === "altre") return renderAltre();
     if (stato.vista === "agenda") { renderAgenda(lista); renderRetroAgenda(lista); } else renderCalendario();
   }
 
