@@ -285,7 +285,10 @@
   .classifica .setcl { white-space: nowrap; }
   .classifica tr.noi td { background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .classifica tr.noi .sq { color: var(--accent); }
-  .fonte { font-size: .75rem; color: var(--muted); text-align: right; margin: 6px 4px 0; }
+  .fonte { font-size: .78rem; color: var(--muted); line-height: 1.45; margin: 8px 0 0; padding: 8px 10px;
+    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; }
+  .fonte.fipav { border-left-color: var(--fipav); } .fonte.pgs { border-left-color: var(--pgs); }
+  .fonte b { color: var(--text); }
   .fonte a { color: inherit; }
   body.retro .tab-classifica { border: 2px solid var(--grigio); border-radius: 4px; background: transparent; }
   body.retro .classifica { font-size: 1.1rem; text-transform: uppercase; }
@@ -293,7 +296,7 @@
   body.retro .classifica td { border-bottom: 2px solid #c9c9c9; color: var(--blu); }
   body.retro .classifica .pt, body.retro .classifica .sq { font-weight: 400; }
   body.retro .classifica tr.noi td { color: var(--rosso); background: linear-gradient(transparent 50%, rgba(255,226,60,.6) 50%, rgba(255,226,60,.6) 90%, transparent 90%); }
-  body.retro .fonte { font-size: .95rem; text-transform: uppercase; }
+  body.retro .fonte { font-size: .95rem; text-transform: uppercase; background: transparent; border-radius: 3px; }
   /* Link rapido alla pagina di amministrazione */
   .admin-link { position: fixed; top: 12px; left: 12px; z-index: 10000; display: inline-block;
     padding: 8px 13px; border-radius: 7px; background: #153b72; color: #fff;
@@ -642,7 +645,12 @@
     if (!dati || !dati.righe || !dati.righe.length)
       return `<h2>Classifica ${c.camp}</h2><div class="empty">Classifica ${c.camp} non ancora disponibile.</div>`;
     const quando = new Date(dati.aggiornato);
-    const q = isNaN(quando) ? "" : quando.toLocaleString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const q = isNaN(quando) ? "" :
+      `${quando.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit" })} alle ${quando.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`;
+    const sito = dati.url ? `<a href="${esc(dati.url)}" target="_blank" rel="noopener">${esc(new URL(dati.url).hostname.replace(/^www\./, ""))}</a>` : "";
+    const avviso = c.pgs
+      ? `<b>PGS</b> · fonte ufficiale ${sito} · letta in tempo reale${q ? ` · classifica aggiornata dalla PGS ${q}` : ""}`
+      : `<b>FIPAV</b> · fonte ufficiale ${sito} · controllata ogni 30 minuti${q ? ` · ultima variazione ${q}` : ""}`;
     const righe = dati.righe.map((r, i) => {
       const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
       return `<tr class="${noi ? "noi" : ""}">
@@ -659,7 +667,7 @@
           <tbody>${righe}</tbody>
         </table>
       </div>
-      <p class="fonte">${q ? `Aggiornata ${q} · ` : ""}${dati.url ? `<a href="${esc(dati.url)}" target="_blank" rel="noopener">fonte ${c.camp}</a>` : ""}</p>`;
+      <p class="fonte ${c.camp.toLowerCase()}">ℹ️ ${avviso}</p>`;
   }
   function renderClassifica() {
     const box = document.getElementById("vista-classifica");
