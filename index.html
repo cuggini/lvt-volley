@@ -27,15 +27,51 @@
     Poi scrivi i parziali, es:  25-12, 23-25, 25-20, 18-25, 16-14
     Il punteggio in set (3-2) viene calcolato da solo.
     Puoi anche scrivere 3-2 (25-12, ...) oppure solo 3-0 (es. forfait).
+    PARTITA IN CORSO: scrivi i parziali giocati fin qui, anche il set
+    che si sta giocando, es:  25-20, 18-25, 12-9
+    Finché nessuna squadra arriva a 3 set compare "IN CORSO"
+    (non conta come vinta o persa). Un set è chiuso a 25 (15 il quinto)
+    con 2 punti di scarto.
   - Righe che iniziano con # = commenti, ignorate.
   ================================================================
 -->
-
+<script id="dati" type="text/plain">
+# data   | ora   | gara  | camp. | partita                                                   | risultato | campo (indirizzo)
+11/10/26 | 18.00 | 1443  | PGS   | LVT LISSONE VOLLEY TEAM - NET VOLLEY CINISELLO BLU        | 3-2 (25-22, 26-24, 20-25, 21-25, 16-14) | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+18/10/26 | 11.00 | 50563 | FIPAV | COOP LA VIGNETTA VOLLEY CORMANO - LVT LISSONE VOLLEY TEAM |  | Palazzetto Brusuglio, Via Bizzozzero 14, 20032 Cormano
+24/10/26 | 15.30 | 1445  | PGS   | LVT LISSONE VOLLEY TEAM - PLESIOS VOLLEY                  |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+25/10/26 | 10.00 | 1447  | PGS   | PAL. CONCOREZZO SSD - LVT LISSONE VOLLEY TEAM             |  | Palazzetto dello Sport, Via Giorgio La Pira 12, 20863 Concorezzo
+31/10/26 | 18.00 | 50571 | FIPAV | PRO VICTORIA PALLAVOLO FUCSIA - LVT LISSONE VOLLEY TEAM   |  | Scuola Media Bellani, Via Silvio Pellico, 20900 Monza
+07/11/26 | 18.00 | 50575 | FIPAV | LVT LISSONE VOLLEY TEAM - CA GROUP NET VOLLEY             |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+08/11/26 | 15.00 | 1453  | PGS   | PGS DOMANI - LVT LISSONE VOLLEY TEAM                      |  |
+14/11/26 | 18.30 | 50579 | FIPAV | ASD POLISPORTIVA DI NOVA - LVT LISSONE VOLLEY TEAM        |  | Palestra Scuola Elementare, Via Venezia, 20834 Nova Milanese
+15/11/26 | 15.00 | 1458  | PGS   | NET VOLLEY CINISELLO BLU - LVT LISSONE VOLLEY TEAM        |  |
+20/11/26 | 20.30 | 1460  | PGS   | PLESIOS VOLLEY - LVT LISSONE VOLLEY TEAM                  |  |
+21/11/26 | 18.00 | 50583 | FIPAV | LVT LISSONE VOLLEY TEAM - POLISPORTIVA ARDOR BOLLATE A.S.D. |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+22/11/26 | 15.00 | 1451  | PGS   | LVT LISSONE VOLLEY TEAM - MOTTASTAMPI AGRATE              |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+28/11/26 | 18.30 | 50587 | FIPAV | VOLLEY CUSANO - LVT LISSONE VOLLEY TEAM                   |  | Centro Polisportivo Comunale, Viale Roma 2, 20095 Cusano Milanino
+29/11/26 | 18.00 | 1462  | PGS   | LVT LISSONE VOLLEY TEAM - PAL. CONCOREZZO SSD             |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+05/12/26 | 18.00 | 50591 | FIPAV | LVT LISSONE VOLLEY TEAM - COOP LA VIGNETTA VOLLEY CORMANO |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+12/12/26 | 19.00 | 1466  | PGS   | MOTTASTAMPI AGRATE - LVT LISSONE VOLLEY TEAM              |  |
+19/12/26 | 18.00 | 50599 | FIPAV | LVT LISSONE VOLLEY TEAM - PRO VICTORIA PALLAVOLO FUCSIA   |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+20/12/26 | 18.00 | 1468  | PGS   | LVT LISSONE VOLLEY TEAM - PGS DOMANI                      |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+10/01/27 | 18.00 | 50603 | FIPAV | CA GROUP NET VOLLEY - LVT LISSONE VOLLEY TEAM             |  | PalaCooper, Via Diaz 39/41, 20092 Cinisello Balsamo
+16/01/27 | 18.00 | 50607 | FIPAV | LVT LISSONE VOLLEY TEAM - ASD POLISPORTIVA DI NOVA        |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+23/01/27 | 17.30 | 50611 | FIPAV | POLISPORTIVA ARDOR BOLLATE A.S.D. - LVT LISSONE VOLLEY TEAM |  | Centro Sportivo Mons. Sala, Viale Repubblica 6, 20021 Bollate
+30/01/27 | 18.00 | 50615 | FIPAV | LVT LISSONE VOLLEY TEAM - VOLLEY CUSANO                   |  | Scuola Media, Via G. B. Vico 4, 20851 Lissone
+</script>
 
 <script>
   const MIA_SQUADRA = "LVT Lissone Volley Team";   // per colorare vittorie/sconfitte e casa/trasferta
   const TITOLO      = "LVT Lissone Volley Team · U15F";
   const SOTTOTITOLO = "Stagione 2026/27 · PGS e FIPAV";
+  // Classifiche: file aggiornati in automatico da GitHub (vedi .github/workflows/classifica.yml)
+  const CLASSIFICHE = [
+    { camp: "FIPAV", file: "classifica-fipav.json" },
+    // PGS: letta in diretta dal sito PGS Milano ogni volta che si apre la classifica
+    { camp: "PGS", pgs: { campionato: "invernale_2026-2027", categoria: "U15F", girone: "8" } },
+  ];
+  const MIA_SOCIETA = /LISSONE VOLLEY TEAM|BAREGGIA|\bLVT\b/i;   // per evidenziare la nostra riga
 </script>
 
 <style>
@@ -100,6 +136,10 @@
   .badge.next { background: var(--accent); color: #fff; }
   .badge.win { background: var(--win); color: #fff; }
   .badge.lose { background: var(--lose); color: #fff; }
+  .badge.live { background: var(--accent); color: #fff; animation: pulsa 1.4s ease-in-out infinite; }
+  @keyframes pulsa { 50% { opacity: .45; } }
+  .set.live { border-style: dashed; border-color: var(--accent); color: var(--accent); }
+  .aggiornato { text-align: center; font-size: .78rem; color: var(--muted); margin: 8px 0 0; min-height: 1em; }
   .where { margin-left: auto; }
   .row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin: 10px 0 8px; }
   .team { font-weight: 600; font-size: .88rem; }
@@ -147,6 +187,9 @@
     box-shadow: 0 0 0 1.5px #fff; }
   .esito.win { background: var(--win); }
   .esito.lose { background: var(--lose); }
+  .esito.live { background: var(--accent); }
+  .foglio .in-corso { color: var(--accent, #ff6b1a); }
+  body.retro .aggiornato { font-size: 1rem; text-transform: uppercase; }
 
   /* pannello dettaglio */
   .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 10; display: none; }
@@ -269,44 +312,35 @@
     .foglio col.c-giorno { width: 24%; } .foglio col.c-paese { width: 25%; } .foglio col.c-ora { width: 14%; }
     .foglio col.c-camp { width: 20%; } .foglio col.c-punti { width: 17%; }
   }
-
-  /* Link rapido alla pagina di amministrazione */
-  .admin-link {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 10000;
-    display: inline-block;
-    padding: 8px 13px;
-    border-radius: 7px;
-    background: #153b72;
-    color: #fff;
-    font: 700 12px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
-    letter-spacing: .06em;
-    text-decoration: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
-  }
-  .admin-link:hover,
-  .admin-link:focus-visible {
-    background: #24569a;
-    color: #fff;
-    outline: 2px solid #fff;
-    outline-offset: 2px;
-  }
-  @media (max-width: 480px) {
-    .admin-link {
-      top: 8px;
-      left: 8px;
-      padding: 7px 10px;
-      font-size: 11px;
-    }
-  }
-
+  /* classifica */
+  .tab-classifica { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    border-left: 5px solid var(--line); }
+  .tab-classifica.fipav { border-left-color: var(--fipav); }
+  .tab-classifica.pgs { border-left-color: var(--pgs); }
+  .classifica { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .9rem; }
+  .classifica th { font-size: .7rem; text-transform: uppercase; letter-spacing: .4px; color: var(--muted);
+    padding: 9px 4px; text-align: center; border-bottom: 1px solid var(--line); }
+  .classifica td { padding: 9px 4px; text-align: center; border-bottom: 1px solid var(--line); }
+  .classifica tr:last-child td { border-bottom: 0; }
+  .classifica .sq { text-align: left; font-weight: 600; }
+  .classifica .sq small { display: block; font-weight: 400; font-size: .7rem; color: var(--muted); }
+  .classifica .pos { color: var(--muted); width: 26px; }
+  .classifica .pt { font-weight: 800; font-size: 1rem; }
+  .classifica .setcl { white-space: nowrap; }
+  .classifica tr.noi td { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .classifica tr.noi .sq { color: var(--accent); }
+  .fonte { font-size: .75rem; color: var(--muted); text-align: right; margin: 6px 4px 0; }
+  .fonte a { color: inherit; }
+  body.retro .tab-classifica { border: 2px solid var(--grigio); border-radius: 4px; background: transparent; }
+  body.retro .classifica { font-size: 1.1rem; text-transform: uppercase; }
+  body.retro .classifica th { font-size: .95rem; color: #555; border-bottom: 3px solid var(--blu); }
+  body.retro .classifica td { border-bottom: 2px solid #c9c9c9; color: var(--blu); }
+  body.retro .classifica .pt, body.retro .classifica .sq { font-weight: 400; }
+  body.retro .classifica tr.noi td { color: var(--rosso); background: linear-gradient(transparent 50%, rgba(255,226,60,.6) 50%, rgba(255,226,60,.6) 90%, transparent 90%); }
+  body.retro .fonte { font-size: .95rem; text-transform: uppercase; }
 </style>
 </head>
 <body>
-<a class="admin-link" href="/lvt-volley/admin/" aria-label="Apri amministrazione LVT Volley">ADMIN</a>
-
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <filter id="matita" x="-2%" y="-10%" width="104%" height="120%">
     <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="onda"/>
@@ -331,8 +365,10 @@
   <div class="seg views" id="views">
     <button data-v="agenda" class="active">Agenda</button>
     <button data-v="calendario">Calendario</button>
+    <button data-v="classifica">Classifica</button>
   </div>
   <div class="summary" id="summary"></div>
+  <p class="aggiornato" id="aggiornato"></p>
 
   <div id="vista-agenda">
     <div id="retro-agenda"></div>
@@ -340,6 +376,7 @@
     <div id="prossime"></div>
   </div>
   <div id="vista-calendario" hidden></div>
+  <div id="vista-classifica" hidden></div>
 </main>
 <footer id="footer"></footer>
 
@@ -351,7 +388,7 @@
 </div>
 
 <script>
-(async function () {
+(function () {
   document.getElementById("titolo").textContent = TITOLO;
   document.getElementById("sottotitolo").textContent = SOTTOTITOLO;
   document.title = TITOLO;
@@ -363,10 +400,7 @@
   const key = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
   function parseData(s) {
-    s = s.trim();
-    const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
-    const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+    const m = s.trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
     if (!m) return null;
     let y = +m[3]; if (y < 100) y += 2000;
     return new Date(y, +m[2] - 1, +m[1]);
@@ -379,44 +413,30 @@
     const md = r.match(/^(\d)\s*-\s*(\d)\s*(?:\((.*)\))?\s*$/);
     if (md) { dichiarato = [+md[1], +md[2]]; testo = md[3] || ""; }
     const parziali = (testo.match(/\d+\s*-\s*\d+/g) || []).map(p => p.split("-").map(n => +n.trim()));
+    // un set è chiuso a 25 (15 il quinto) con 2 punti di scarto; altrimenti è ancora in corso
+    const chiuso = ([a, b], i) => Math.max(a, b) >= (i === 4 ? 15 : 25) && Math.abs(a - b) >= 2;
     const calc = [0, 0];
-    parziali.forEach(([a, b]) => { if (a > b) calc[0]++; else if (b > a) calc[1]++; });
+    parziali.forEach((s, i) => { if (chiuso(s, i)) calc[s[0] > s[1] ? 0 : 1]++; });
+    parziali.forEach((s, i) => { s.live = !chiuso(s, i); });
     if (!dichiarato && !parziali.length) return null;
     const score = dichiarato || calc;
+    const finita = score[0] === 3 || score[1] === 3;
     const nonTorna = dichiarato && parziali.length && (dichiarato[0] !== calc[0] || dichiarato[1] !== calc[1]);
-    return { score, parziali, nonTorna, calc };
+    return { score, parziali, nonTorna, calc, finita };
   }
 
-  let datiJSON;
-  try {
-    const response = await fetch("data/risultati.json?ts=" + Date.now() + "-" + Math.random().toString(36).slice(2), { cache: "reload", headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" } });
-    if (!response.ok) throw new Error("HTTP " + response.status);
-    datiJSON = await response.json();
-  } catch (error) {
-    console.error("Errore caricamento data/risultati.json:", error);
-    const avviso = document.createElement("p");
-    avviso.textContent = "Impossibile caricare il calendario. Riprova più tardi.";
-    avviso.style.cssText = "margin:20px;padding:14px;border-radius:10px;background:#fff1f1;color:#8b1d1d";
-    document.body.prepend(avviso);
-    return;
-  }
-
-  const partite = (Array.isArray(datiJSON.partite) ? datiJSON.partite : [])
-    .map(p => {
-      const d = parseData(String(p.data || ""));
-      if (!d) return null;
-      const risultato = (Number(p.setCasa || 0) || Number(p.setOspite || 0) ||
-        (Array.isArray(p.punteggiSet) && p.punteggiSet.length))
-        ? `${Number(p.setCasa || 0)}-${Number(p.setOspite || 0)}${
-            (p.punteggiSet || []).length ? " (" + p.punteggiSet.join(", ") + ")" : ""
-          }`
-        : "";
-      return {
-        d, ora: String(p.ora || ""), gara: String(p.gara || ""),
-        camp: norm(String(p.competizione || "FIPAV")) === "PGS" ? "PGS" : "FIPAV",
-        casa: String(p.squadraCasa || ""), ospite: String(p.squadraOspite || ""),
-        ris: parseRisultato(risultato), campo: String(p.campo || "")
-      };
+  const partite = document.getElementById("dati").textContent.split("\n")
+    .map(r => r.trim()).filter(r => r && !r.startsWith("#"))
+    .map(riga => {
+      const p = riga.split("|").map(x => x.trim());
+      if (p.length < 5) return null;
+      const [data, ora, gara, camp, squadre, ris, campo] = p;
+      const sq = squadre.split(/\s+-\s+/);
+      const d = parseData(data);
+      if (sq.length !== 2 || !d) return null;
+      return { d, ora, gara, camp: norm(camp) === "PGS" ? "PGS" : "FIPAV",
+               casa: sq[0].trim(), ospite: sq[1].trim(), ris: parseRisultato(ris),
+               campo: (campo || "").trim() };
     }).filter(Boolean).sort((a, b) => a.d - b.d);
 
   const me = norm(MIA_SQUADRA || "");
@@ -424,7 +444,9 @@
   const inCasa = p => isMe(p.casa);
 
   function esito(p) {
-    if (!p.ris || !me) return "";
+    if (!p.ris) return "";
+    if (!p.ris.finita) return "live";
+    if (!me) return "";
     const [a, b] = p.ris.score;
     if (a === b) return "";
     const vinceCasa = a > b;
@@ -442,8 +464,11 @@
     if (p.ris) {
       const [a, b] = p.ris.score;
       centro = `<div class="center">${a} - ${b}</div>`;
-      sets = p.ris.parziali.map(([x, y]) =>
-        `<span class="set">${x > y ? `<b>${x}</b>` : x}-${y > x ? `<b>${y}</b>` : y}</span>`).join("");
+      sets = p.ris.parziali.map(s => {
+        const [x, y] = s;
+        return s.live ? `<span class="set live" title="Set in corso">${x}-${y}</span>`
+                      : `<span class="set">${x > y ? `<b>${x}</b>` : x}-${y > x ? `<b>${y}</b>` : y}</span>`;
+      }).join("");
       if (p.ris.nonTorna) warn = `<div class="warn">⚠ ${a}-${b} non corrisponde ai parziali (${p.ris.calc[0]}-${p.ris.calc[1]})</div>`;
     } else {
       centro = `<div class="center time">ore ${esc(p.ora)}</div>`;
@@ -453,7 +478,7 @@
         <div class="meta">
           <span class="badge ${cls}">${p.camp}</span>
           ${isNext ? '<span class="badge next">PROSSIMA</span>' : ""}
-          ${e ? `<span class="badge ${e}">${e === "win" ? "VITTORIA" : "SCONFITTA"}</span>` : ""}
+          ${e ? `<span class="badge ${e}">${({ win: "VITTORIA", lose: "SCONFITTA", live: "IN CORSO" })[e]}</span>` : ""}
           <span>${dataTxt}${p.ris ? " · " + esc(p.ora) : ""} · Gara ${esc(p.gara)}</span>
           <span class="where">${where}</span>
         </div>
@@ -476,14 +501,14 @@
   const passa = p => stato.filtro === "TUTTE" || p.camp === stato.filtro;
 
   function renderSummary(lista) {
-    const giocate = lista.filter(p => p.ris);
+    const giocate = lista.filter(p => p.ris && p.ris.finita);
     const v = giocate.filter(p => esito(p) === "win").length;
     const s = giocate.filter(p => esito(p) === "lose").length;
     document.getElementById("summary").innerHTML = `
       <div class="stat"><div class="n">${giocate.length}</div><div class="l">Giocate</div></div>
       <div class="stat"><div class="n" style="color:var(--win)">${v}</div><div class="l">Vinte</div></div>
       <div class="stat"><div class="n" style="color:var(--lose)">${s}</div><div class="l">Perse</div></div>
-      <div class="stat"><div class="n">${lista.length - giocate.length}</div><div class="l">Da giocare</div></div>`;
+      <div class="stat"><div class="n">${lista.filter(p => !p.ris).length}</div><div class="l">Da giocare</div></div>`;
   }
 
   function renderAgenda(lista) {
@@ -581,7 +606,7 @@
       const c = PENNE[ci % PENNE.length];
       const camp = visti[p.camp] ? p.camp[0] : `<span class="pieno">${p.camp}</span>`; visti[p.camp] = true;
       const e = esito(p);
-      const punti = p.ris ? `<span class="${e === "win" ? "w" : e === "lose" ? "l" : ""}">${p.ris.score[0]}-${p.ris.score[1]}</span>` : "";
+      const punti = p.ris ? `<span class="${({ win: "w", lose: "l", live: "in-corso" })[e] || ""}">${p.ris.score[0]}-${p.ris.score[1]}</span>` : "";
       return `<tr class="riga ${p === prossima ? "prossima" : ""}" data-k="${key(p.d)}" style="--c:${c}">
           <td>${GG[p.d.getDay()]} ${p.d.getDate()}-${MM[p.d.getMonth()]}</td>
           <td>${esc(paese(p))}</td>
@@ -603,11 +628,74 @@
       <p class="nota-retro">Tocca una riga per i dettagli</p>` : '<div class="empty">Nessuna partita.</div>';
   }
 
+  // ---------- CLASSIFICA ----------
+  const cacheClassifiche = {};
+  const API_PGS = "https://volley.pgsmilano.org/api";
+  function leggiPgs({ campionato, categoria, girone }) {
+    const json = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status));
+    return Promise.all([json(`${API_PGS}/classifiche/campionato/${campionato}`),
+                        json(`${API_PGS}/iscrizioni/campionato/${campionato}/light`)])
+      .then(([classifiche, iscritte]) => {
+        const g = classifiche.find(x => x.categoria === categoria && String(x.girone) === String(girone));
+        if (!g) return null;
+        const nomi = Object.fromEntries(iscritte.map(x => [x.id || x._id, x.nomeSquadra]));
+        const righe = [...g.squadre].sort((a, b) => a.ranking - b.ranking).map(s => ({
+          squadra: nomi[s.squadraID] || "?", punti: s.punteggio,
+          giocate: s.partiteVinte + s.partitePerse + (s.partitePareggiate || 0),
+          vinte: s.partiteVinte, perse: s.partitePerse, setVinti: s.setVinti, setPersi: s.setPersi }));
+        return { aggiornato: g.timeLastUpdated, girone: `Girone ${girone}`, url: "https://volley.pgsmilano.org/classifiche", righe };
+      });
+  }
+  function caricaClassifica(c) {
+    const k = c.file || c.camp, v = cacheClassifiche[k];
+    if (v && Date.now() - v.t < 60000) return v.p;   // ricarica al massimo una volta al minuto
+    const p = (c.pgs ? leggiPgs(c.pgs)
+                     : fetch(`${c.file}?t=${Date.now()}`, { cache: "no-store" }).then(r => r.ok ? r.json() : null))
+      .catch(() => null);
+    cacheClassifiche[k] = { t: Date.now(), p };
+    return p;
+  }
+  function tabellaClassifica(c, dati) {
+    if (!dati || !dati.righe || !dati.righe.length)
+      return `<h2>Classifica ${c.camp}</h2><div class="empty">Classifica ${c.camp} non ancora disponibile.</div>`;
+    const quando = new Date(dati.aggiornato);
+    const q = isNaN(quando) ? "" : quando.toLocaleString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const righe = dati.righe.map((r, i) => {
+      const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
+      return `<tr class="${noi ? "noi" : ""}">
+          <td class="pos">${i + 1}</td>
+          <td class="sq">${esc(r.squadra)}${r.societa && r.societa !== r.squadra ? `<small>${esc(r.societa)}</small>` : ""}</td>
+          <td class="pt">${esc(r.punti)}</td><td>${esc(r.giocate)}</td><td>${esc(r.vinte)}</td><td>${esc(r.perse)}</td>
+          <td class="setcl">${esc(r.setVinti)}-${esc(r.setPersi)}</td>
+        </tr>`;
+    }).join("");
+    return `<h2>Classifica ${c.camp}${dati.girone ? ` · ${esc(dati.girone)}` : ""}</h2>
+      <div class="tab-classifica ${c.camp.toLowerCase()}">
+        <table class="classifica">
+          <thead><tr><th>#</th><th class="sq">Squadra</th><th>Pt</th><th>G</th><th>V</th><th>P</th><th>Set</th></tr></thead>
+          <tbody>${righe}</tbody>
+        </table>
+      </div>
+      <p class="fonte">${q ? `Aggiornata ${q} · ` : ""}${dati.url ? `<a href="${esc(dati.url)}" target="_blank" rel="noopener">fonte ${c.camp}</a>` : ""}</p>`;
+  }
+  function renderClassifica() {
+    const box = document.getElementById("vista-classifica");
+    const scelte = CLASSIFICHE.filter(c => stato.filtro === "TUTTE" || c.camp === stato.filtro);
+    box.innerHTML = '<div class="empty">Caricamento classifica…</div>';
+    Promise.all(scelte.map(caricaClassifica)).then(tutti => {
+      if (stato.vista !== "classifica") return;
+      box.innerHTML = scelte.map((c, i) => tabellaClassifica(c, tutti[i])).join("");
+      if (document.body.classList.contains("retro")) box.querySelectorAll("table, h2").forEach(x => x.classList.add("matita"));
+    });
+  }
+
   function render() {
     const lista = partite.filter(passa);
     renderSummary(lista);
     document.getElementById("vista-agenda").hidden = stato.vista !== "agenda";
     document.getElementById("vista-calendario").hidden = stato.vista !== "calendario";
+    document.getElementById("vista-classifica").hidden = stato.vista !== "classifica";
+    if (stato.vista === "classifica") return renderClassifica();
     if (stato.vista === "agenda") { renderAgenda(lista); renderRetroAgenda(lista); } else renderCalendario();
   }
 
@@ -668,16 +756,26 @@
   setRetro(retroIniziale);
   document.getElementById("footer").textContent = `${partite.length} partite in calendario`;
 
-  // Se la pagina rimane aperta mentre si aggiornano i risultati, ricaricala
-  // quando l'utente torna sulla scheda dopo almeno 30 secondi in background.
-  let nascostaDa = 0;
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      nascostaDa = Date.now();
-    } else if (nascostaDa && Date.now() - nascostaDa > 30000) {
-      window.location.reload();
-    }
-  });
+  // ultimo aggiornamento: data dell'ultima modifica del file su GitHub
+  (function () {
+    const el = document.getElementById("aggiornato");
+    const scrivi = d => {
+      const g = d.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit" });
+      const o = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+      el.textContent = `Ultimo aggiornamento: ${g} alle ${o}`;
+    };
+    const daServer = () => {   // intestazione Last-Modified inviata da GitHub Pages
+      const d = new Date(document.lastModified);
+      if (!isNaN(d) && Date.now() - d > 60000) scrivi(d);
+    };
+    const m = location.hostname.match(/^([\w-]+)\.github\.io$/);
+    const repo = location.pathname.split("/").filter(Boolean)[0];
+    if (!m || !repo) return daServer();
+    fetch(`https://api.github.com/repos/${m[1]}/${repo}/commits?path=index.html&per_page=1`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(c => scrivi(new Date(c[0].commit.committer.date)))
+      .catch(daServer);
+  })();
 })();
 </script>
 </body>
