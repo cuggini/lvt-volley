@@ -72,7 +72,16 @@
   .seg button.active { background: var(--text); color: var(--bg); }
   .seg.views button.active { background: var(--accent); color: #fff; }
   .seg.views { max-width: 520px; }
-  .seg.views button { font-size: .82rem; padding: 9px 4px; white-space: nowrap; }
+  .seg.views button { font-size: .78rem; padding: 8px 2px; line-height: 1.1; letter-spacing: -.1px; }
+  @media (max-width: 380px) {
+    main { padding: 12px 10px 40px; }
+    header { padding: 20px 10px 18px; }
+    header h1 { font-size: 1.25rem; }
+    .seg { padding: 3px; }
+    .seg button { font-size: .88rem; padding: 7px 4px; }
+    .seg.views button { font-size: .72rem; padding: 7px 1px; }
+    .stat .n { font-size: 1.2rem; } .stat .l { font-size: .6rem; }
+  }
   @media (min-width: 600px) { .seg.views button { font-size: .95rem; } }
   .seg.views button { min-width: 0; }
   body.retro .seg.views button { font-size: .92rem; white-space: normal; line-height: 1.05; padding: 7px 3px; }
@@ -296,6 +305,24 @@
     background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; }
   .fonte.fipav { border-left-color: var(--fipav); } .fonte.pgs { border-left-color: var(--pgs); }
   .fonte b { color: var(--text); }
+  /* classifica cliccabile */
+  .classifica tbody tr { cursor: pointer; }
+  .classifica tbody tr:active td { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .classifica .vai { color: var(--muted); margin-left: 4px; font-weight: 700; }
+  /* altre partite */
+  .sq-link { all: unset; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line);
+    text-underline-offset: 3px; }
+  .sq-link:hover, .sq-link:focus-visible { text-decoration-color: currentColor; }
+  h3.sotto { font-size: .85rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 18px 0 10px; }
+  .filtro-squadra { display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 4px;
+    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; font-size: .85rem; }
+  .filtro-squadra.fipav { border-left-color: var(--fipav); } .filtro-squadra.pgs { border-left-color: var(--pgs); }
+  .filtro-squadra span { flex: 1; }
+  .filtro-squadra button, .mostra-tutte { border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .mostra-tutte { display: block; width: 100%; padding: 10px; margin-top: 4px; }
+  body.retro h3.sotto { font-size: 1.1rem; font-weight: 400; color: var(--blu); }
+  body.retro .filtro-squadra, body.retro .mostra-tutte { font-family: inherit; text-transform: uppercase; border-radius: 4px; }
   .fonte a { color: inherit; }
   body.retro .tab-classifica { border: 2px solid var(--grigio); border-radius: 4px; background: transparent; }
   body.retro .classifica { font-size: 1.1rem; text-transform: uppercase; }
@@ -311,6 +338,10 @@
     text-decoration: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .18); }
   .admin-link:hover, .admin-link:focus-visible { background: #24569a; color: #fff; outline: 2px solid #fff; outline-offset: 2px; }
   @media (max-width: 480px) { .admin-link { top: 8px; left: 8px; padding: 7px 10px; font-size: 11px; } }
+  @media (max-width: 380px) {
+    body.retro .seg button { font-size: 1rem; }
+    body.retro .seg.views button { font-size: .76rem; padding: 6px 1px; letter-spacing: 0; }
+  }
 </style>
 </head>
 <body>
@@ -450,7 +481,9 @@
     return "";
   }
 
-  function card(p, isNext) {
+  function card(p, isNext, opt = {}) {
+    const nomeSq = n => opt.squadreCliccabili
+      ? `<button class="sq-link" data-camp="${p.camp}" data-sq="${esc(n)}">${esc(n)}</button>` : esc(n);
     const cls = p.camp.toLowerCase();
     const dataTxt = `${GIORNI[p.d.getDay()]} ${String(p.d.getDate()).padStart(2, "0")}/${String(p.d.getMonth() + 1).padStart(2, "0")}/${String(p.d.getFullYear()).slice(2)}`;
     const e = esito(p);
@@ -478,21 +511,21 @@
           <span class="where">${where}</span>
         </div>
         <div class="row">
-          <div class="team home ${isMe(p.casa) ? "me" : ""}">${esc(p.casa)}</div>
+          <div class="team home ${isMe(p.casa) || opt.evidenzia === norm(p.casa) ? "me" : ""}">${nomeSq(p.casa)}</div>
           ${centro}
-          <div class="team ${isMe(p.ospite) ? "me" : ""}">${esc(p.ospite)}</div>
+          <div class="team ${isMe(p.ospite) || opt.evidenzia === norm(p.ospite) ? "me" : ""}">${nomeSq(p.ospite)}</div>
         </div>
         ${sets ? `<div class="sets">${sets}</div>` : ""}
         ${warn}
         ${p.campo ? `<div class="campo">
             <span>📍 ${esc(p.campo)}</span>
-            <a class="naviga" target="_blank" rel="noopener"
-               href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.campo)}">Naviga</a>
+            ${opt.senzaNaviga ? "" : `<a class="naviga" target="_blank" rel="noopener"
+               href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.campo)}">Naviga</a>`}
           </div>` : ""}
       </article>`;
   }
 
-  const stato = { filtro: "TUTTE", vista: "agenda" };
+  const stato = { filtro: "TUTTE", vista: "agenda", squadra: null };   // squadra = { camp, nome } in "Altre partite"
   const passa = p => stato.filtro === "TUTTE" || p.camp === stato.filtro;
 
   function renderSummary(lista) {
@@ -670,11 +703,11 @@
       : `<b>FIPAV</b> · fonte ufficiale ${sito} · controllata ogni 30 minuti${q ? ` · ultima variazione ${q}` : ""}`;
     const righe = dati.righe.map((r, i) => {
       const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
-      return `<tr class="${noi ? "noi" : ""}">
+      return `<tr class="${noi ? "noi" : ""}" data-camp="${c.camp}" data-sq="${esc(r.squadra)}" title="${noi ? "Apri l'agenda LVT" : "Vedi le partite di questa squadra"}">
           <td class="pos">${i + 1}</td>
           <td class="sq">${esc(r.squadra)}${r.societa && r.societa !== r.squadra ? `<small>${esc(r.societa)}</small>` : ""}</td>
           <td class="pt">${esc(r.punti)}</td><td>${esc(r.giocate)}</td><td>${esc(r.vinte)}</td><td>${esc(r.perse)}</td>
-          <td class="setcl">${esc(r.setVinti)}-${esc(r.setPersi)}</td>
+          <td class="setcl">${esc(r.setVinti)}-${esc(r.setPersi)}<span class="vai">›</span></td>
         </tr>`;
     }).join("");
     return `<h2>Classifica ${c.camp}${dati.girone ? ` · ${esc(dati.girone)}` : ""}</h2>
@@ -737,21 +770,64 @@
   }
   const eNoi = nome => MIA_SOCIETA.test(nome || "");
 
+  const PROSSIME_VISIBILI = 8;
+  let mostraTutteProssime = false;
   function renderAltre() {
     const box = document.getElementById("vista-altre");
-    box.innerHTML = '<div class="empty">Caricamento risultati…</div>';
+    box.innerHTML = '<div class="empty">Caricamento partite…</div>';
     caricaPartiteUfficiali().then(({ fipav, pgs, tutte }) => {
       if (stato.vista !== "altre") return;
-      const lista = tutte.filter(p => p.ris && !eNoi(p.casa) && !eNoi(p.ospite) && passa(p)).sort((a, b) => b.d - a.d);
+      const sq = stato.squadra;
+      const scelte = tutte.filter(p => passa(p) && (sq
+        ? p.camp === sq.camp && (norm(p.casa) === norm(sq.nome) || norm(p.ospite) === norm(sq.nome))   // tutte le partite di quella squadra
+        : !eNoi(p.casa) && !eNoi(p.ospite)));                                                         // solo le altre squadre
+      const giocate = scelte.filter(p => p.ris).sort((a, b) => b.d - a.d);
+      const future = scelte.filter(p => !p.ris).sort((a, b) => a.d - b.d);
+      const futureVisibili = sq || mostraTutteProssime ? future : future.slice(0, PROSSIME_VISIBILI);
+      const opt = { senzaNaviga: true, squadreCliccabili: true, evidenzia: sq ? norm(sq.nome) : null };
       const mancano = [stato.filtro !== "PGS" && !fipav && "FIPAV", stato.filtro !== "FIPAV" && !pgs && "PGS"].filter(Boolean);
-      box.innerHTML = `<h2>Altre partite</h2>
-        <p class="fonte">ℹ️ Risultati delle altre squadre dei nostri gironi, presi dai siti ufficiali:
-          <b>FIPAV</b> controllato ogni 30 minuti, <b>PGS</b> letto in tempo reale.</p>
-        ${mancano.length ? `<div class="empty">Risultati ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
-        ${lista.length ? lista.map(p => card(p, false)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}`;
-      if (document.body.classList.contains("retro")) box.querySelectorAll("h2").forEach(x => x.classList.add("matita"));
+      const girone = c => c === "FIPAV" ? "Girone J" : "Girone 8";
+      box.innerHTML = `<h2>${sq ? esc(sq.nome) : "Altre partite"}</h2>
+        ${sq ? `<div class="filtro-squadra ${sq.camp.toLowerCase()}">
+            <span>Partite di <b>${esc(sq.nome)}</b> · ${sq.camp} ${girone(sq.camp)}</span>
+            <button id="togli-squadra">✕ Tutte</button></div>`
+          : `<p class="fonte">ℹ️ Partite delle altre squadre dei nostri gironi, dai siti ufficiali:
+              <b>FIPAV</b> controllato ogni 30 minuti, <b>PGS</b> letto in tempo reale. Tocca una squadra per vedere solo le sue partite.</p>`}
+        ${mancano.length ? `<div class="empty">Partite ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
+        <h3 class="sotto">Risultati</h3>
+        ${giocate.length ? giocate.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}
+        <h3 class="sotto">Prossime partite</h3>
+        ${futureVisibili.length ? futureVisibili.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessuna partita in programma.</div>'}
+        ${futureVisibili.length < future.length ? `<button class="mostra-tutte" id="mostra-prossime">Mostra tutte (${future.length})</button>` : ""}`;
+      if (document.body.classList.contains("retro")) box.querySelectorAll("h2, h3").forEach(x => x.classList.add("matita"));
     });
   }
+
+  // cambia vista / filtro / squadra da codice (clic su classifica o su una squadra)
+  function vai({ vista, filtro, squadra = null }) {
+    if (filtro) stato.filtro = filtro;
+    if (vista) stato.vista = vista;
+    stato.squadra = squadra;
+    mostraTutteProssime = false;
+    document.querySelectorAll("#filters button").forEach(x => x.classList.toggle("active", x.dataset.f === stato.filtro));
+    document.querySelectorAll("#views button").forEach(x => x.classList.toggle("active", x.dataset.v === stato.vista));
+    render();
+    document.getElementById("views").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function apriSquadra(camp, nome) {
+    if (eNoi(nome)) vai({ vista: "agenda", filtro: camp });
+    else vai({ vista: "altre", filtro: camp, squadra: { camp, nome } });
+  }
+  document.getElementById("vista-altre").addEventListener("click", e => {
+    const s = e.target.closest(".sq-link");
+    if (s) return apriSquadra(s.dataset.camp, s.dataset.sq);
+    if (e.target.closest("#togli-squadra")) return vai({ vista: "altre" });
+    if (e.target.closest("#mostra-prossime")) { mostraTutteProssime = true; renderAltre(); }
+  });
+  document.getElementById("vista-classifica").addEventListener("click", e => {
+    const r = e.target.closest("tr[data-sq]");
+    if (r) apriSquadra(r.dataset.camp, r.dataset.sq);
+  });
 
   // partite LVT senza risultato nell'admin: lo prendo dal sito ufficiale (stesso numero gara)
   caricaPartiteUfficiali().then(({ tutte }) => {
@@ -818,6 +894,7 @@
       document.querySelectorAll(`#${id} button`).forEach(x => x.classList.toggle("active", x === b));
       const cambioVista = campo === "vista" && stato.vista !== b.dataset[attr];
       stato[campo] = b.dataset[attr];
+      stato.squadra = null; mostraTutteProssime = false;
       render();
       if (cambioVista && stato.vista === "calendario") {
         const ora = new Date();
