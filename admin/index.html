@@ -16,6 +16,10 @@ label{display:block;font-size:14px;font-weight:650;margin-bottom:5px}input,butto
 button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;margin-top:10px}button.secondary{background:#e7edf5;color:#172033}button.danger{background:#a72c35}
 .actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{width:auto;flex:1}
 .item{border:1px solid #dce2eb;border-radius:10px;padding:14px;margin:10px 0;background:#fff}.item.completed{background:#eaf8ee;border-color:#91cda1}.match-title{display:block;line-height:1.45}.muted{color:#647086;font-size:14px}.status{white-space:pre-wrap;margin-top:10px}.completed-label{display:inline-block;background:#ccebd4;color:#185b2b;border-radius:5px;padding:3px 7px;font-size:12px;font-weight:750;margin:0 0 8px}.editor-inline{margin-top:14px}.editor-inline .panel{margin:0;background:#f8faff;border:1px solid #dce5f2;box-shadow:none;padding:16px}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.section-heading h2{margin:0}
+.allen-item{border:1px dashed #9aa3b1;border-radius:10px;padding:12px;margin:8px 0;background:#f4f5f7}.allen-item.annullato{opacity:.6;text-decoration:line-through}.allen-item.annullato .actions{text-decoration:none}
+.allen-item.modif{border-style:solid;border-color:#5d6573}.tag{display:inline-block;border-radius:5px;padding:2px 7px;font-size:12px;font-weight:750;margin-left:6px;background:#5d6573;color:#fff}.tag.off{background:#a72c35}
+h3.sub{margin:22px 0 6px}select{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box;background:#fff}
+.mini-form{margin-top:10px;padding:12px;border:1px solid #dce5f2;border-radius:10px;background:#f8faff}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -34,6 +38,23 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 <p class="muted">Le partite concluse sono evidenziate in verde. Puoi comunque modificarle.</p>
 <div id="matches"></div>
 <button class="secondary" id="logoutBtn">Esci</button>
+</section>
+<section class="panel" id="allenPanel" hidden>
+<div class="section-heading"><h2>Allenamenti</h2></div>
+<p class="muted">Compaiono in grigio solo nel Calendario del sito. Ogni modifica viene salvata subito.</p>
+<h3 class="sub">Serie settimanali</h3>
+<p class="muted">Per cambiare orario o palestra <b>per sempre</b> (es. tutti i lunedì) usa «Cambia per sempre».</p>
+<div id="serieList"></div>
+<button class="secondary" id="addSerieBtn">+ Aggiungi un giorno di allenamento</button>
+<h3 class="sub">Prossimi allenamenti</h3>
+<p class="muted">Per un <b>singolo</b> allenamento: «Modifica» cambia solo quel giorno, «Elimina» lo toglie dal calendario.</p>
+<div id="allenList"></div>
+<button class="secondary" id="moreAllenBtn">Mostra altre 4 settimane</button>
+<p class="status" id="allenStatus" role="status"></p>
+<datalist id="palestre">
+<option value="Scuola Media, Via G. B. Vico 4, 20851 Lissone">
+<option value="Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone">
+</datalist>
 </section>
 <div id="editorHome"></div>
 <section class="panel" id="editor" hidden>
@@ -98,10 +119,12 @@ async function loginWithPassword(candidate, automatic=false){
   await request("auth",{method:"POST",body:JSON.stringify({password})});
   const d=await request("results");
   matches=Array.isArray(d.partite)?d.partite:[];
+  allen=d.allenamenti&&Array.isArray(d.allenamenti.serie)?d.allenamenti:JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI));
+  if(!Array.isArray(allen.eccezioni)) allen.eccezioni=[];
   // Conserva la password soltanto nella sessione della scheda, non in modo permanente.
   try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
   $("password").value="";
-  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;
+  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();
   $("loginStatus").textContent="";
   render();
   return true;
@@ -112,6 +135,182 @@ async function loginWithPassword(candidate, automatic=false){
   return false;
  }finally{$("loginBtn").disabled=false;}
 }
+  // ---------- ALLENAMENTI (stesse regole nel sito e nell'admin) ----------
+const ALLENAMENTI_PREDEFINITI = {
+  serie: [
+    { id: "lun", giorno: 1, inizio: "17:00", fine: "19:00", palestra: "Scuola Media, Via G. B. Vico 4, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+    { id: "mer", giorno: 3, inizio: "19:00", fine: "21:00", palestra: "Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+    { id: "ven", giorno: 5, inizio: "18:30", fine: "20:00", palestra: "Scuola Media, Via G. B. Vico 4, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+  ],
+  eccezioni: [],   // { data, serie, annullato } oppure { data, serie, inizio, fine, palestra }
+};
+const isoData = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// tutti gli allenamenti tra due date (incluse); quelli eliminati hanno annullato: true
+function espandiAllenamenti(cfg, da, a) {
+  const out = [], ecc = {};
+  (cfg.eccezioni || []).forEach(e => { ecc[`${e.data}|${e.serie}`] = e; });
+  for (let d = new Date(da.getFullYear(), da.getMonth(), da.getDate()); d <= a; d.setDate(d.getDate() + 1)) {
+    const iso = isoData(d);
+    (cfg.serie || []).forEach(s => {
+      if (Number(s.giorno) !== d.getDay() || (s.dal && iso < s.dal) || (s.al && iso > s.al)) return;
+      const e = ecc[`${iso}|${s.id}`];
+      out.push({ data: iso, d: new Date(d), serie: s.id,
+        inizio: (e && e.inizio) || s.inizio, fine: (e && e.fine) || s.fine, palestra: (e && e.palestra) || s.palestra,
+        modificato: !!(e && !e.annullato), annullato: !!(e && e.annullato) });
+    });
+  }
+  return out.sort((x, y) => x.data.localeCompare(y.data) || x.inizio.localeCompare(y.inizio));
+}
+
+let allen = JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI)), settimaneAllen = 4, formAperto = null;
+const GIORNI = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+const itData = iso => iso ? iso.split("-").reverse().join("/") : "";
+const oggiIso = () => isoData(new Date());
+const giornoPrima = iso => { const [y,m,d] = iso.split("-").map(Number); return isoData(new Date(y, m - 1, d - 1)); };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function allenStatus(msg) { $("allenStatus").textContent = msg; }
+
+async function salvaAllen(descrizione) {
+  const res = await request("results", { method: "PUT", body: JSON.stringify({ password, partite: matches, allenamenti: allen }) });
+  if (!res.allenamenti) throw new Error("il servizio di salvataggio (Worker Cloudflare) non è ancora aggiornato: gli allenamenti non vengono salvati.");
+  allen = res.allenamenti;
+  allenStatus(descrizione + " ✔");
+}
+async function modificaAllen(fn, descrizione) {
+  const vecchio = JSON.parse(JSON.stringify(allen));
+  fn();
+  formAperto = null; renderAllen();
+  try { await salvaAllen(descrizione); renderAllen(); }
+  catch (e) { allen = vecchio; renderAllen(); allenStatus("Salvataggio non riuscito: " + e.message); }
+}
+
+function campiForm(v, conGiorno, conDal) {
+  return `<div class="mini-form"><div class="grid">
+    ${conGiorno ? `<div><label>Giorno</label><select data-f="giorno">${[1,2,3,4,5,6,0].map(g => `<option value="${g}" ${Number(v.giorno) === g ? "selected" : ""}>${GIORNI[g]}</option>`).join("")}</select></div>` : ""}
+    <div><label>Inizio</label><input data-f="inizio" type="time" value="${esc(v.inizio)}"></div>
+    <div><label>Fine</label><input data-f="fine" type="time" value="${esc(v.fine)}"></div>
+    <div style="grid-column:1/-1"><label>Palestra / indirizzo</label><input data-f="palestra" list="palestre" value="${esc(v.palestra)}"></div>
+    ${conDal ? `<div><label>${conDal}</label><input data-f="dal" type="date" value="${esc(v.dal)}"></div>` : ""}
+  </div><div class="actions"><button data-a="ok">Salva</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`;
+}
+function leggiForm(box) {
+  const v = {}; box.querySelectorAll("[data-f]").forEach(i => v[i.dataset.f] = i.value.trim());
+  if (v.giorno !== undefined) v.giorno = Number(v.giorno);
+  return v;
+}
+function validi(v) {
+  if (!/^\d{1,2}:\d{2}$/.test(v.inizio || "") || !/^\d{1,2}:\d{2}$/.test(v.fine || "")) return "Inserisci orario di inizio e fine.";
+  if (v.fine <= v.inizio) return "L'orario di fine deve essere dopo l'inizio.";
+  if (!v.palestra) return "Inserisci la palestra.";
+  if ("dal" in v && !/^\d{4}-\d{2}-\d{2}$/.test(v.dal)) return "Inserisci la data.";
+  return "";
+}
+
+function renderAllen() {
+  const oggi = oggiIso();
+  // --- serie
+  const sl = $("serieList"); sl.innerHTML = "";
+  const attive = allen.serie.filter(s => !s.al || s.al >= oggi).sort((x, y) => ((x.giorno + 6) % 7) - ((y.giorno + 6) % 7) || x.inizio.localeCompare(y.inizio));
+  if (!attive.length) sl.innerHTML = '<p class="muted">Nessuna serie attiva.</p>';
+  attive.forEach(s => {
+    const div = document.createElement("div"); div.className = "item";
+    div.innerHTML = `<strong class="match-title">${GIORNI[s.giorno]} · ${s.inizio}–${s.fine}</strong>
+      <p class="muted">${esc(s.palestra)}<br>dal ${itData(s.dal) || "inizio stagione"} ${s.al ? "al " + itData(s.al) : ""}</p>
+      <div class="actions"><button class="secondary" data-a="cambia">Cambia per sempre</button><button class="danger" data-a="termina">Termina serie</button></div>`;
+    const apri = tipo => {
+      formAperto = `${tipo}-${s.id}`;
+      const v = tipo === "cambia" ? { ...s, dal: s.dal > oggi ? s.dal : oggi } : { dal: oggi };
+      const box = document.createElement("div");
+      box.innerHTML = tipo === "cambia" ? campiForm(v, false, "Valido a partire dal")
+        : `<div class="mini-form"><label>Ultimo allenamento di questa serie (compreso)</label><input data-f="dal" type="date" value="${oggi}">
+           <div class="actions"><button class="danger" data-a="ok">Termina</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`;
+      div.append(box);
+      box.onclick = e => {
+        const b = e.target.closest("button[data-a]"); if (!b) return;
+        if (b.dataset.a === "annulla") { formAperto = null; return renderAllen(); }
+        const n = leggiForm(box);
+        if (tipo === "cambia") {
+          const err = validi(n); if (err) return allenStatus(err);
+          modificaAllen(() => {
+            if (!s.dal || n.dal <= s.dal) Object.assign(s, { inizio: n.inizio, fine: n.fine, palestra: n.palestra });
+            else {   // dalla data scelta nasce una nuova serie, la vecchia finisce il giorno prima
+              const nuova = { ...s, id: s.id.split("-")[0] + "-" + n.dal, inizio: n.inizio, fine: n.fine, palestra: n.palestra, dal: n.dal };
+              s.al = giornoPrima(n.dal);
+              allen.serie.push(nuova);
+              allen.eccezioni.forEach(e => { if (e.serie === s.id && e.data >= n.dal) e.serie = nuova.id; });
+            }
+          }, `${GIORNI[s.giorno]}: nuovi orari/palestra salvati dal ${itData(n.dal)}`);
+        } else {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(n.dal)) return allenStatus("Inserisci la data.");
+          if (!confirm(`Togliere tutti gli allenamenti del ${GIORNI[s.giorno].toLowerCase()} dopo il ${itData(n.dal)}?`)) return;
+          modificaAllen(() => { s.al = n.dal; }, `Serie del ${GIORNI[s.giorno].toLowerCase()} terminata il ${itData(n.dal)}`);
+        }
+      };
+    };
+    const chiudiForm = () => document.querySelectorAll("#allenPanel .mini-form").forEach(x => x.parentElement.remove());
+    div.querySelector('[data-a="cambia"]').onclick = () => { chiudiForm(); apri("cambia"); };
+    div.querySelector('[data-a="termina"]').onclick = () => { chiudiForm(); apri("termina"); };
+    sl.append(div);
+  });
+
+  // --- singoli allenamenti
+  const al = $("allenList"); al.innerHTML = "";
+  const da = new Date(); const a = new Date(); a.setDate(a.getDate() + settimaneAllen * 7);
+  const lista = espandiAllenamenti(allen, da, a);
+  if (!lista.length) al.innerHTML = '<p class="muted">Nessun allenamento nelle prossime settimane.</p>';
+  lista.forEach(x => {
+    const div = document.createElement("div");
+    div.className = "allen-item" + (x.annullato ? " annullato" : x.modificato ? " modif" : "");
+    div.innerHTML = `<strong>${GIORNI[x.d.getDay()]} ${itData(x.data)} · ${x.inizio}–${x.fine}</strong>
+      ${x.annullato ? '<span class="tag off">ELIMINATO</span>' : x.modificato ? '<span class="tag">VARIATO</span>' : ""}
+      <div class="muted">${esc(x.palestra)}</div>
+      <div class="actions">${x.annullato || x.modificato ? '<button class="secondary" data-a="ripristina">Ripristina come la serie</button>' : ""}
+        ${x.annullato ? "" : '<button class="secondary" data-a="modifica">Modifica solo questo</button><button class="danger" data-a="elimina">Elimina solo questo</button>'}</div>`;
+    const togli = () => { allen.eccezioni = allen.eccezioni.filter(e => !(e.data === x.data && e.serie === x.serie)); };
+    div.onclick = e => {
+      const b = e.target.closest("button[data-a]"); if (!b || b.closest(".mini-form")) return;
+      const quando = `${GIORNI[x.d.getDay()].toLowerCase()} ${itData(x.data)}`;
+      if (b.dataset.a === "ripristina") return modificaAllen(togli, `Allenamento di ${quando} ripristinato`);
+      if (b.dataset.a === "elimina") {
+        if (!confirm(`Eliminare l'allenamento di ${quando}?`)) return;
+        return modificaAllen(() => { togli(); allen.eccezioni.push({ data: x.data, serie: x.serie, annullato: true }); }, `Allenamento di ${quando} eliminato`);
+      }
+      if (b.dataset.a === "modifica") {
+        renderAllen();
+        const tgt = [...$("allenList").children][lista.indexOf(x)];
+        const box = document.createElement("div"); box.innerHTML = campiForm(x, false, "");
+        tgt.append(box);
+        box.onclick = ev => {
+          const bb = ev.target.closest("button[data-a]"); if (!bb) return;
+          if (bb.dataset.a === "annulla") return renderAllen();
+          const n = leggiForm(box); const err = validi(n); if (err) return allenStatus(err);
+          const s = allen.serie.find(z => z.id === x.serie) || {};
+          modificaAllen(() => {
+            togli();
+            if (n.inizio !== s.inizio || n.fine !== s.fine || n.palestra !== s.palestra)
+              allen.eccezioni.push({ data: x.data, serie: x.serie, inizio: n.inizio, fine: n.fine, palestra: n.palestra });
+          }, `Allenamento di ${quando} modificato`);
+        };
+      }
+    };
+    al.append(div);
+  });
+}
+$("moreAllenBtn").onclick = () => { settimaneAllen += 4; renderAllen(); };
+$("addSerieBtn").onclick = () => {
+  renderAllen();
+  const box = document.createElement("div");
+  box.innerHTML = campiForm({ giorno: 2, inizio: "18:00", fine: "20:00", palestra: "", dal: oggiIso() }, true, "A partire dal");
+  $("serieList").append(box);
+  box.onclick = e => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    if (b.dataset.a === "annulla") return renderAllen();
+    const n = leggiForm(box); const err = validi(n); if (err) return allenStatus(err);
+    const fineStagione = allen.serie.reduce((m, s) => s.al > m ? s.al : m, "2027-06-30");
+    modificaAllen(() => allen.serie.push({ id: `g${n.giorno}-${n.dal}-${Date.now() % 100000}`, giorno: n.giorno, inizio: n.inizio, fine: n.fine, palestra: n.palestra, dal: n.dal, al: fineStagione }),
+      `Nuovo allenamento del ${GIORNI[n.giorno].toLowerCase()} aggiunto`);
+  };
+};
 $("loginBtn").onclick=()=>loginWithPassword($("password").value);
 // Ripristina l'accesso al ricaricamento della pagina, finché la sessione della scheda è attiva.
 try{
@@ -125,16 +324,16 @@ $("matchForm").onsubmit=async e=>{
  const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
  const oldMatches=JSON.parse(JSON.stringify(matches));
  const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
- try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");}
+ try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");}
  catch(err){matches=oldMatches;render();showStatus(err.message==="Password errata"
   ? "Salvataggio non riuscito: password non riconosciuta dal Worker. Esci e accedi di nuovo verificando la password."
   : "Salvataggio non riuscito: "+err.message);}
 };
 function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
  $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
-async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 $("resetBtn").onclick=resetForm;
-$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
 </script></body></html>

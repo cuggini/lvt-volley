@@ -152,6 +152,21 @@
   .cell.pgs { background: var(--pgs); color: var(--pgs-ink); }
   .cell.fipav { background: var(--fipav); color: var(--fipav-ink); }
   .cell.dim { opacity: .28; }
+  /* allenamenti: grigi, ben distinti dalle partite */
+  .cell.allen { background: #c9ced6; color: #3d4450; border: 1px dashed #8d95a3; }
+  .cell.allen .info { font-weight: 600; }
+  .cell.allen.modif { border-style: solid; border-color: #5d6573; }
+  .allen-mark { position: absolute; left: 4px; bottom: 4px; width: 8px; height: 8px; border-radius: 2px;
+    background: #8d95a3; box-shadow: 0 0 0 1.5px #fff; }
+  .legend i.allen-leg { background: #c9ced6; border: 1px dashed #8d95a3; box-sizing: border-box; }
+  .match.allen { border-left-color: #8d95a3; background: color-mix(in srgb, var(--card) 85%, #c9ced6); }
+  .badge.allen { background: #5d6573; color: #fff; }
+  .badge.modif { background: #e8ebf0; color: #3d4450; border: 1px solid #8d95a3; }
+  .allen-ora { font-size: 1.25rem; font-weight: 800; text-align: center; margin: 10px 0 2px; color: var(--text); }
+  @media (prefers-color-scheme: dark) { .cell.allen { background: #3a414d; color: #c7ccd5; border-color: #6c7480; } }
+  body.retro .cell.allen { color: #444; border: 2px dashed #9a9a9a;
+    background: repeating-linear-gradient(-35deg, rgba(120,120,120,.35) 0 2px, rgba(120,120,120,.08) 2px 5px); }
+  body.retro .allen-ora { font-weight: 400; }
   .cell .info { font-size: .66rem; font-weight: 700; margin-top: auto; margin-bottom: 5px;
     font-variant-numeric: tabular-nums; }
   .cell .ha { font-size: .6rem; font-weight: 600; opacity: .85; }
@@ -332,7 +347,7 @@
   body.retro .classifica tr.noi td { color: var(--rosso); background: linear-gradient(transparent 50%, rgba(255,226,60,.6) 50%, rgba(255,226,60,.6) 90%, transparent 90%); }
   body.retro .fonte { font-size: .95rem; text-transform: uppercase; background: transparent; border-radius: 3px; }
   /* Link rapido alla pagina di amministrazione */
-  .admin-link { position: fixed; top: 12px; left: 12px; z-index: 10000; display: inline-block;
+  .admin-link { position: absolute; top: 12px; left: 12px; z-index: 10000; display: inline-block;
     padding: 8px 13px; border-radius: 7px; background: #153b72; color: #fff;
     font: 700 12px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .06em;
     text-decoration: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .18); }
@@ -449,6 +464,47 @@
     return;
   }
 
+  // ---------- ALLENAMENTI (stesse regole nel sito e nell'admin) ----------
+  const ALLENAMENTI_PREDEFINITI = {
+    serie: [
+      { id: "lun", giorno: 1, inizio: "17:00", fine: "19:00", palestra: "Scuola Media, Via G. B. Vico 4, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+      { id: "mer", giorno: 3, inizio: "19:00", fine: "21:00", palestra: "Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+      { id: "ven", giorno: 5, inizio: "18:30", fine: "20:00", palestra: "Scuola Media, Via G. B. Vico 4, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+    ],
+    eccezioni: [],   // { data, serie, annullato } oppure { data, serie, inizio, fine, palestra }
+  };
+  const isoData = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  // tutti gli allenamenti tra due date (incluse); quelli eliminati hanno annullato: true
+  function espandiAllenamenti(cfg, da, a) {
+    const out = [], ecc = {};
+    (cfg.eccezioni || []).forEach(e => { ecc[`${e.data}|${e.serie}`] = e; });
+    for (let d = new Date(da.getFullYear(), da.getMonth(), da.getDate()); d <= a; d.setDate(d.getDate() + 1)) {
+      const iso = isoData(d);
+      (cfg.serie || []).forEach(s => {
+        if (Number(s.giorno) !== d.getDay() || (s.dal && iso < s.dal) || (s.al && iso > s.al)) return;
+        const e = ecc[`${iso}|${s.id}`];
+        out.push({ data: iso, d: new Date(d), serie: s.id,
+          inizio: (e && e.inizio) || s.inizio, fine: (e && e.fine) || s.fine, palestra: (e && e.palestra) || s.palestra,
+          modificato: !!(e && !e.annullato), annullato: !!(e && e.annullato) });
+      });
+    }
+    return out.sort((x, y) => x.data.localeCompare(y.data) || x.inizio.localeCompare(y.inizio));
+  }
+  const allenCfg = datiJSON.allenamenti && Array.isArray(datiJSON.allenamenti.serie) ? datiJSON.allenamenti : ALLENAMENTI_PREDEFINITI;
+  const GIORNI_LUNGHI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+  const orario = a => `${a.inizio.replace(":", ".")}–${a.fine.replace(":", ".")}`;
+  function cardAllenamento(a) {
+    return `<article class="match allen">
+        <div class="meta"><span class="badge allen">ALLENAMENTO</span>
+          ${a.modificato ? '<span class="badge modif">VARIATO</span>' : ""}
+          <span>${GIORNI_LUNGHI[a.d.getDay()]} ${a.d.getDate()}/${String(a.d.getMonth() + 1).padStart(2, "0")}</span></div>
+        <div class="allen-ora">🏐 ${orario(a)}</div>
+        <div class="campo"><span>📍 ${esc(a.palestra)}</span>
+          <a class="naviga" target="_blank" rel="noopener"
+             href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a.palestra)}">Naviga</a></div>
+      </article>`;
+  }
+
   const partite = (Array.isArray(datiJSON.partite) ? datiJSON.partite : [])
     .map(p => {
       const d = parseData(String(p.data || ""));
@@ -557,11 +613,15 @@
     const oggi = key(new Date());
 
     const primo = partite[0].d, ultimo = partite[partite.length - 1].d;
+    const allenPerGiorno = {};
+    espandiAllenamenti(allenCfg, new Date(primo.getFullYear(), primo.getMonth(), 1), new Date(ultimo.getFullYear(), ultimo.getMonth() + 1, 0))
+      .filter(a => !a.annullato).forEach(a => (allenPerGiorno[key(a.d)] = allenPerGiorno[key(a.d)] || []).push(a));
     let html = `<div class="legend">
         <span><i style="background:var(--pgs)"></i>PGS</span>
         <span><i style="background:var(--fipav)"></i>FIPAV</span>
         <span><i class="dot" style="background:var(--win)"></i>Vinta</span>
         <span><i class="dot" style="background:var(--lose)"></i>Persa</span>
+        <span><i class="allen-leg"></i>Allenamento</span>
       </div>`;
 
     for (let m = new Date(primo.getFullYear(), primo.getMonth(), 1);
@@ -579,6 +639,15 @@
         const ps = perGiorno[k] || [];
         const cls = ["cell"];
         if (k === oggi) cls.push("today");
+        const al = allenPerGiorno[k] || [];
+        if (!ps.length && al.length) {
+          const a = al[0];
+          celle += `<button class="${cls.join(" ")} has allen${a.modificato ? " modif" : ""}" data-k="${k}" ${k === oggi ? 'id="oggi"' : ""}
+                      aria-label="${g} ${MESI[mo]}: allenamento ${orario(a)}">${g}
+                      <span class="info">${a.inizio.replace(":", ".")}</span><span class="ha">allen.</span>
+                    </button>`;
+          continue;
+        }
         if (!ps.length) { celle += `<div class="${cls.join(" ")}" ${k === oggi ? 'id="oggi"' : ""}>${g}</div>`; continue; }
         const p = ps[0];
         cls.push("has", p.camp.toLowerCase());
@@ -588,7 +657,7 @@
         const ha = me ? (inCasa(p) ? "casa" : "trasf.") : "";
         celle += `<button class="${cls.join(" ")}" data-k="${k}" ${k === oggi ? 'id="oggi"' : ""}
                     aria-label="${g} ${MESI[mo]}: ${esc(p.casa)} - ${esc(p.ospite)}">
-                    ${g}${e ? `<span class="esito ${e}"></span>` : ""}
+                    ${g}${e ? `<span class="esito ${e}"></span>` : ""}${al.length ? '<span class="allen-mark" title="Anche allenamento"></span>' : ""}
                     <span class="info">${info}</span>${ha ? `<span class="ha">${ha}</span>` : ""}
                   </button>`;
       }
@@ -856,9 +925,11 @@
   const sheet = document.getElementById("sheet"), backdrop = document.getElementById("backdrop");
   function apri(k) {
     const ps = partite.filter(p => key(p.d) === k);
-    if (!ps.length) return;
+    const [y, mo, g] = k.split("-").map(Number), giorno = new Date(y, mo, g);
+    const al = stato.vista === "calendario" ? espandiAllenamenti(allenCfg, giorno, giorno).filter(a => !a.annullato) : [];
+    if (!ps.length && !al.length) return;
     const prossima = partite.find(p => !p.ris);
-    document.getElementById("sheet-body").innerHTML = ps.map(p => card(p, p === prossima)).join("");
+    document.getElementById("sheet-body").innerHTML = ps.map(p => card(p, p === prossima)).join("") + al.map(cardAllenamento).join("");
     sheet.classList.add("open"); backdrop.classList.add("open");
   }
   function chiudi() { sheet.classList.remove("open"); backdrop.classList.remove("open"); }

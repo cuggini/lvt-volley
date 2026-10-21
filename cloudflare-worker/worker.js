@@ -55,7 +55,14 @@ export default {
       try { current = await githubFile(env); } catch (e) {
         if (!String(e.message).includes("404")) throw e;
       }
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify({ partite: clean }, null, 2) + "\n")));
+      // Allenamenti: se l'admin li manda li salvo, altrimenti tengo quelli già presenti nel file
+      let allenamenti;
+      if (body.allenamenti !== undefined) allenamenti = pulisciAllenamenti(body.allenamenti);
+      else if (current) {
+        try { allenamenti = JSON.parse(decodeURIComponent(escape(atob(current.content.replace(/\n/g, ""))))).allenamenti; } catch {}
+      }
+      const dati = { partite: clean, ...(allenamenti ? { allenamenti } : {}) };
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(dati, null, 2) + "\n")));
       const api = `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/contents/${JSON_PATH}`;
       const resp = await fetch(api, {
         method: "PUT",
@@ -68,12 +75,28 @@ export default {
         })
       });
       if (!resp.ok) throw new Error(`${resp.status} ${await resp.text()}`);
-      return json({ ok: true, partite: clean }, 200, cors);
+      return json({ ok: true, partite: clean, ...(allenamenti ? { allenamenti } : {}) }, 200, cors);
     } catch (e) {
       return json({ error: "Scrittura su GitHub fallita: " + e.message }, 502, cors);
     }
   }
 };
+
+function pulisciAllenamenti(a) {
+  if (!a || typeof a !== "object") return undefined;
+  const giorno = /^\d{4}-\d{2}-\d{2}$/, ora = /^\d{1,2}:\d{2}$/;
+  const serie = (Array.isArray(a.serie) ? a.serie : []).map(s => ({
+    id: String(s.id || ""), giorno: Number(s.giorno),
+    inizio: String(s.inizio || ""), fine: String(s.fine || ""), palestra: String(s.palestra || ""),
+    dal: String(s.dal || ""), al: String(s.al || "")
+  })).filter(s => s.id && s.giorno >= 0 && s.giorno <= 6 && ora.test(s.inizio) && ora.test(s.fine)
+             && (!s.dal || giorno.test(s.dal)) && (!s.al || giorno.test(s.al)));
+  const eccezioni = (Array.isArray(a.eccezioni) ? a.eccezioni : []).map(e => e.annullato
+    ? { data: String(e.data || ""), serie: String(e.serie || ""), annullato: true }
+    : { data: String(e.data || ""), serie: String(e.serie || ""), inizio: String(e.inizio || ""), fine: String(e.fine || ""), palestra: String(e.palestra || "") }
+  ).filter(e => giorno.test(e.data) && e.serie);
+  return { serie, eccezioni };
+}
 
 function ghHeaders(env) {
   return {
