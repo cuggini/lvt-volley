@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-18T19:03:31.145Z",
+  "aggiornato": "2026-10-21T10:23:01.572Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -11,7 +11,12 @@
       "ospite": "ASD POLISPORTIVA DI NOVA",
       "setCasa": 3,
       "setOspite": 1,
-      "parziali": [],
+      "parziali": [
+        "25-21",
+        "18-25",
+        "25-14",
+        "25-15"
+      ],
       "provvisorio": true,
       "campo": "PALACOOPER, CINISELLO BALSAMO - VIA DIAZ 39/41"
     },
