@@ -126,6 +126,19 @@
   .set.live { border-style: dashed; border-color: var(--accent); color: var(--accent); }
   .aggiornato { text-align: center; font-size: .78rem; color: var(--muted); margin: 8px 0 0; min-height: 1em; }
   .where { margin-left: auto; }
+  .match { position: relative; }
+  .match:has(.locandina-btn) .meta { padding-right: 42px; }
+  .locandina-btn { position: absolute; top: 10px; right: 10px;
+    border: 1px solid var(--line); background: var(--bg); border-radius: 999px; width: 34px; height: 34px;
+    font-size: 16px; line-height: 1; cursor: pointer; flex: none; padding: 0; }
+  .locandina-btn:active { transform: scale(.94); }
+  .locandina img { width: 100%; height: auto; display: block; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,.18); }
+  .locandina .azioni { display: grid; gap: 8px; margin-top: 12px; }
+  .locandina .azioni button { padding: 12px; border-radius: 12px; border: 1px solid var(--line); font: inherit; font-weight: 700;
+    font-size: .95rem; cursor: pointer; background: var(--card); color: var(--text); }
+  .locandina .azioni button.primario { background: var(--fipav); color: #fff; border-color: var(--fipav); }
+  .locandina .esito-azione { text-align: center; font-size: .85rem; color: var(--muted); min-height: 1.2em; margin: 8px 0 0; }
+  body.retro .locandina .azioni button { font-family: inherit; font-weight: 400; text-transform: uppercase; border-radius: 4px; }
   .row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin: 10px 0 8px; }
   .team { font-weight: 600; font-size: .88rem; }
   .team.home { text-align: right; }
@@ -589,6 +602,8 @@
           ${e ? `<span class="badge ${e}">${({ win: "VITTORIA", lose: "SCONFITTA", live: "IN CORSO" })[e]}</span>` : ""}
           <span>${dataTxt}${p.ris ? " · " + esc(p.ora) : ""} · Gara ${esc(p.gara)}</span>
           <span class="where">${where}</span>
+          ${!p.ris && (isMe(p.casa) || isMe(p.ospite)) ? `<button class="locandina-btn" data-camp="${p.camp}" data-gara="${esc(p.gara)}" data-k="${key(p.d)}"
+              title="Locandina da condividere" aria-label="Crea la locandina della partita">📤</button>` : ""}
         </div>
         <div class="row">
           <div class="team home ${isMe(p.casa) || opt.evidenzia === norm(p.casa) ? "me" : ""}">${nomeSq(p.casa)}</div>
@@ -1018,6 +1033,108 @@
   render();
   setRetro(retroIniziale);
   document.getElementById("footer").textContent = `${partite.length} partite in calendario`;
+
+
+  // ---------- LOCANDINA PARTITA (immagine da condividere) ----------
+  let logoLocandina = null;
+  function caricaLogo() {
+    if (logoLocandina) return logoLocandina;
+    const prova = src => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; });
+    const fav = document.querySelector('link[rel="icon"]').href;
+    logoLocandina = prova("icon-512.png").catch(() => prova(fav)).catch(() => null);
+    return logoLocandina;
+  }
+  function righe(ctx, testo, maxW) {        // va a capo per parole
+    const out = []; let r = "";
+    testo.split(/\s+/).forEach(w => { const t = r ? r + " " + w : w; if (ctx.measureText(t).width > maxW && r) { out.push(r); r = w; } else r = t; });
+    if (r) out.push(r); return out;
+  }
+  function testoAdattato(ctx, testo, x, y, maxW, maxRighe, size, peso, colore, interl = 1.12) {
+    let s = size, rr;
+    do { ctx.font = `${peso} ${s}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`; rr = righe(ctx, testo, maxW); s -= 2; }
+    while (rr.length > maxRighe && s > 20);
+    ctx.fillStyle = colore; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const h = (s + 2) * interl, y0 = y - (rr.length - 1) * h / 2;
+    rr.forEach((t, i) => ctx.fillText(t, x, y0 + i * h));
+    return rr.length * h;
+  }
+  function rett(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+  async function disegnaLocandina(p) {
+    const W = 1080, H = 1350, c = document.createElement("canvas"); c.width = W; c.height = H;
+    const ctx = c.getContext("2d");
+    // sfondo nei colori del logo
+    const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#06893f"); g.addColorStop(1, "#1d3f7a");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.lineWidth = 46;
+    [[980, 150, 300], [90, 1240, 360], [1040, 1180, 170]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); });
+    // logo
+    const logo = await caricaLogo();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(W / 2, 175, 118, 0, Math.PI * 2); ctx.fill();
+    if (logo) { ctx.save(); ctx.beginPath(); ctx.arc(W / 2, 175, 108, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(logo, W / 2 - 108, 67, 216, 216); ctx.restore(); }
+    testoAdattato(ctx, "LVT LISSONE VOLLEY TEAM", W / 2, 350, 980, 1, 52, 800, "#fff");
+    testoAdattato(ctx, "UNDER 15 FEMMINILE · STAGIONE 2026/27", W / 2, 405, 980, 1, 28, 600, "rgba(255,255,255,.85)");
+    // campionato
+    const pgs = p.camp === "PGS", etich = pgs ? "CAMPIONATO PGS · GIRONE 8" : "CAMPIONATO FIPAV · GIRONE J";
+    ctx.font = "800 30px system-ui, -apple-system, sans-serif";
+    const bw = ctx.measureText(etich).width + 64;
+    ctx.fillStyle = pgs ? "#f5c400" : "#ffffff"; rett(ctx, (W - bw) / 2, 448, bw, 62, 31); ctx.fill();
+    testoAdattato(ctx, etich, W / 2, 480, bw, 1, 30, 800, pgs ? "#3d3000" : "#1e4aa8");
+    // squadre
+    ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+    rett(ctx, 70, 545, W - 140, 490, 36); ctx.fill(); ctx.shadowColor = "transparent";
+    const coloreSq = n => isMe(n) ? "#ff6b1a" : "#1a2233";
+    testoAdattato(ctx, p.casa.toUpperCase(), W / 2, 650, 820, 2, 56, 900, coloreSq(p.casa));
+    ctx.fillStyle = "#ff6b1a"; ctx.beginPath(); ctx.arc(W / 2, 770, 46, 0, Math.PI * 2); ctx.fill();
+    testoAdattato(ctx, "VS", W / 2, 772, 100, 1, 36, 900, "#fff");
+    testoAdattato(ctx, p.ospite.toUpperCase(), W / 2, 890, 820, 2, 56, 900, coloreSq(p.ospite));
+    testoAdattato(ctx, isMe(p.casa) ? "🏠  IN CASA" : "🚌  IN TRASFERTA", W / 2, 997, 820, 1, 28, 700, "#6b7489");
+    // data e ora
+    const giorno = `${GIORNI_LUNGHI[p.d.getDay()]} ${p.d.getDate()} ${MESI[p.d.getMonth()]}`.toUpperCase();
+    testoAdattato(ctx, giorno, W / 2, 1105, 980, 1, 64, 900, "#fff");
+    testoAdattato(ctx, `ORE ${p.ora}`, W / 2, 1187, 980, 1, 82, 900, "#ffd23f");
+    // palestra
+    if (p.campo) testoAdattato(ctx, "📍 " + p.campo, W / 2, 1272, 960, 2, 30, 600, "rgba(255,255,255,.92)");
+    if (p.gara) testoAdattato(ctx, `Gara n. ${p.gara}`, W / 2, 1323, 960, 1, 22, 600, "rgba(255,255,255,.6)");
+    return new Promise(ok => c.toBlob(b => ok({ blob: b, url: c.toDataURL("image/png") }), "image/png"));
+  }
+
+  async function apriLocandina(p) {
+    document.getElementById("sheet-body").innerHTML = '<div class="empty">Preparo la locandina…</div>';
+    sheet.classList.add("open"); backdrop.classList.add("open");
+    const { blob, url } = await disegnaLocandina(p);
+    const nome = `LVT-${p.camp}-${isoData(p.d)}.png`;
+    const file = new File([blob], nome, { type: "image/png" });
+    const puoCondividere = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    const puoCopiare = !!(navigator.clipboard && window.ClipboardItem);
+    document.getElementById("sheet-body").innerHTML = `<div class="locandina">
+        <img src="${url}" alt="Locandina della partita ${esc(p.casa)} - ${esc(p.ospite)}">
+        <div class="azioni">
+          ${puoCondividere ? '<button class="primario" data-azione="condividi">📤 Condividi immagine</button>' : ""}
+          ${puoCopiare ? `<button class="${puoCondividere ? "" : "primario"}" data-azione="copia">📋 Copia immagine</button>` : ""}
+          <button data-azione="scarica">⬇️ Scarica immagine</button>
+        </div>
+        <p class="esito-azione" id="esito-locandina"></p>
+      </div>`;
+    const esito = t => { document.getElementById("esito-locandina").textContent = t; };
+    document.querySelector(".locandina .azioni").onclick = async e => {
+      const b = e.target.closest("button[data-azione]"); if (!b) return;
+      try {
+        if (b.dataset.azione === "condividi") { await navigator.share({ files: [file], title: "LVT U15F – partita" }); esito("Condivisa ✔"); }
+        if (b.dataset.azione === "copia") { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); esito("Copiata ✔ ora puoi incollarla dove vuoi"); }
+        if (b.dataset.azione === "scarica") { const a = document.createElement("a"); a.href = url; a.download = nome; a.click(); esito("Immagine scaricata ✔"); }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;   // condivisione annullata dall'utente
+        esito(b.dataset.azione === "copia" ? "Questo browser non permette di copiare immagini: usa Condividi o Scarica." : "Operazione non riuscita, prova con Scarica.");
+      }
+    };
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".locandina-btn"); if (!b) return;
+    e.stopPropagation();
+    const p = partite.find(x => x.camp === b.dataset.camp && String(x.gara) === b.dataset.gara && key(x.d) === b.dataset.k);
+    if (p) apriLocandina(p);
+  }, true);
 
   // ---------- CREA APP (installazione sul telefono) ----------
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
