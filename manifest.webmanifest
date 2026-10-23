@@ -1,0 +1,17 @@
+{
+  "name": "LVT Lissone Volley Team · U15F",
+  "short_name": "LVT U15F",
+  "description": "Calendario, risultati e classifiche di LVT Lissone Volley Team Under 15 Femminile",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#1d3f7a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
