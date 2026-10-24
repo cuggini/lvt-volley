@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-21T10:23:01.572Z",
+  "aggiornato": "2026-10-24T18:53:18.419Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -60,10 +60,14 @@
       "ora": "18.00",
       "casa": "PRO VICTORIA PALLAVOLO FUCSIA",
       "ospite": "COOP LA VIGNETTA VOLLEY CORMANO",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "10-25",
+        "19-25",
+        "25-27"
+      ],
+      "provvisorio": true,
       "campo": "SCUOLA MEDIA BELLANI, MONZA - VIA SILVIO PELLICO"
     },
     {
@@ -84,10 +88,14 @@
       "ora": "18.30",
       "casa": "VOLLEY CUSANO",
       "ospite": "CA GROUP NET VOLLEY",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "20-25",
+        "12-25",
+        "25-27"
+      ],
+      "provvisorio": true,
       "campo": "CENTRO POLISPORTIVO COMUNALE, CUSANO MILANINO - VIALE ROMA 2"
     },
     {
