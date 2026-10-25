@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-24T18:53:18.418Z",
+  "aggiornato": "2026-10-25T23:23:26.194Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -14,18 +14,6 @@
       "setPersi": "1",
       "puntiFatti": "170",
       "puntiSubiti": "132"
-    },
-    {
-      "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "societa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "punti": "3",
-      "giocate": "1",
-      "vinte": "1",
-      "perse": "0",
-      "setVinti": "3",
-      "setPersi": "1",
-      "puntiFatti": "99",
-      "puntiSubiti": "79"
     },
     {
       "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
@@ -54,14 +42,26 @@
     {
       "squadra": "ASD POLISPORTIVA DI NOVA",
       "societa": "POLISPORTIVA DI NOVA",
-      "punti": "0",
-      "giocate": "1",
-      "vinte": "0",
+      "punti": "3",
+      "giocate": "2",
+      "vinte": "1",
       "perse": "1",
-      "setVinti": "1",
-      "setPersi": "3",
-      "puntiFatti": "75",
-      "puntiSubiti": "93"
+      "setVinti": "4",
+      "setPersi": "4",
+      "puntiFatti": "171",
+      "puntiSubiti": "170"
+    },
+    {
+      "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
+      "societa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
+      "punti": "3",
+      "giocate": "2",
+      "vinte": "1",
+      "perse": "1",
+      "setVinti": "4",
+      "setPersi": "4",
+      "puntiFatti": "176",
+      "puntiSubiti": "175"
     },
     {
       "squadra": "PRO VICTORIA PALLAVOLO FUCSIA",

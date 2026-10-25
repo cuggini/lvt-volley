@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-24T18:53:18.419Z",
+  "aggiornato": "2026-10-25T23:23:26.195Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -76,10 +76,15 @@
       "ora": "18.30",
       "casa": "ASD POLISPORTIVA DI NOVA",
       "ospite": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 3,
+      "setOspite": 1,
+      "parziali": [
+        "25-17",
+        "25-19",
+        "21-25",
+        "25-16"
+      ],
+      "provvisorio": true,
       "campo": "PALESTRA SCUOLA ELEMENTARE, NOVA MILANESE - VIA VENEZIA"
     },
     {
