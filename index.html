@@ -874,9 +874,56 @@
               gara: c.numeroGara, data: c.data, ora: c.ora,
               casa: nomi[c.squadraCasaID] || "?", ospite: nomi[c.squadraTrasfertaID] || "?",
               setCasa: c.setVintiCasa, setOspite: c.setVintiTrasferta,
-              parziali: (c.parzialiCasa || []).map((v, i) => `${v}-${(c.parzialiTrasferta || [])[i]}`) }));
+              parziali: (c.parzialiCasa || []).map((v, i) => `${v}-${(c.parzialiTrasferta || [])[i]}`),
+              campo: c.indirizzo || c.palestraIndirizzo || c.indirizzoPalestra || "" }));
         });
     });
+  }
+
+  // Recupera indirizzi palestre da PGS per le partite senza indirizzo compilato
+  let cacheIndirizziPgs = {};
+  function leggiIndirizziPgs(partitePgs) {
+    // Filtra le partite PGS senza indirizzo e con numeroGara
+    const senzaIndirizzo = partitePgs.filter(p => p.camp === "PGS" && !p.campo && p.gara);
+    if (!senzaIndirizzo.length) return Promise.resolve({});
+
+    // Raggruppa per numeroGara per evitare richieste duplicate
+    const gareUniche = [...new Set(senzaIndirizzo.map(p => p.gara))];
+    const indirizzi = {};
+
+    // Prova a ottenere gli indirizzi - fallback graceful se l'API non risponde
+    return Promise.all(gareUniche.map(gara => {
+      // Verifica cache locale
+      if (cacheIndirizziPgs[gara]) {
+        return Promise.resolve({ gara, indirizzo: cacheIndirizziPgs[gara] });
+      }
+
+      // Prova diverse possibili API per gli indirizzi
+      const urls = [
+        `${API_PGS}/gare/${gara}`,
+        `${API_PGS}/calendari/gara/${gara}`,
+        `${API_PGS}/partite/${gara}`
+      ];
+
+      // Prova la prima URL che funziona
+      let promessa = Promise.reject();
+      for (const url of urls) {
+        promessa = promessa.catch(() => jsonNoCache(url));
+      }
+
+      return promessa.then(data => {
+        // Estrai indirizzo da vari possibili campi
+        const campo = data?.indirizzo || data?.palestraIndirizzo || data?.indirizzoPalestra ||
+                     data?.impianto?.indirizzo || data?.palestra?.indirizzo || "";
+        if (campo) cacheIndirizziPgs[gara] = campo;
+        return { gara, indirizzo: campo };
+      }).catch(() => ({ gara, indirizzo: "" })); // Fallback se API non risponde
+    }))
+    .then(risultati => {
+      // Crea una mappa gara -> indirizzo
+      return Object.fromEntries(risultati.map(r => [r.gara, r.indirizzo]));
+    })
+    .catch(() => ({})); // Fallback totale se tutto fallisce
   }
   let cachePartite = null;
   function caricaPartiteUfficiali() {
@@ -952,6 +999,7 @@
   });
 
   // partite LVT senza risultato nell'admin: lo prendo dal sito ufficiale (stesso numero gara)
+  // inoltre, per le partite PGS senza indirizzo, lo recupero dal sito PGS
   caricaPartiteUfficiali().then(({ tutte }) => {
     const perGara = Object.fromEntries(tutte.filter(p => p.ris).map(p => [`${p.camp}-${p.gara}`, p]));
     let cambiate = 0;
@@ -959,6 +1007,25 @@
       const u = !p.ris && perGara[`${p.camp}-${p.gara}`];
       if (u) { p.ris = u.ris; p.risUfficiale = true; cambiate++; }
     });
+
+    // Recupera gli indirizzi dalle partite PGS ufficiali
+    leggiIndirizziPgs(tutte).then(indirizziMap => {
+      // Aggiorna il campo per le partite LVT che non hanno indirizzo compilato
+      partite.forEach(p => {
+        if (!p.campo && p.gara && indirizziMap[p.gara]) {
+          p.campo = indirizziMap[p.gara];
+          p.campoUfficiale = true;
+          cambiate++;
+        }
+      });
+
+      if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
+    }).catch(() => {
+      // Se recupero indirizzi fallisce, semplicemente renderizza se c'erano risultati da aggiornare
+      if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
+    });
+
+    // Renderizza anche se il recupero indirizzi non è completato ancora
     if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
   });
 
