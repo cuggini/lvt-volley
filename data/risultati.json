@@ -60,7 +60,11 @@
       "squadraOspite": "LVT LISSONE VOLLEY TEAM",
       "setCasa": 0,
       "setOspite": 3,
-      "punteggiSet": [],
+      "punteggiSet": [
+        "9-25",
+        "19-25",
+        "7-25"
+      ],
       "campo": "Palazzetto dello Sport, Via Giorgio La Pira 12, 20863 Concorezzo"
     },
     {
