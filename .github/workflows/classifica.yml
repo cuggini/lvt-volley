@@ -1,5 +1,5 @@
-# Legge dal sito FIPAV la classifica e i risultati del girone e li salva in
-# classifica-fipav.json e partite-fipav.json (solo quando cambiano).
+# Legge dai siti FIPAV e PGS classifica, risultati e palestre dei gironi e li salva in
+# classifica-fipav.json, partite-fipav.json e pgs.json (solo quando cambiano).
 # Gira da sola ogni 30 minuti; si può lanciare a mano da: Actions → Aggiorna classifica → Run workflow
 name: Aggiorna classifica
 
@@ -18,6 +18,9 @@ concurrency:
 env:
   URL_FIPAV: https://www.sol.milano.federvolley.it/calendarioris/1001242/2026
   GIRONE_FIPAV: J
+  PGS_CAMPIONATO: invernale_2026-2027
+  PGS_CATEGORIA: U15F
+  PGS_GIRONE: "8"
 
 jobs:
   aggiorna:
@@ -35,7 +38,81 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.47.2
           npx playwright install --with-deps chromium
 
+      - name: Leggi classifica, partite e palestre PGS
+        continue-on-error: true
+        run: |
+          cat > leggi-pgs.mjs <<'EOF'
+          import fs from "node:fs";
+          // Poche richieste e distanziate: il sito PGS blocca chi ne fa troppe
+          const API = process.env.PGS_API || "https://volley.pgsmilano.org/api";
+          const CAMP = process.env.PGS_CAMPIONATO, CAT = process.env.PGS_CATEGORIA, GIR = String(process.env.PGS_GIRONE);
+          const FILE = "pgs.json", pausa = ms => new Promise(r => setTimeout(r, ms));
+          const ATTESA = Number(process.env.PGS_PAUSA_MS || 1500);
+          async function leggi(percorso) {
+            for (let t = 1; t <= 3; t++) {
+              const r = await fetch(API + percorso, { headers: { "User-Agent": "lvt-volley (https://cuggini.github.io/lvt-volley/)" } });
+              if (r.ok) { await pausa(ATTESA); return r.json(); }
+              if (r.status === 429 && t < 3) { console.log(`${percorso}: troppe richieste, aspetto`); await pausa(30000 * t); continue; }
+              throw new Error(`${percorso}: HTTP ${r.status}`);
+            }
+          }
+          // "presso, indirizzo, città" come nel popup INDIRIZZO del sito PGS
+          const indirizzo = o => o && o.indirizzo && o.citta ? [o.presso, o.indirizzo, o.citta].filter(Boolean).join(", ") : "";
+
+          const classifiche = await leggi(`/classifiche/campionato/${CAMP}`);
+          const g = classifiche.find(x => x.categoria === CAT && String(x.girone) === GIR);
+          if (!g) throw new Error(`Girone ${GIR} ${CAT} non trovato`);
+          const iscritte = await leggi(`/iscrizioni/campionato/${CAMP}/light`);
+          const nomi = Object.fromEntries(iscritte.map(x => [x.id || x._id, x.nomeSquadra]));
+          const ids = g.squadre.map(s => s.squadraID);
+
+          // palestra di ogni squadra (usata per le partite in casa)
+          const sedi = {};
+          for (const id of ids) {
+            try { const r = await leggi(`/iscrizioni/${id}`); sedi[id] = indirizzo(r && r.data ? r.data : r); }
+            catch (e) { console.log(`Palestra di ${nomi[id] || id} non letta: ${e.message}`); }
+          }
+          let vecchio = null;
+          try { vecchio = JSON.parse(fs.readFileSync(FILE, "utf8")); } catch {}
+          const campoVecchio = Object.fromEntries(((vecchio && vecchio.partite) || []).map(p => [p.gara, p.campo]));
+
+          // partite del girone (ogni partita compare nel calendario di due squadre: la prendo una volta)
+          const viste = new Set(), partite = [];
+          for (const id of ids) {
+            for (const c of await leggi(`/calendari/team/${id}`)) {
+              const cid = c.id || c._id;
+              if (c.codiceCampionato !== CAMP || c.categoria !== CAT || String(c.girone) !== GIR || viste.has(cid)) continue;
+              viste.add(cid);
+              const gara = String(c.numeroGara || "");
+              partite.push({
+                gara, data: c.data, ora: String(c.ora || "").replace(":", "."),
+                casa: nomi[c.squadraCasaID] || "?", ospite: nomi[c.squadraTrasfertaID] || "?",
+                setCasa: c.setVintiCasa ?? null, setOspite: c.setVintiTrasferta ?? null,
+                parziali: (c.parzialiCasa || []).map((v, i) => `${v}-${(c.parzialiTrasferta || [])[i]}`),
+                campo: indirizzo(c) || sedi[c.squadraCasaID] || campoVecchio[gara] || "",
+              });
+            }
+          }
+          const dataNum = s => { const [d, m, y] = String(s).split("/"); return `${y}${m}${d}`; };
+          partite.sort((a, b) => dataNum(a.data).localeCompare(dataNum(b.data)) || a.ora.localeCompare(b.ora));
+          const righe = [...g.squadre].sort((a, b) => a.ranking - b.ranking).map(s => ({
+            squadra: nomi[s.squadraID] || "?", punti: s.punteggio,
+            giocate: s.partiteVinte + s.partitePerse + (s.partitePareggiate || 0),
+            vinte: s.partiteVinte, perse: s.partitePerse, setVinti: s.setVinti, setPersi: s.setPersi }));
+          const dati = {
+            classifica: { aggiornato: g.timeLastUpdated, girone: `Girone ${GIR}`, url: "https://volley.pgsmilano.org/classifiche", righe },
+            url: "https://volley.pgsmilano.org/calendari", partite,
+          };
+          if (vecchio && JSON.stringify({ ...vecchio, aggiornato: undefined }) === JSON.stringify({ ...dati, aggiornato: undefined })) {
+            console.log("pgs.json: invariato"); process.exit(0);
+          }
+          fs.writeFileSync(FILE, JSON.stringify({ aggiornato: new Date().toISOString(), ...dati }, null, 2));
+          console.log(`pgs.json: aggiornato (${righe.length} squadre, ${partite.length} partite, ${Object.values(sedi).filter(Boolean).length} palestre)`);
+          EOF
+          node leggi-pgs.mjs
+
       - name: Leggi classifica e risultati FIPAV
+        continue-on-error: true
         run: |
           cat > leggi-fipav.mjs <<'EOF'
           import { chromium } from "playwright";
@@ -126,7 +203,7 @@ jobs:
         run: |
           git config user.name "aggiorna-classifica"
           git config user.email "actions@users.noreply.github.com"
-          for f in classifica-fipav.json partite-fipav.json; do [ -f "$f" ] && git add "$f"; done
+          for f in classifica-fipav.json partite-fipav.json pgs.json; do [ -f "$f" ] && git add "$f"; done
           git diff --cached --quiet && echo "Nessuna modifica" && exit 0
           git commit -m "Classifica e risultati FIPAV aggiornati"
           git pull --rebase
