@@ -30,8 +30,9 @@
   // Classifiche: file aggiornati in automatico da GitHub (vedi .github/workflows/classifica.yml)
   const CLASSIFICHE = [
     { camp: "FIPAV", file: "classifica-fipav.json" },
-    // PGS: letta in diretta dal sito PGS Milano ogni volta che si apre la classifica
-    { camp: "PGS", pgs: { campionato: "invernale_2026-2027", categoria: "U15F", girone: "8" } },
+    // PGS: copiata dal sito PGS Milano dall'automatismo GitHub (non si interroga il sito PGS da ogni telefono:
+    // con troppe richieste il sito PGS blocca la connessione, anche per il sito PGS stesso)
+    { camp: "PGS", pgs: { file: "pgs.json", girone: "8" } },
   ];
   // Risultati di tutte le partite dei gironi (sezione "Altre partite")
   const PARTITE_FIPAV = "partite-fipav.json";   // aggiornato dall'automatismo GitHub
@@ -780,34 +781,21 @@
 
   // ---------- CLASSIFICA ----------
   const cacheClassifiche = {};
-  const API_PGS = "https://volley.pgsmilano.org/api";
-  const jsonNoCache = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status));
-  let basePgs = null;
-  function leggiBasePgs({ campionato }) {      // classifiche + nomi squadre, riusati per un minuto
-    if (basePgs && Date.now() - basePgs.t < 60000) return basePgs.p;
-    const p = Promise.all([jsonNoCache(`${API_PGS}/classifiche/campionato/${campionato}`),
-                           jsonNoCache(`${API_PGS}/iscrizioni/campionato/${campionato}/light`)])
-      .then(([classifiche, iscritte]) => ({ classifiche, nomi: Object.fromEntries(iscritte.map(x => [x.id || x._id, x.nomeSquadra])) }));
-    basePgs = { t: Date.now(), p };
+  // dati PGS (classifica + partite + indirizzi palestre) dal file preparato dall'automatismo
+  let filePgs = null;
+  function leggiFilePgs() {
+    if (filePgs && Date.now() - filePgs.t < 60000) return filePgs.p;
+    const p = fetch(`pgs.json?t=${Date.now()}`, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+    filePgs = { t: Date.now(), p };
     return p;
   }
-  function leggiPgs(cfg) {
-    const { categoria, girone } = cfg;
-    return leggiBasePgs(cfg)
-      .then(({ classifiche, nomi }) => {
-        const g = classifiche.find(x => x.categoria === categoria && String(x.girone) === String(girone));
-        if (!g) return null;
-        const righe = [...g.squadre].sort((a, b) => a.ranking - b.ranking).map(s => ({
-          squadra: nomi[s.squadraID] || "?", punti: s.punteggio,
-          giocate: s.partiteVinte + s.partitePerse + (s.partitePareggiate || 0),
-          vinte: s.partiteVinte, perse: s.partitePerse, setVinti: s.setVinti, setPersi: s.setPersi }));
-        return { aggiornato: g.timeLastUpdated, girone: `Girone ${girone}`, url: "https://volley.pgsmilano.org/classifiche", righe };
-      });
+  function leggiPgs() {
+    return leggiFilePgs().then(j => j && j.classifica ? j.classifica : null);
   }
   function caricaClassifica(c) {
     const k = c.file || c.camp, v = cacheClassifiche[k];
     if (v && Date.now() - v.t < 60000) return v.p;   // ricarica al massimo una volta al minuto
-    const p = (c.pgs ? leggiPgs(c.pgs)
+    const p = (c.pgs ? leggiPgs()
                      : fetch(`${c.file}?t=${Date.now()}`, { cache: "no-store" }).then(r => r.ok ? r.json() : null))
       .catch(() => null);
     cacheClassifiche[k] = { t: Date.now(), p };
@@ -821,7 +809,7 @@
       `${quando.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit" })} alle ${quando.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`;
     const sito = dati.url ? `<a href="${esc(dati.url)}" target="_blank" rel="noopener">${esc(new URL(dati.url).hostname.replace(/^www\./, ""))}</a>` : "";
     const avviso = c.pgs
-      ? `<b>PGS</b> · fonte ufficiale ${sito} · letta in tempo reale${q ? ` · classifica aggiornata dalla PGS ${q}` : ""}`
+      ? `<b>PGS</b> · fonte ufficiale ${sito} · controllata ogni 30 minuti${q ? ` · classifica aggiornata dalla PGS ${q}` : ""}`
       : `<b>FIPAV</b> · fonte ufficiale ${sito} · controllata ogni 30 minuti${q ? ` · ultima variazione ${q}` : ""}`;
     const righe = dati.righe.map((r, i) => {
       const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
@@ -861,78 +849,16 @@
     return { d, ora: String(x.ora || "").replace(":", "."), gara: String(x.gara || ""), camp,
              casa: x.casa, ospite: x.ospite, ris: parseRisultato(risTxt), campo: x.campo || "" };
   }
-  function leggiPartitePgs(cfg) {
-    return leggiBasePgs(cfg).then(({ classifiche, nomi }) => {
-      const g = classifiche.find(x => x.categoria === cfg.categoria && String(x.girone) === String(cfg.girone));
-      if (!g) return [];
-      return Promise.all(g.squadre.map(s => jsonNoCache(`${API_PGS}/calendari/team/${s.squadraID}`).catch(() => [])))
-        .then(liste => {
-          const viste = new Set();
-          return liste.flat().filter(c => c.codiceCampionato === cfg.campionato && c.categoria === cfg.categoria &&
-                                          String(c.girone) === String(cfg.girone) && !viste.has(c.id) && viste.add(c.id))
-            .map(c => partitaUfficiale("PGS", {
-              gara: c.numeroGara, data: c.data, ora: c.ora,
-              casa: nomi[c.squadraCasaID] || "?", ospite: nomi[c.squadraTrasfertaID] || "?",
-              setCasa: c.setVintiCasa, setOspite: c.setVintiTrasferta,
-              parziali: (c.parzialiCasa || []).map((v, i) => `${v}-${(c.parzialiTrasferta || [])[i]}`),
-              campo: c.indirizzo || c.palestraIndirizzo || c.indirizzoPalestra || "" }));
-        });
-    });
-  }
-
-  // Recupera indirizzi palestre da PGS per le partite senza indirizzo compilato
-  let cacheIndirizziPgs = {};
-  function leggiIndirizziPgs(partitePgs) {
-    // Filtra le partite PGS senza indirizzo e con numeroGara
-    const senzaIndirizzo = partitePgs.filter(p => p.camp === "PGS" && !p.campo && p.gara);
-    if (!senzaIndirizzo.length) return Promise.resolve({});
-
-    // Raggruppa per numeroGara per evitare richieste duplicate
-    const gareUniche = [...new Set(senzaIndirizzo.map(p => p.gara))];
-    const indirizzi = {};
-
-    // Prova a ottenere gli indirizzi - fallback graceful se l'API non risponde
-    return Promise.all(gareUniche.map(gara => {
-      // Verifica cache locale
-      if (cacheIndirizziPgs[gara]) {
-        return Promise.resolve({ gara, indirizzo: cacheIndirizziPgs[gara] });
-      }
-
-      // Prova diverse possibili API per gli indirizzi
-      const urls = [
-        `${API_PGS}/gare/${gara}`,
-        `${API_PGS}/calendari/gara/${gara}`,
-        `${API_PGS}/partite/${gara}`
-      ];
-
-      // Prova la prima URL che funziona
-      let promessa = Promise.reject();
-      for (const url of urls) {
-        promessa = promessa.catch(() => jsonNoCache(url));
-      }
-
-      return promessa.then(data => {
-        // Estrai indirizzo da vari possibili campi
-        const campo = data?.indirizzo || data?.palestraIndirizzo || data?.indirizzoPalestra ||
-                     data?.impianto?.indirizzo || data?.palestra?.indirizzo || "";
-        if (campo) cacheIndirizziPgs[gara] = campo;
-        return { gara, indirizzo: campo };
-      }).catch(() => ({ gara, indirizzo: "" })); // Fallback se API non risponde
-    }))
-    .then(risultati => {
-      // Crea una mappa gara -> indirizzo
-      return Object.fromEntries(risultati.map(r => [r.gara, r.indirizzo]));
-    })
-    .catch(() => ({})); // Fallback totale se tutto fallisce
+  function leggiPartitePgs() {
+    return leggiFilePgs().then(j => j && Array.isArray(j.partite) ? j.partite.map(x => partitaUfficiale("PGS", x)).filter(Boolean) : null);
   }
   let cachePartite = null;
   function caricaPartiteUfficiali() {
     if (cachePartite && Date.now() - cachePartite.t < 60000) return cachePartite.p;
-    const cfgPgs = (CLASSIFICHE.find(c => c.pgs) || {}).pgs;
     const p = Promise.all([
       fetch(`${PARTITE_FIPAV}?t=${Date.now()}`, { cache: "no-store" }).then(r => r.ok ? r.json() : null)
         .then(j => (j && j.partite || []).map(x => partitaUfficiale("FIPAV", x))).catch(() => null),
-      cfgPgs ? leggiPartitePgs(cfgPgs).catch(() => null) : Promise.resolve([]),
+      leggiPartitePgs().catch(() => null),
     ]).then(([fipav, pgs]) => ({ fipav, pgs, tutte: [...(fipav || []), ...(pgs || [])].filter(Boolean) }));
     cachePartite = { t: Date.now(), p };
     return p;
@@ -961,7 +887,7 @@
             <span>Partite di <b>${esc(sq.nome)}</b> · ${sq.camp} ${girone(sq.camp)}</span>
             <button id="togli-squadra">✕ Tutte</button></div>`
           : `<p class="fonte">ℹ️ Partite delle altre squadre dei nostri gironi, dai siti ufficiali:
-              <b>FIPAV</b> controllato ogni 30 minuti, <b>PGS</b> letto in tempo reale. Tocca una squadra per vedere solo le sue partite.</p>`}
+              <b>FIPAV</b> e <b>PGS</b> controllati ogni 30 minuti. Tocca una squadra per vedere solo le sue partite.</p>`}
         ${mancano.length ? `<div class="empty">Partite ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
         <h3 class="sotto">Risultati</h3>
         ${giocate.length ? giocate.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}
@@ -998,34 +924,16 @@
     if (r) apriSquadra(r.dataset.camp, r.dataset.sq);
   });
 
-  // partite LVT senza risultato nell'admin: lo prendo dal sito ufficiale (stesso numero gara)
-  // inoltre, per le partite PGS senza indirizzo, lo recupero dal sito PGS
+  // partite LVT: se nell'admin mancano risultato o palestra, li prendo dal sito ufficiale (stesso numero gara)
   caricaPartiteUfficiali().then(({ tutte }) => {
-    const perGara = Object.fromEntries(tutte.filter(p => p.ris).map(p => [`${p.camp}-${p.gara}`, p]));
+    const perGara = Object.fromEntries(tutte.map(p => [`${p.camp}-${p.gara}`, p]));
     let cambiate = 0;
     partite.forEach(p => {
-      const u = !p.ris && perGara[`${p.camp}-${p.gara}`];
-      if (u) { p.ris = u.ris; p.risUfficiale = true; cambiate++; }
+      const u = perGara[`${p.camp}-${p.gara}`];
+      if (!u) return;
+      if (!p.ris && u.ris) { p.ris = u.ris; p.risUfficiale = true; cambiate++; }
+      if (!p.campo && u.campo) { p.campo = u.campo; p.campoUfficiale = true; cambiate++; }
     });
-
-    // Recupera gli indirizzi dalle partite PGS ufficiali
-    leggiIndirizziPgs(tutte).then(indirizziMap => {
-      // Aggiorna il campo per le partite LVT che non hanno indirizzo compilato
-      partite.forEach(p => {
-        if (!p.campo && p.gara && indirizziMap[p.gara]) {
-          p.campo = indirizziMap[p.gara];
-          p.campoUfficiale = true;
-          cambiate++;
-        }
-      });
-
-      if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
-    }).catch(() => {
-      // Se recupero indirizzi fallisce, semplicemente renderizza se c'erano risultati da aggiornare
-      if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
-    });
-
-    // Renderizza anche se il recupero indirizzi non è completato ancora
     if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
   });
 

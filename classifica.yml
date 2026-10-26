@@ -1,0 +1,210 @@
+# Legge dai siti FIPAV e PGS classifica, risultati e palestre dei gironi e li salva in
+# classifica-fipav.json, partite-fipav.json e pgs.json (solo quando cambiano).
+# Gira da sola ogni 30 minuti; si può lanciare a mano da: Actions → Aggiorna classifica → Run workflow
+name: Aggiorna classifica
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: classifica
+  cancel-in-progress: true
+
+env:
+  URL_FIPAV: https://www.sol.milano.federvolley.it/calendarioris/1001242/2026
+  GIRONE_FIPAV: J
+  PGS_CAMPIONATO: invernale_2026-2027
+  PGS_CATEGORIA: U15F
+  PGS_GIRONE: "8"
+
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installa il browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.47.2
+          npx playwright install --with-deps chromium
+
+      - name: Leggi classifica, partite e palestre PGS
+        continue-on-error: true
+        run: |
+          cat > leggi-pgs.mjs <<'EOF'
+          import fs from "node:fs";
+          // Poche richieste e distanziate: il sito PGS blocca chi ne fa troppe
+          const API = process.env.PGS_API || "https://volley.pgsmilano.org/api";
+          const CAMP = process.env.PGS_CAMPIONATO, CAT = process.env.PGS_CATEGORIA, GIR = String(process.env.PGS_GIRONE);
+          const FILE = "pgs.json", pausa = ms => new Promise(r => setTimeout(r, ms));
+          const ATTESA = Number(process.env.PGS_PAUSA_MS || 1500);
+          async function leggi(percorso) {
+            for (let t = 1; t <= 3; t++) {
+              const r = await fetch(API + percorso, { headers: { "User-Agent": "lvt-volley (https://cuggini.github.io/lvt-volley/)" } });
+              if (r.ok) { await pausa(ATTESA); return r.json(); }
+              if (r.status === 429 && t < 3) { console.log(`${percorso}: troppe richieste, aspetto`); await pausa(30000 * t); continue; }
+              throw new Error(`${percorso}: HTTP ${r.status}`);
+            }
+          }
+          // "presso, indirizzo, città" come nel popup INDIRIZZO del sito PGS
+          const indirizzo = o => o && o.indirizzo && o.citta ? [o.presso, o.indirizzo, o.citta].filter(Boolean).join(", ") : "";
+
+          const classifiche = await leggi(`/classifiche/campionato/${CAMP}`);
+          const g = classifiche.find(x => x.categoria === CAT && String(x.girone) === GIR);
+          if (!g) throw new Error(`Girone ${GIR} ${CAT} non trovato`);
+          const iscritte = await leggi(`/iscrizioni/campionato/${CAMP}/light`);
+          const nomi = Object.fromEntries(iscritte.map(x => [x.id || x._id, x.nomeSquadra]));
+          const ids = g.squadre.map(s => s.squadraID);
+
+          // palestra di ogni squadra (usata per le partite in casa)
+          const sedi = {};
+          for (const id of ids) {
+            try { const r = await leggi(`/iscrizioni/${id}`); sedi[id] = indirizzo(r && r.data ? r.data : r); }
+            catch (e) { console.log(`Palestra di ${nomi[id] || id} non letta: ${e.message}`); }
+          }
+          let vecchio = null;
+          try { vecchio = JSON.parse(fs.readFileSync(FILE, "utf8")); } catch {}
+          const campoVecchio = Object.fromEntries(((vecchio && vecchio.partite) || []).map(p => [p.gara, p.campo]));
+
+          // partite del girone (ogni partita compare nel calendario di due squadre: la prendo una volta)
+          const viste = new Set(), partite = [];
+          for (const id of ids) {
+            for (const c of await leggi(`/calendari/team/${id}`)) {
+              const cid = c.id || c._id;
+              if (c.codiceCampionato !== CAMP || c.categoria !== CAT || String(c.girone) !== GIR || viste.has(cid)) continue;
+              viste.add(cid);
+              const gara = String(c.numeroGara || "");
+              partite.push({
+                gara, data: c.data, ora: String(c.ora || "").replace(":", "."),
+                casa: nomi[c.squadraCasaID] || "?", ospite: nomi[c.squadraTrasfertaID] || "?",
+                setCasa: c.setVintiCasa ?? null, setOspite: c.setVintiTrasferta ?? null,
+                parziali: (c.parzialiCasa || []).map((v, i) => `${v}-${(c.parzialiTrasferta || [])[i]}`),
+                campo: indirizzo(c) || sedi[c.squadraCasaID] || campoVecchio[gara] || "",
+              });
+            }
+          }
+          const dataNum = s => { const [d, m, y] = String(s).split("/"); return `${y}${m}${d}`; };
+          partite.sort((a, b) => dataNum(a.data).localeCompare(dataNum(b.data)) || a.ora.localeCompare(b.ora));
+          const righe = [...g.squadre].sort((a, b) => a.ranking - b.ranking).map(s => ({
+            squadra: nomi[s.squadraID] || "?", punti: s.punteggio,
+            giocate: s.partiteVinte + s.partitePerse + (s.partitePareggiate || 0),
+            vinte: s.partiteVinte, perse: s.partitePerse, setVinti: s.setVinti, setPersi: s.setPersi }));
+          const dati = {
+            classifica: { aggiornato: g.timeLastUpdated, girone: `Girone ${GIR}`, url: "https://volley.pgsmilano.org/classifiche", righe },
+            url: "https://volley.pgsmilano.org/calendari", partite,
+          };
+          if (vecchio && JSON.stringify({ ...vecchio, aggiornato: undefined }) === JSON.stringify({ ...dati, aggiornato: undefined })) {
+            console.log("pgs.json: invariato"); process.exit(0);
+          }
+          fs.writeFileSync(FILE, JSON.stringify({ aggiornato: new Date().toISOString(), ...dati }, null, 2));
+          console.log(`pgs.json: aggiornato (${righe.length} squadre, ${partite.length} partite, ${Object.values(sedi).filter(Boolean).length} palestre)`);
+          EOF
+          node leggi-pgs.mjs
+
+      - name: Leggi classifica e risultati FIPAV
+        continue-on-error: true
+        run: |
+          cat > leggi-fipav.mjs <<'EOF'
+          import { chromium } from "playwright";
+          import fs from "node:fs";
+
+          const URL = process.env.URL_FIPAV, GIRONE = process.env.GIRONE_FIPAV;
+          const browser = await chromium.launch();
+          const page = await browser.newPage({ locale: "it-IT" });
+          await page.goto(URL, { waitUntil: "networkidle", timeout: 60000 });
+
+          // apre una scheda e aspetta che il contenuto sia pronto (il sito a volte è lento)
+          async function apriScheda(nome, pronto) {
+            for (let i = 0; i < 8; i++) {
+              if (await page.evaluate(pronto, GIRONE)) return true;
+              await page.locator(".rz-tabview-title").filter({ hasText: nome }).first().click().catch(() => {});
+              await page.waitForTimeout(3000);
+            }
+            return page.evaluate(pronto, GIRONE);
+          }
+          const pannelloVisibile = `[...document.querySelectorAll(".rz-tabview-panel")].filter(p => p.offsetParent !== null)`;
+
+          // ---- risultati del girone (scheda con la lettera del girone) ----
+          const okPartite = await apriScheda(new RegExp(`^\\s*${GIRONE}\\s*$`),
+            new Function("g", `return ${pannelloVisibile}.some(p => p.innerText.includes("GIRONE " + g + " - Giornata"))`));
+          const partite = !okPartite ? null : await page.evaluate(g => {
+            const panel = [...document.querySelectorAll(".rz-tabview-panel")]
+              .find(p => p.offsetParent !== null && p.innerText.includes(`GIRONE ${g} - Giornata`));
+            const testi = td => [...td.querySelectorAll("div")].map(d => d.innerText.trim());
+            return [...panel.querySelectorAll("tbody tr")].map(tr => {
+              const td = tr.querySelectorAll("td");
+              if (td.length < 6) return null;
+              const [data, giorno] = testi(td[1]);
+              const [casa, ospite] = testi(td[2]);
+              const [sc, so] = testi(td[3]);
+              const pz = td[4].querySelector("div");
+              const [campo, indirizzo] = testi(td[5]);
+              return {
+                gara: td[0].innerText.trim(), data, ora: (giorno || "").split(":").slice(1).join(":").trim(),
+                casa, ospite,
+                setCasa: sc ? Number(sc) : null, setOspite: so ? Number(so) : null,
+                parziali: (pz?.innerText || "").trim().split(/\s+/).filter(Boolean).map(x => x.replace("/", "-")),
+                provvisorio: /omologa/i.test(pz?.title || ""),
+                campo: [campo, indirizzo].filter(Boolean).join(", "),
+              };
+            }).filter(r => r && /^\d+$/.test(r.gara));
+          }, GIRONE);
+
+          // ---- classifica (scheda "Classifiche" / "Classifica Gir. X") ----
+          const okClassifica = await apriScheda(/^\s*Classific/,
+            new Function("g", `return ${pannelloVisibile}.some(p => [...p.querySelectorAll("div")].some(e => e.textContent.trim() === "GIRONE " + g))`));
+          const righe = !okClassifica ? null : await page.evaluate(g => {
+            const panel = [...document.querySelectorAll(".rz-tabview-panel")].find(p => p.offsetParent !== null);
+            const h = [...panel.querySelectorAll("div")].find(e => e.textContent.trim() === `GIRONE ${g}`);
+            let tbl = null;
+            for (let n = h; n && !tbl; n = n.parentElement)
+              for (let s = n.nextElementSibling; s && !tbl; s = s.nextElementSibling)
+                tbl = s.matches("table") ? s : s.querySelector("table");
+            const num = td => (td?.innerText || "").trim();
+            return [...tbl.querySelectorAll("tbody tr")].map(tr => {
+              const td = tr.querySelectorAll("td");
+              return {
+                squadra: (td[0].querySelector(".rid-09")?.innerText || td[0].innerText).trim(),
+                societa: (td[0].querySelector(".rid-07")?.innerText || "").trim(),
+                punti: num(td[1]), giocate: num(td[2]), vinte: num(td[3]), perse: num(td[4]),
+                setVinti: num(td[5]), setPersi: num(td[6]), puntiFatti: num(td[8]), puntiSubiti: num(td[9]),
+              };
+            }).filter(r => r.squadra);
+          }, GIRONE);
+          await browser.close();
+
+          // salva un file solo se il contenuto è cambiato
+          function salva(file, chiave, dati) {
+            if (!dati || !dati.length) { console.log(`${file}: nessun dato letto, non lo tocco`); return false; }
+            let vecchio = null;
+            try { vecchio = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+            if (vecchio && JSON.stringify(vecchio[chiave]) === JSON.stringify(dati)) { console.log(`${file}: invariato`); return true; }
+            fs.writeFileSync(file, JSON.stringify({ aggiornato: new Date().toISOString(), girone: `Girone ${GIRONE}`, url: URL, [chiave]: dati }, null, 2));
+            console.log(`${file}: aggiornato (${dati.length} righe)`);
+            return true;
+          }
+          const a = salva("classifica-fipav.json", "righe", righe);
+          const b = salva("partite-fipav.json", "partite", partite);
+          if (!a && !b) throw new Error("Non sono riuscito a leggere né la classifica né i risultati");
+          EOF
+          node leggi-fipav.mjs
+
+      - name: Salva se è cambiato qualcosa
+        run: |
+          git config user.name "aggiorna-classifica"
+          git config user.email "actions@users.noreply.github.com"
+          for f in classifica-fipav.json partite-fipav.json pgs.json; do [ -f "$f" ] && git add "$f"; done
+          git diff --cached --quiet && echo "Nessuna modifica" && exit 0
+          git commit -m "Classifica e risultati FIPAV aggiornati"
+          git pull --rebase
+          git push
