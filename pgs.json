@@ -1,7 +1,7 @@
 {
-  "aggiornato": "2026-10-26T12:01:39.404Z",
+  "aggiornato": "2026-10-26T22:41:52.392Z",
   "classifica": {
-    "aggiornato": "2026-10-24T17:51:24.516Z",
+    "aggiornato": "2026-10-26T17:11:38.475Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
@@ -24,6 +24,15 @@
         "setPersi": 3
       },
       {
+        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
+        "punti": 6,
+        "giocate": 3,
+        "vinte": 2,
+        "perse": 1,
+        "setVinti": 6,
+        "setPersi": 5
+      },
+      {
         "squadra": "PGS DOMANI",
         "punti": 3,
         "giocate": 2,
@@ -42,22 +51,13 @@
         "setPersi": 4
       },
       {
-        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
-        "punti": 3,
-        "giocate": 2,
-        "vinte": 1,
-        "perse": 1,
-        "setVinti": 3,
-        "setPersi": 5
-      },
-      {
         "squadra": "PAL. CONCOREZZO SSD",
         "punti": 0,
-        "giocate": 2,
+        "giocate": 3,
         "vinte": 0,
-        "perse": 2,
+        "perse": 3,
         "setVinti": 2,
-        "setPersi": 6
+        "setPersi": 9
       }
     ]
   },
@@ -179,9 +179,13 @@
       "ora": "10.00",
       "casa": "PAL. CONCOREZZO SSD",
       "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "7-25",
+        "19-25",
+        "9-25"
+      ],
       "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
     },
     {
