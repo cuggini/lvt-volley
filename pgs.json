@@ -1,0 +1,430 @@
+{
+  "aggiornato": "2026-10-26T12:01:39.404Z",
+  "classifica": {
+    "aggiornato": "2026-10-24T17:51:24.516Z",
+    "girone": "Girone 8",
+    "url": "https://volley.pgsmilano.org/classifiche",
+    "righe": [
+      {
+        "squadra": "NET VOLLEY CINISELLO BLU",
+        "punti": 7,
+        "giocate": 3,
+        "vinte": 2,
+        "perse": 1,
+        "setVinti": 8,
+        "setPersi": 4
+      },
+      {
+        "squadra": "PLESIOS VOLLEY",
+        "punti": 6,
+        "giocate": 3,
+        "vinte": 2,
+        "perse": 1,
+        "setVinti": 7,
+        "setPersi": 3
+      },
+      {
+        "squadra": "PGS DOMANI",
+        "punti": 3,
+        "giocate": 2,
+        "vinte": 1,
+        "perse": 1,
+        "setVinti": 3,
+        "setPersi": 4
+      },
+      {
+        "squadra": "MOTTASTAMPI AGRATE",
+        "punti": 3,
+        "giocate": 2,
+        "vinte": 1,
+        "perse": 1,
+        "setVinti": 3,
+        "setPersi": 4
+      },
+      {
+        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
+        "punti": 3,
+        "giocate": 2,
+        "vinte": 1,
+        "perse": 1,
+        "setVinti": 3,
+        "setPersi": 5
+      },
+      {
+        "squadra": "PAL. CONCOREZZO SSD",
+        "punti": 0,
+        "giocate": 2,
+        "vinte": 0,
+        "perse": 2,
+        "setVinti": 2,
+        "setPersi": 6
+      }
+    ]
+  },
+  "url": "https://volley.pgsmilano.org/calendari",
+  "partite": [
+    {
+      "gara": "1441",
+      "data": "09/10/2026",
+      "ora": "20.30",
+      "casa": "PLESIOS VOLLEY",
+      "ospite": "PGS DOMANI",
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-16",
+        "25-18",
+        "25-18"
+      ],
+      "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
+    },
+    {
+      "gara": "1444",
+      "data": "10/10/2026",
+      "ora": "18.00",
+      "casa": "PGS DOMANI",
+      "ospite": "PAL. CONCOREZZO SSD",
+      "setCasa": 3,
+      "setOspite": 1,
+      "parziali": [
+        "25-22",
+        "25-16",
+        "21-25",
+        "25-16"
+      ],
+      "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
+    },
+    {
+      "gara": "1442",
+      "data": "11/10/2026",
+      "ora": "11.00",
+      "casa": "PAL. CONCOREZZO SSD",
+      "ospite": "MOTTASTAMPI AGRATE",
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "18-25",
+        "25-22",
+        "21-25",
+        "20-25"
+      ],
+      "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
+    },
+    {
+      "gara": "1443",
+      "data": "11/10/2026",
+      "ora": "18.00",
+      "casa": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "ospite": "NET VOLLEY CINISELLO BLU",
+      "setCasa": 3,
+      "setOspite": 2,
+      "parziali": [
+        "25-22",
+        "26-24",
+        "20-25",
+        "21-25",
+        "16-14"
+      ],
+      "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1446",
+      "data": "17/10/2026",
+      "ora": "15.30",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "MOTTASTAMPI AGRATE",
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-10",
+        "25-14",
+        "25-19"
+      ],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
+    },
+    {
+      "gara": "1449",
+      "data": "23/10/2026",
+      "ora": "20.30",
+      "casa": "PLESIOS VOLLEY",
+      "ospite": "NET VOLLEY CINISELLO BLU",
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "21-25",
+        "25-12",
+        "23-25",
+        "11-25"
+      ],
+      "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
+    },
+    {
+      "gara": "1445",
+      "data": "24/10/2026",
+      "ora": "15.30",
+      "casa": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "ospite": "PLESIOS VOLLEY",
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "19-25",
+        "21-25",
+        "22-25"
+      ],
+      "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1447",
+      "data": "25/10/2026",
+      "ora": "10.00",
+      "casa": "PAL. CONCOREZZO SSD",
+      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
+    },
+    {
+      "gara": "1463",
+      "data": "29/10/2026",
+      "ora": "21.00",
+      "casa": "PGS DOMANI",
+      "ospite": "MOTTASTAMPI AGRATE",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
+    },
+    {
+      "gara": "1450",
+      "data": "30/10/2026",
+      "ora": "20.30",
+      "casa": "PLESIOS VOLLEY",
+      "ospite": "PAL. CONCOREZZO SSD",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
+    },
+    {
+      "gara": "1461",
+      "data": "31/10/2026",
+      "ora": "19.00",
+      "casa": "MOTTASTAMPI AGRATE",
+      "ospite": "NET VOLLEY CINISELLO BLU",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
+    },
+    {
+      "gara": "1452",
+      "data": "01/11/2026",
+      "ora": "15.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "PGS DOMANI",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
+    },
+    {
+      "gara": "1454",
+      "data": "07/11/2026",
+      "ora": "19.00",
+      "casa": "MOTTASTAMPI AGRATE",
+      "ospite": "PLESIOS VOLLEY",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
+    },
+    {
+      "gara": "1455",
+      "data": "08/11/2026",
+      "ora": "10.00",
+      "casa": "PAL. CONCOREZZO SSD",
+      "ospite": "NET VOLLEY CINISELLO BLU",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
+    },
+    {
+      "gara": "1453",
+      "data": "08/11/2026",
+      "ora": "15.00",
+      "casa": "PGS DOMANI",
+      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
+    },
+    {
+      "gara": "1458",
+      "data": "15/11/2026",
+      "ora": "15.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
+    },
+    {
+      "gara": "1456",
+      "data": "15/11/2026",
+      "ora": "18.00",
+      "casa": "PGS DOMANI",
+      "ospite": "PLESIOS VOLLEY",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
+    },
+    {
+      "gara": "1457",
+      "data": "15/11/2026",
+      "ora": "19.00",
+      "casa": "MOTTASTAMPI AGRATE",
+      "ospite": "PAL. CONCOREZZO SSD",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
+    },
+    {
+      "gara": "1460",
+      "data": "20/11/2026",
+      "ora": "20.30",
+      "casa": "PLESIOS VOLLEY",
+      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
+    },
+    {
+      "gara": "1459",
+      "data": "22/11/2026",
+      "ora": "10.00",
+      "casa": "PAL. CONCOREZZO SSD",
+      "ospite": "PGS DOMANI",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
+    },
+    {
+      "gara": "1451",
+      "data": "22/11/2026",
+      "ora": "15.00",
+      "casa": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "ospite": "MOTTASTAMPI AGRATE",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1464",
+      "data": "29/11/2026",
+      "ora": "18.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "PLESIOS VOLLEY",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
+    },
+    {
+      "gara": "1462",
+      "data": "29/11/2026",
+      "ora": "18.00",
+      "casa": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "ospite": "PAL. CONCOREZZO SSD",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1448",
+      "data": "29/11/2026",
+      "ora": "18.30",
+      "casa": "MOTTASTAMPI AGRATE",
+      "ospite": "PGS DOMANI",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
+    },
+    {
+      "gara": "1466",
+      "data": "12/12/2026",
+      "ora": "19.00",
+      "casa": "MOTTASTAMPI AGRATE",
+      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
+    },
+    {
+      "gara": "1465",
+      "data": "13/12/2026",
+      "ora": "10.00",
+      "casa": "PAL. CONCOREZZO SSD",
+      "ospite": "PLESIOS VOLLEY",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
+    },
+    {
+      "gara": "1469",
+      "data": "18/12/2026",
+      "ora": "20.30",
+      "casa": "PLESIOS VOLLEY",
+      "ospite": "MOTTASTAMPI AGRATE",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
+    },
+    {
+      "gara": "1470",
+      "data": "20/12/2026",
+      "ora": "18.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "PAL. CONCOREZZO SSD",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
+    },
+    {
+      "gara": "1468",
+      "data": "20/12/2026",
+      "ora": "18.00",
+      "casa": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "ospite": "PGS DOMANI",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1467",
+      "data": "09/01/2027",
+      "ora": "15.00",
+      "casa": "PGS DOMANI",
+      "ospite": "NET VOLLEY CINISELLO BLU",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
+    }
+  ]
+}

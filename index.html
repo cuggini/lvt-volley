@@ -809,8 +809,8 @@
       `${quando.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit" })} alle ${quando.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`;
     const sito = dati.url ? `<a href="${esc(dati.url)}" target="_blank" rel="noopener">${esc(new URL(dati.url).hostname.replace(/^www\./, ""))}</a>` : "";
     const avviso = c.pgs
-      ? `<b>PGS</b> · fonte ufficiale ${sito} · controllata ogni 30 minuti${q ? ` · classifica aggiornata dalla PGS ${q}` : ""}`
-      : `<b>FIPAV</b> · fonte ufficiale ${sito} · controllata ogni 30 minuti${q ? ` · ultima variazione ${q}` : ""}`;
+      ? `<b>PGS</b> · fonte ufficiale ${sito} · controllata in automatico più volte al giorno${q ? ` · classifica aggiornata dalla PGS ${q}` : ""}`
+      : `<b>FIPAV</b> · fonte ufficiale ${sito} · controllata in automatico più volte al giorno${q ? ` · ultima variazione ${q}` : ""}`;
     const righe = dati.righe.map((r, i) => {
       const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
       return `<tr class="${noi ? "noi" : ""}" data-camp="${c.camp}" data-sq="${esc(r.squadra)}" title="${noi ? "Apri l'agenda LVT" : "Vedi le partite di questa squadra"}">
@@ -887,7 +887,7 @@
             <span>Partite di <b>${esc(sq.nome)}</b> · ${sq.camp} ${girone(sq.camp)}</span>
             <button id="togli-squadra">✕ Tutte</button></div>`
           : `<p class="fonte">ℹ️ Partite delle altre squadre dei nostri gironi, dai siti ufficiali:
-              <b>FIPAV</b> e <b>PGS</b> controllati ogni 30 minuti. Tocca una squadra per vedere solo le sue partite.</p>`}
+              <b>FIPAV</b> e <b>PGS</b> controllati in automatico più volte al giorno. Tocca una squadra per vedere solo le sue partite.</p>`}
         ${mancano.length ? `<div class="empty">Partite ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
         <h3 class="sotto">Risultati</h3>
         ${giocate.length ? giocate.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}
