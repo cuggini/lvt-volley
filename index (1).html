@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin LVT Volley</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172033;background:#f3f5f8}
+body{margin:0;padding:24px}.wrap{max-width:960px;margin:auto}.panel{background:white;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 2px 12px #15223812}
+/* CTA BOARD: identica nello stile al pulsante ADMIN del sito pubblico */
+.board-link{position:fixed;top:12px;left:12px;z-index:10000;display:inline-block;padding:8px 13px;border-radius:7px;background:#153b72;color:#fff;font:700 12px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.06em;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.board-link:hover,.board-link:focus-visible{background:#24569a;color:#fff;outline:2px solid #fff;outline-offset:2px}
+@media(max-width:480px){.board-link{top:8px;left:8px;padding:7px 10px;font-size:11px}}
+h1{margin-top:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:14px;font-weight:650;margin-bottom:5px}input,button{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box}
+button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;margin-top:10px}button.secondary{background:#e7edf5;color:#172033}button.danger{background:#a72c35}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{width:auto;flex:1}
+.item{border:1px solid #dce2eb;border-radius:10px;padding:14px;margin:10px 0;background:#fff}.item.completed{background:#eaf8ee;border-color:#91cda1}.match-title{display:block;line-height:1.45}.muted{color:#647086;font-size:14px}.status{white-space:pre-wrap;margin-top:10px}.completed-label{display:inline-block;background:#ccebd4;color:#185b2b;border-radius:5px;padding:3px 7px;font-size:12px;font-weight:750;margin:0 0 8px}.editor-inline{margin-top:14px}.editor-inline .panel{margin:0;background:#f8faff;border:1px solid #dce5f2;box-shadow:none;padding:16px}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.section-heading h2{margin:0}
+.allen-item{border:1px dashed #9aa3b1;border-radius:10px;padding:12px;margin:8px 0;background:#f4f5f7}.allen-item.annullato{opacity:.6;text-decoration:line-through}.allen-item.annullato .actions{text-decoration:none}
+.allen-item.modif{border-style:solid;border-color:#5d6573}.tag{display:inline-block;border-radius:5px;padding:2px 7px;font-size:12px;font-weight:750;margin-left:6px;background:#5d6573;color:#fff}.tag.off{background:#a72c35}
+h3.sub{margin:22px 0 6px}select{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box;background:#fff}
+.mini-form{margin-top:10px;padding:12px;border:1px solid #dce5f2;border-radius:10px;background:#f8faff}
+.st-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.st-tile{border:1px solid #dce2eb;border-radius:10px;padding:10px 6px;text-align:center}
+.st-tile b{display:block;font-size:22px}.st-tile span{font-size:12px;color:#647086}
+.indice{display:flex;gap:16px;align-items:center;border:1px solid #dce2eb;border-radius:12px;padding:14px;margin:12px 0}
+.indice .voto{font-size:44px;font-weight:800;min-width:90px;text-align:center;line-height:1}.indice .voto small{display:block;font-size:13px;font-weight:700;margin-top:4px}
+.indice ul{margin:0;padding-left:18px;font-size:14px;line-height:1.6}
+.st-graf{border:1px solid #dce2eb;border-radius:10px;padding:8px}.st-graf svg{width:100%;height:auto;display:block}
+.st-graf .b{fill:#153b72}.st-graf .b:hover{fill:#24569a}.st-graf text{fill:#647086;font-size:20px}.st-graf .g{stroke:#e5e9f0}
+.st-barre{display:grid;gap:6px}.st-barre div{display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;font-size:14px}
+.st-barre i{display:block;height:10px;border-radius:0 4px 4px 0;background:#153b72}.st-barre em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+table.acc{width:100%;border-collapse:collapse;font-size:13px}table.acc td,table.acc th{padding:7px 6px;border-bottom:1px solid #e5e9f0;text-align:left}
+table.acc .ko{color:#a72c35;font-weight:700}.periodo{display:flex;gap:6px;flex-wrap:wrap}.periodo button{width:auto;margin-top:0;padding:8px 14px}
+.periodo button.on{background:#153b72;color:#fff}
+@media(max-width:600px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.st-barre div{grid-template-columns:110px 1fr 40px}.indice{flex-direction:column;align-items:flex-start}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><a class="board-link" href="/lvt-volley/" aria-label="Torna al sito pubblico LVT Volley">BOARD</a><main class="wrap">
+<h1>Amministrazione LVT Volley</h1>
+<p class="muted">Accedi per gestire i risultati. Le modifiche vengono salvate nel file data/risultati.json del repository.</p>
+<section class="panel" id="loginPanel">
+<label for="password">Password amministratore</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Inserisci la password">
+<button id="loginBtn">Accedi e carica risultati</button>
+<p class="status" id="loginStatus" role="status"></p>
+<p class="muted">La password resta memorizzata solo nella sessione di questa scheda e viene cancellata quando premi Esci o chiudi la sessione del browser.</p>
+</section>
+<section class="panel" id="matchesPanel" hidden>
+<div class="section-heading"><h2>Partite (dalla prima all'ultima)</h2></div>
+<p class="muted">Le partite concluse sono evidenziate in verde. Puoi comunque modificarle.</p>
+<div id="matches"></div>
+<button class="secondary" id="logoutBtn">Esci</button>
+</section>
+<section class="panel" id="allenPanel" hidden>
+<div class="section-heading"><h2>Allenamenti</h2></div>
+<p class="muted">Compaiono in grigio solo nel Calendario del sito. Ogni modifica viene salvata subito.</p>
+<h3 class="sub">Serie settimanali</h3>
+<p class="muted">Per cambiare orario o palestra <b>per sempre</b> (es. tutti i lunedì) usa «Cambia per sempre».</p>
+<div id="serieList"></div>
+<button class="secondary" id="addSerieBtn">+ Aggiungi un giorno di allenamento</button>
+<h3 class="sub">Prossimi allenamenti</h3>
+<p class="muted">Per un <b>singolo</b> allenamento: «Modifica» cambia solo quel giorno, «Elimina» lo toglie dal calendario.</p>
+<div id="allenList"></div>
+<button class="secondary" id="moreAllenBtn">Mostra altre 4 settimane</button>
+<p class="status" id="allenStatus" role="status"></p>
+<datalist id="palestre">
+<option value="Scuola Media, Via G. B. Vico 4, 20851 Lissone">
+<option value="Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone">
+</datalist>
+</section>
+<section class="panel" id="statPanel" hidden>
+<div class="section-heading"><h2>Statistiche del sito</h2>
+<div class="periodo" id="periodo"><button class="secondary" data-g="7">7 giorni</button><button class="secondary on" data-g="30">30 giorni</button><button class="secondary" data-g="90">90 giorni</button></div></div>
+<p class="muted">Dati anonimi: nessun cookie, nessun indirizzo IP, nessun nome. Le visite fatte dai dispositivi con cui accedi all'admin non vengono contate.</p>
+<div id="statBody"><p class="muted">Caricamento…</p></div>
+<h3 class="sub">Accessi alla pagina admin</h3>
+<p class="muted">Ultimi 40 tentativi. «Ripristino» è la riapertura della pagina con la sessione già attiva. Un «password errata» che non sei stato tu è un campanello d'allarme: in quel caso cambia la password su Cloudflare.</p>
+<div id="accessiBody"></div>
+</section>
+<div id="editorHome"></div>
+<section class="panel" id="editor" hidden>
+<h2 id="formTitle">Aggiungi partita</h2>
+<form id="matchForm">
+<input type="hidden" id="matchId">
+<div class="grid">
+<div><label for="date">Data</label><input id="date" type="date" required></div>
+<div><label for="time">Ora</label><input id="time" placeholder="18.00"></div>
+<div><label for="game">Numero gara</label><input id="game" placeholder="1443"></div>
+<div><label for="competition">Competizione</label><input id="competition" placeholder="PGS oppure FIPAV"></div>
+<div><label for="home">Squadra casa</label><input id="home" required></div>
+<div><label for="away">Squadra ospite</label><input id="away" required></div>
+<div><label for="homeSets">Set squadra casa</label><input id="homeSets" type="number" min="0" max="5" required></div>
+<div><label for="awaySets">Set squadra ospite</label><input id="awaySets" type="number" min="0" max="5" required></div>
+<div style="grid-column:1/-1"><label for="setScores">Punteggi set (facoltativo)</label><input id="setScores" placeholder="25-20, 22-25, 25-18, 25-21"></div>
+<div style="grid-column:1/-1"><label for="venue">Palestra / indirizzo</label><input id="venue" placeholder="Palestra e indirizzo"></div>
+</div>
+<div class="actions"><button type="submit">Salva partita</button><button class="secondary" type="button" id="resetBtn">Annulla / nuova partita</button></div>
+</form>
+<div class="status" id="status" role="status"></div>
+</section>
+</main>
+<script>
+const endpoint="https://lvt.cicciodesimone.workers.dev";
+let matches=[], password="", activeEditId=null;
+const $=id=>document.getElementById(id);
+function apiUrl(){return endpoint.replace(/\/+$/,"")+"/";}
+function showStatus(msg){$("status").textContent=msg;}
+async function request(path, options={}) {
+  const response=await fetch(apiUrl()+path,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+  const data=await response.json().catch(()=>({error:"Risposta non valida dal servizio"}));
+  if(!response.ok) throw new Error(data.error||("Errore HTTP "+response.status));
+  return data;
+}
+function isCompleted(m){return Number(m.setCasa)>=3 || Number(m.setOspite)>=3;}
+function render(){
+ const box=$("matches"), editor=$("editor"), home=$("editorHome");
+ // Riporta temporaneamente il modulo nella sua sede prima di ricostruire l'elenco.
+ home.append(editor);
+ box.innerHTML="";
+ if(!matches.length){box.textContent="Nessuna partita inserita.";return;}
+ const ordered=[...matches].sort((a,b)=>(a.data||"").localeCompare(b.data||"") || (Number(a.id)||0)-(Number(b.id)||0));
+ for(const m of ordered){
+  const div=document.createElement("div");div.className="item"+(isCompleted(m)?" completed":"");div.dataset.matchId=String(m.id);
+  if(isCompleted(m)){const badge=document.createElement("span");badge.className="completed-label";badge.textContent="PARTITA CONCLUSA";div.append(badge);}
+  const title=document.createElement("strong");title.className="match-title";title.textContent=`${m.data||"Data da definire"} · ${m.ora||"Ora da definire"} — ${m.squadraCasa} ${m.setCasa} - ${m.setOspite} ${m.squadraOspite}`;div.append(title);
+  const info=document.createElement("p");info.className="muted";info.textContent=[m.gara?"Gara "+m.gara:"",m.competizione,(m.punteggiSet||[]).join(" · "),m.campo].filter(Boolean).join(" | ");div.append(info);
+  const actions=document.createElement("div");actions.className="actions";
+  const edit=document.createElement("button");edit.className="secondary";edit.textContent="Modifica";edit.onclick=()=>editMatch(m.id);
+  const del=document.createElement("button");del.className="danger";del.textContent="Elimina";del.onclick=()=>deleteMatch(m.id);
+  actions.append(edit,del);div.append(actions);box.append(div);
+  if(activeEditId!==null && String(activeEditId)===String(m.id)){const inline=document.createElement("div");inline.className="editor-inline";div.append(inline);inline.append(editor);}
+ }
+}
+async function loginWithPassword(candidate, automatic=false){
+ password=String(candidate||"").trim();
+ if(!password){$("loginStatus").textContent="Inserisci la password.";return false;}
+ $("loginStatus").textContent=automatic?"Ripristino della sessione…":"Verifica password in corso…";
+ $("loginBtn").disabled=true;
+ try{
+  await request("auth",{method:"POST",body:JSON.stringify({password,tipo:automatic?"ripristino":"login"})});
+  const d=await request("results");
+  matches=Array.isArray(d.partite)?d.partite:[];
+  allen=d.allenamenti&&Array.isArray(d.allenamenti.serie)?d.allenamenti:JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI));
+  if(!Array.isArray(allen.eccezioni)) allen.eccezioni=[];
+  // Conserva la password soltanto nella sessione della scheda, non in modo permanente.
+  try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
+  $("password").value="";
+  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();$("statPanel").hidden=false;caricaStat();
+  try{localStorage.setItem("lvt-admin","1");}catch{}   // le visite da questo dispositivo non vengono contate
+  $("loginStatus").textContent="";
+  render();
+  return true;
+ }catch(e){
+  password="";
+  try{sessionStorage.removeItem("lvtAdminPassword");}catch{}
+  $("loginStatus").textContent=(automatic?"Sessione scaduta, inserisci nuovamente la password. ":"Accesso non riuscito: ")+e.message;
+  return false;
+ }finally{$("loginBtn").disabled=false;}
+}
+  // ---------- ALLENAMENTI (stesse regole nel sito e nell'admin) ----------
+const ALLENAMENTI_PREDEFINITI = {
+  serie: [
+    { id: "lun", giorno: 1, inizio: "17:00", fine: "19:00", palestra: "Scuola Media, Via G. B. Vico 4, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+    { id: "mer", giorno: 3, inizio: "19:00", fine: "21:00", palestra: "Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+    { id: "ven", giorno: 5, inizio: "18:30", fine: "20:00", palestra: "Scuola Media, Via G. B. Vico 4, 20851 Lissone", dal: "2026-10-01", al: "2027-06-30" },
+  ],
+  eccezioni: [],   // { data, serie, annullato } oppure { data, serie, inizio, fine, palestra }
+};
+const isoData = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// tutti gli allenamenti tra due date (incluse); quelli eliminati hanno annullato: true
+function espandiAllenamenti(cfg, da, a) {
+  const out = [], ecc = {};
+  (cfg.eccezioni || []).forEach(e => { ecc[`${e.data}|${e.serie}`] = e; });
+  for (let d = new Date(da.getFullYear(), da.getMonth(), da.getDate()); d <= a; d.setDate(d.getDate() + 1)) {
+    const iso = isoData(d);
+    (cfg.serie || []).forEach(s => {
+      if (Number(s.giorno) !== d.getDay() || (s.dal && iso < s.dal) || (s.al && iso > s.al)) return;
+      const e = ecc[`${iso}|${s.id}`];
+      out.push({ data: iso, d: new Date(d), serie: s.id,
+        inizio: (e && e.inizio) || s.inizio, fine: (e && e.fine) || s.fine, palestra: (e && e.palestra) || s.palestra,
+        modificato: !!(e && !e.annullato), annullato: !!(e && e.annullato) });
+    });
+  }
+  return out.sort((x, y) => x.data.localeCompare(y.data) || x.inizio.localeCompare(y.inizio));
+}
+
+let allen = JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI)), settimaneAllen = 4, formAperto = null;
+const GIORNI = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+const itData = iso => iso ? iso.split("-").reverse().join("/") : "";
+const oggiIso = () => isoData(new Date());
+const giornoPrima = iso => { const [y,m,d] = iso.split("-").map(Number); return isoData(new Date(y, m - 1, d - 1)); };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function allenStatus(msg) { $("allenStatus").textContent = msg; }
+
+async function salvaAllen(descrizione) {
+  const res = await request("results", { method: "PUT", body: JSON.stringify({ password, partite: matches, allenamenti: allen }) });
+  if (!res.allenamenti) throw new Error("il servizio di salvataggio (Worker Cloudflare) non è ancora aggiornato: gli allenamenti non vengono salvati.");
+  allen = res.allenamenti;
+  allenStatus(descrizione + " ✔");
+}
+async function modificaAllen(fn, descrizione) {
+  const vecchio = JSON.parse(JSON.stringify(allen));
+  fn();
+  formAperto = null; renderAllen();
+  try { await salvaAllen(descrizione); renderAllen(); }
+  catch (e) { allen = vecchio; renderAllen(); allenStatus("Salvataggio non riuscito: " + e.message); }
+}
+
+function campiForm(v, conGiorno, conDal) {
+  return `<div class="mini-form"><div class="grid">
+    ${conGiorno ? `<div><label>Giorno</label><select data-f="giorno">${[1,2,3,4,5,6,0].map(g => `<option value="${g}" ${Number(v.giorno) === g ? "selected" : ""}>${GIORNI[g]}</option>`).join("")}</select></div>` : ""}
+    <div><label>Inizio</label><input data-f="inizio" type="time" value="${esc(v.inizio)}"></div>
+    <div><label>Fine</label><input data-f="fine" type="time" value="${esc(v.fine)}"></div>
+    <div style="grid-column:1/-1"><label>Palestra / indirizzo</label><input data-f="palestra" list="palestre" value="${esc(v.palestra)}"></div>
+    ${conDal ? `<div><label>${conDal}</label><input data-f="dal" type="date" value="${esc(v.dal)}"></div>` : ""}
+  </div><div class="actions"><button data-a="ok">Salva</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`;
+}
+function leggiForm(box) {
+  const v = {}; box.querySelectorAll("[data-f]").forEach(i => v[i.dataset.f] = i.value.trim());
+  if (v.giorno !== undefined) v.giorno = Number(v.giorno);
+  return v;
+}
+function validi(v) {
+  if (!/^\d{1,2}:\d{2}$/.test(v.inizio || "") || !/^\d{1,2}:\d{2}$/.test(v.fine || "")) return "Inserisci orario di inizio e fine.";
+  if (v.fine <= v.inizio) return "L'orario di fine deve essere dopo l'inizio.";
+  if (!v.palestra) return "Inserisci la palestra.";
+  if ("dal" in v && !/^\d{4}-\d{2}-\d{2}$/.test(v.dal)) return "Inserisci la data.";
+  return "";
+}
+
+function renderAllen() {
+  const oggi = oggiIso();
+  // --- serie
+  const sl = $("serieList"); sl.innerHTML = "";
+  const attive = allen.serie.filter(s => !s.al || s.al >= oggi).sort((x, y) => ((x.giorno + 6) % 7) - ((y.giorno + 6) % 7) || x.inizio.localeCompare(y.inizio));
+  if (!attive.length) sl.innerHTML = '<p class="muted">Nessuna serie attiva.</p>';
+  attive.forEach(s => {
+    const div = document.createElement("div"); div.className = "item";
+    div.innerHTML = `<strong class="match-title">${GIORNI[s.giorno]} · ${s.inizio}–${s.fine}</strong>
+      <p class="muted">${esc(s.palestra)}<br>dal ${itData(s.dal) || "inizio stagione"} ${s.al ? "al " + itData(s.al) : ""}</p>
+      <div class="actions"><button class="secondary" data-a="cambia">Cambia per sempre</button><button class="danger" data-a="termina">Termina serie</button></div>`;
+    const apri = tipo => {
+      formAperto = `${tipo}-${s.id}`;
+      const v = tipo === "cambia" ? { ...s, dal: s.dal > oggi ? s.dal : oggi } : { dal: oggi };
+      const box = document.createElement("div");
+      box.innerHTML = tipo === "cambia" ? campiForm(v, false, "Valido a partire dal")
+        : `<div class="mini-form"><label>Ultimo allenamento di questa serie (compreso)</label><input data-f="dal" type="date" value="${oggi}">
+           <div class="actions"><button class="danger" data-a="ok">Termina</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`;
+      div.append(box);
+      box.onclick = e => {
+        const b = e.target.closest("button[data-a]"); if (!b) return;
+        if (b.dataset.a === "annulla") { formAperto = null; return renderAllen(); }
+        const n = leggiForm(box);
+        if (tipo === "cambia") {
+          const err = validi(n); if (err) return allenStatus(err);
+          modificaAllen(() => {
+            if (!s.dal || n.dal <= s.dal) Object.assign(s, { inizio: n.inizio, fine: n.fine, palestra: n.palestra });
+            else {   // dalla data scelta nasce una nuova serie, la vecchia finisce il giorno prima
+              const nuova = { ...s, id: s.id.split("-")[0] + "-" + n.dal, inizio: n.inizio, fine: n.fine, palestra: n.palestra, dal: n.dal };
+              s.al = giornoPrima(n.dal);
+              allen.serie.push(nuova);
+              allen.eccezioni.forEach(e => { if (e.serie === s.id && e.data >= n.dal) e.serie = nuova.id; });
+            }
+          }, `${GIORNI[s.giorno]}: nuovi orari/palestra salvati dal ${itData(n.dal)}`);
+        } else {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(n.dal)) return allenStatus("Inserisci la data.");
+          if (!confirm(`Togliere tutti gli allenamenti del ${GIORNI[s.giorno].toLowerCase()} dopo il ${itData(n.dal)}?`)) return;
+          modificaAllen(() => { s.al = n.dal; }, `Serie del ${GIORNI[s.giorno].toLowerCase()} terminata il ${itData(n.dal)}`);
+        }
+      };
+    };
+    const chiudiForm = () => document.querySelectorAll("#allenPanel .mini-form").forEach(x => x.parentElement.remove());
+    div.querySelector('[data-a="cambia"]').onclick = () => { chiudiForm(); apri("cambia"); };
+    div.querySelector('[data-a="termina"]').onclick = () => { chiudiForm(); apri("termina"); };
+    sl.append(div);
+  });
+
+  // --- singoli allenamenti
+  const al = $("allenList"); al.innerHTML = "";
+  const da = new Date(); const a = new Date(); a.setDate(a.getDate() + settimaneAllen * 7);
+  const lista = espandiAllenamenti(allen, da, a);
+  if (!lista.length) al.innerHTML = '<p class="muted">Nessun allenamento nelle prossime settimane.</p>';
+  lista.forEach(x => {
+    const div = document.createElement("div");
+    div.className = "allen-item" + (x.annullato ? " annullato" : x.modificato ? " modif" : "");
+    div.innerHTML = `<strong>${GIORNI[x.d.getDay()]} ${itData(x.data)} · ${x.inizio}–${x.fine}</strong>
+      ${x.annullato ? '<span class="tag off">ELIMINATO</span>' : x.modificato ? '<span class="tag">VARIATO</span>' : ""}
+      <div class="muted">${esc(x.palestra)}</div>
+      <div class="actions">${x.annullato || x.modificato ? '<button class="secondary" data-a="ripristina">Ripristina come la serie</button>' : ""}
+        ${x.annullato ? "" : '<button class="secondary" data-a="modifica">Modifica solo questo</button><button class="danger" data-a="elimina">Elimina solo questo</button>'}</div>`;
+    const togli = () => { allen.eccezioni = allen.eccezioni.filter(e => !(e.data === x.data && e.serie === x.serie)); };
+    div.onclick = e => {
+      const b = e.target.closest("button[data-a]"); if (!b || b.closest(".mini-form")) return;
+      const quando = `${GIORNI[x.d.getDay()].toLowerCase()} ${itData(x.data)}`;
+      if (b.dataset.a === "ripristina") return modificaAllen(togli, `Allenamento di ${quando} ripristinato`);
+      if (b.dataset.a === "elimina") {
+        if (!confirm(`Eliminare l'allenamento di ${quando}?`)) return;
+        return modificaAllen(() => { togli(); allen.eccezioni.push({ data: x.data, serie: x.serie, annullato: true }); }, `Allenamento di ${quando} eliminato`);
+      }
+      if (b.dataset.a === "modifica") {
+        renderAllen();
+        const tgt = [...$("allenList").children][lista.indexOf(x)];
+        const box = document.createElement("div"); box.innerHTML = campiForm(x, false, "");
+        tgt.append(box);
+        box.onclick = ev => {
+          const bb = ev.target.closest("button[data-a]"); if (!bb) return;
+          if (bb.dataset.a === "annulla") return renderAllen();
+          const n = leggiForm(box); const err = validi(n); if (err) return allenStatus(err);
+          const s = allen.serie.find(z => z.id === x.serie) || {};
+          modificaAllen(() => {
+            togli();
+            if (n.inizio !== s.inizio || n.fine !== s.fine || n.palestra !== s.palestra)
+              allen.eccezioni.push({ data: x.data, serie: x.serie, inizio: n.inizio, fine: n.fine, palestra: n.palestra });
+          }, `Allenamento di ${quando} modificato`);
+        };
+      }
+    };
+    al.append(div);
+  });
+}
+$("moreAllenBtn").onclick = () => { settimaneAllen += 4; renderAllen(); };
+$("addSerieBtn").onclick = () => {
+  renderAllen();
+  const box = document.createElement("div");
+  box.innerHTML = campiForm({ giorno: 2, inizio: "18:00", fine: "20:00", palestra: "", dal: oggiIso() }, true, "A partire dal");
+  $("serieList").append(box);
+  box.onclick = e => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    if (b.dataset.a === "annulla") return renderAllen();
+    const n = leggiForm(box); const err = validi(n); if (err) return allenStatus(err);
+    const fineStagione = allen.serie.reduce((m, s) => s.al > m ? s.al : m, "2027-06-30");
+    modificaAllen(() => allen.serie.push({ id: `g${n.giorno}-${n.dal}-${Date.now() % 100000}`, giorno: n.giorno, inizio: n.inizio, fine: n.fine, palestra: n.palestra, dal: n.dal, al: fineStagione }),
+      `Nuovo allenamento del ${GIORNI[n.giorno].toLowerCase()} aggiunto`);
+  };
+};
+
+// ================= STATISTICHE DEL SITO =================
+let giorniStat = 30;
+const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Classifica e statistiche", altre: "Altre partite" };
+const NOMI_FUNZ = { naviga: "Naviga (Google Maps)", locandina: "Locandina aperta", condividi: "Locandina condivisa", copia: "Locandina copiata",
+  scarica: "Locandina scaricata", retro: "Modalità Retro", crea_app: "Pulsante Crea app", app_installata: "App installata",
+  apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV" };
+const NOMI_ERR = { risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
+const somma = (dest, json) => { let o = {}; try { o = JSON.parse(json || "{}"); } catch {} for (const [k, v] of Object.entries(o)) dest[k] = (dest[k] || 0) + v; };
+const giorniDa = (dal, n) => { const [y, m, d] = dal.split("-").map(Number); return [...Array(n)].map((_, i) => isoData(new Date(y, m - 1, d + i))); };
+
+function barreSvg(valori, etichette, alt) {
+  const W = 640, H = 200, L = 46, B = 34, max = Math.max(1, ...valori), bw = (W - L) / valori.length;
+  const ystep = Math.max(1, Math.ceil(max / 4));
+  let g = ""; for (let v = 0; v <= max; v += ystep) { const y = H - B - (H - B - 8) * v / max; g += `<line class="g" x1="${L}" x2="${W}" y1="${y}" y2="${y}"/><text x="${L - 8}" y="${y + 7}" text-anchor="end">${v}</text>`; }
+  const barre = valori.map((v, i) => { const h = (H - B - 8) * v / max, x = L + i * bw + 1;
+    return `<rect class="b" x="${x}" y="${H - B - h}" width="${Math.max(1, bw - 2)}" height="${h}" rx="${h ? 2 : 0}"><title>${etichette[i].full}: ${v}</title></rect>`; }).join("");
+  const step = Math.ceil(valori.length / 6);
+  const lab = etichette.map((e, i) => i % step ? "" : `<text x="${L + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${e.short}</text>`).join("");
+  return `<div class="st-graf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${alt}">${g}${barre}${lab}</svg></div>`;
+}
+function listaBarre(obj, nomi) {
+  const l = Object.entries(obj).sort((x, y) => y[1] - x[1]); if (!l.length) return '<p class="muted">Ancora nessun dato.</p>';
+  const max = l[0][1];
+  return `<div class="st-barre">${l.map(([k, v]) => `<div><span>${esc(nomi[k] || k)}</span><i style="width:${Math.max(2, 100 * v / max)}%"></i><em>${v}</em></div>`).join("")}</div>`;
+}
+function calcolaStat(d) {
+  const visite = d.righe.filter(r => !r.seguito);
+  const perVisita = {};   // vid|giorno -> sezioni ed errori uniti (una visita può inviare più volte)
+  d.righe.forEach(r => { const k = r.vid + "|" + r.giorno; const v = perVisita[k] = perVisita[k] || { viste: {}, err: 0 };
+    somma(v.viste, r.viste); try { if (Object.keys(JSON.parse(r.errori || "{}")).length) v.err = 1; } catch {} });
+  const gruppi = Object.values(perVisita);
+  const viste = {}, funzioni = {}, errori = {};
+  d.righe.forEach(r => { somma(viste, r.viste); somma(funzioni, r.funzioni); somma(errori, r.errori); });
+  const giorni = giorniDa(d.dal, d.giorni), oggi = isoData(new Date());
+  const perGiorno = giorni.map(g => visite.filter(r => r.giorno === g).length);
+  const ore = [...Array(24)].map((_, h) => visite.filter(r => r.ora === h).length);
+  const vids = new Set(visite.map(r => r.vid));
+  const app = visite.filter(r => r.modalita === "app").length;
+  const disp = {}; visite.forEach(r => { disp[r.dispositivo] = (disp[r.dispositivo] || 0) + 1; });
+  const durate = visite.map(r => r.durata).filter(x => x > 0).sort((x, y) => x - y);
+  const mediana = durate.length ? durate[Math.floor(durate.length / 2)] : 0;
+  // fedeltà: chi è arrivato da almeno 7 giorni, è tornato entro una settimana?
+  const limite = isoData(new Date(Date.now() - 7 * 864e5));
+  const candidati = d.storico.filter(s => s.primo >= d.dal && s.primo <= limite);
+  const tornati = candidati.filter(s => { const p = new Date(s.primo), fine = isoData(new Date(p.getTime() + 7 * 864e5));
+    return String(s.giorni || "").split(",").some(g => g > s.primo && g <= fine); });
+  const fedelta = candidati.length >= 3 ? tornati.length / candidati.length : null;
+  const esplorazione = gruppi.length ? gruppi.reduce((a, g) => a + Object.keys(g.viste).length, 0) / gruppi.length : 0;
+  const affidabilita = gruppi.length ? 1 - gruppi.filter(g => g.err).length / gruppi.length : 1;
+  const quotaApp = visite.length ? app / visite.length : 0;
+  // indice di usabilità 0-100
+  const parti = [
+    { nome: "Fedeltà", peso: 40, v: fedelta === null ? null : Math.min(1, fedelta / 0.5), testo: fedelta === null ? "ancora pochi dati" : `${Math.round(fedelta * 100)}% torna entro 7 giorni` },
+    { nome: "Esplorazione", peso: 30, v: Math.max(0, Math.min(1, (esplorazione - 1) / 2)), testo: `${esplorazione.toFixed(1).replace(".", ",")} sezioni per visita` },
+    { nome: "Affidabilità", peso: 20, v: affidabilita, testo: `${Math.round(affidabilita * 100)}% delle visite senza errori` },
+    { nome: "Uso come app", peso: 10, v: Math.min(1, quotaApp / 0.3), testo: `${Math.round(quotaApp * 100)}% delle visite dall'app installata` },
+  ];
+  const valide = parti.filter(p => p.v !== null), pesoTot = valide.reduce((x, p) => x + p.peso, 0);
+  const indice = visite.length ? Math.round(100 * valide.reduce((x, p) => x + p.v * p.peso, 0) / pesoTot) : null;
+  return { visite, vids, app, disp, mediana, perGiorno, giorni, ore, viste, funzioni, errori, parti, indice, oggi };
+}
+function renderStat(d) {
+  const s = calcolaStat(d), box = $("statBody");
+  if (!s.visite.length) { box.innerHTML = `<p class="muted">Nessuna visita registrata negli ultimi ${d.giorni} giorni${d.visiteInterne ? ` (escluse ${d.visiteInterne} tue)` : ""}. I dati arrivano dalle visite successive all'aggiornamento del sito.</p>`; return; }
+  const giudizio = s.indice >= 75 ? ["ottimo", "#1f9d55"] : s.indice >= 50 ? ["buono", "#153b72"] : s.indice >= 30 ? ["migliorabile", "#c77700"] : ["basso", "#a72c35"];
+  const mm = Math.floor(s.mediana / 60), ss = s.mediana % 60;
+  const et = s.giorni.map(g => { const [y, m, dd] = g.split("-"); return { short: `${dd}/${m}`, full: `${dd}/${m}/${y}` }; });
+  box.innerHTML = `
+    <div class="st-tiles">
+      <div class="st-tile"><b>${s.visite.length}</b><span>Visite</span></div>
+      <div class="st-tile"><b>${s.vids.size}</b><span>Visitatori (stima)</span></div>
+      <div class="st-tile"><b>${s.visite.filter(r => r.nuovo).length}</b><span>Nuovi</span></div>
+      <div class="st-tile"><b>${mm}:${String(ss).padStart(2, "0")}</b><span>Durata tipica</span></div>
+    </div>
+    <div class="indice"><div class="voto" style="color:${giudizio[1]}">${s.indice}<small>${giudizio[0]}</small></div>
+      <div><strong>Indice di usabilità (0–100)</strong><ul>${s.parti.map(p => `<li><b>${p.nome}</b> (peso ${p.peso}): ${p.testo}</li>`).join("")}</ul></div></div>
+    <h3 class="sub">Visite al giorno</h3>${barreSvg(s.perGiorno, et, "Visite al giorno")}
+    <h3 class="sub">A che ora</h3>${barreSvg(s.ore, s.ore.map((_, h) => ({ short: `${h}`, full: `ore ${h}-${h + 1}` })), "Visite per ora del giorno")}
+    <p class="muted">Dispositivi: ${Object.entries(s.disp).map(([k, v]) => `${k} ${Math.round(100 * v / s.visite.length)}%`).join(" · ")} · da app installata ${Math.round(100 * s.app / s.visite.length)}%${d.visiteInterne ? ` · escluse ${d.visiteInterne} tue visite` : ""}</p>
+    <h3 class="sub">Sezioni più viste</h3>${listaBarre(s.viste, NOMI_VISTE)}
+    <h3 class="sub">Funzioni usate</h3>${listaBarre(s.funzioni, NOMI_FUNZ)}
+    <h3 class="sub">Problemi</h3>${Object.keys(s.errori).length ? listaBarre(s.errori, NOMI_ERR) : '<p class="muted">Nessun errore registrato 👍</p>'}`;
+  const acc = d.accessi || [];
+  $("accessiBody").innerHTML = acc.length ? `<table class="acc"><thead><tr><th>Quando</th><th>Esito</th><th>Dispositivo</th><th>Da</th></tr></thead><tbody>${acc.map(x => {
+    const t = new Date(x.ts), q = `${t.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" })} ${t.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`;
+    return `<tr><td>${q}</td><td class="${x.esito === "ok" ? "" : "ko"}">${x.esito === "ok" ? (x.tipo === "ripristino" ? "ok (ripristino)" : "ok") : "password errata"}</td><td>${esc(x.dispositivo)} · ${esc(x.browser)}</td><td>${esc(x.luogo || "–")}</td></tr>`; }).join("")}</tbody></table>`
+    : '<p class="muted">Nessun accesso registrato.</p>';
+}
+async function caricaStat() {
+  $("statBody").innerHTML = '<p class="muted">Caricamento…</p>';
+  try { renderStat(await request("stats", { method: "POST", body: JSON.stringify({ password, giorni: giorniStat }) })); }
+  catch (e) {
+    $("statBody").innerHTML = `<p class="status">Statistiche non disponibili: ${esc(e.message)}.${/non configurato|404|Endpoint/.test(e.message) ? " Serve aggiornare il Worker Cloudflare e collegare il database (vedi istruzioni)." : ""}</p>`;
+    $("accessiBody").innerHTML = "";
+  }
+}
+$("periodo").onclick = e => { const b = e.target.closest("button[data-g]"); if (!b) return;
+  giorniStat = Number(b.dataset.g); document.querySelectorAll("#periodo button").forEach(x => x.classList.toggle("on", x === b)); caricaStat(); };
+$("loginBtn").onclick=()=>loginWithPassword($("password").value);
+// Ripristina l'accesso al ricaricamento della pagina, finché la sessione della scheda è attiva.
+try{
+ const savedPassword=sessionStorage.getItem("lvtAdminPassword");
+ if(savedPassword) loginWithPassword(savedPassword,true);
+}catch{}
+$("matchForm").onsubmit=async e=>{
+ e.preventDefault();
+ const id=$("matchId").value||((matches.reduce((n,m)=>Math.max(n,Number(m.id)||0),0))+1);
+ const existing=matches.find(x=>String(x.id)===String(id))||{};
+ const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
+ const oldMatches=JSON.parse(JSON.stringify(matches));
+ const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
+ try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");}
+ catch(err){matches=oldMatches;render();showStatus(err.message==="Password errata"
+  ? "Salvataggio non riuscito: password non riconosciuta dal Worker. Esci e accedi di nuovo verificando la password."
+  : "Salvataggio non riuscito: "+err.message);}
+};
+function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
+ $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
+async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
+function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
+$("resetBtn").onclick=resetForm;
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+</script></body></html>
