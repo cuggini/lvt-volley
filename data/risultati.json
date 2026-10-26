@@ -59,7 +59,7 @@
       "squadraCasa": "PAL. CONCOREZZO SSD",
       "squadraOspite": "LVT LISSONE VOLLEY TEAM",
       "setCasa": 0,
-      "setOspite": 0,
+      "setOspite": 3,
       "punteggiSet": [],
       "campo": "Palazzetto dello Sport, Via Giorgio La Pira 12, 20863 Concorezzo"
     },
@@ -297,5 +297,37 @@
       "punteggiSet": [],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
     }
-  ]
+  ],
+  "allenamenti": {
+    "serie": [
+      {
+        "id": "lun",
+        "giorno": 1,
+        "inizio": "17:00",
+        "fine": "19:00",
+        "palestra": "Scuola Media, Via G. B. Vico 4, 20851 Lissone",
+        "dal": "2026-10-01",
+        "al": "2027-06-30"
+      },
+      {
+        "id": "mer",
+        "giorno": 3,
+        "inizio": "19:00",
+        "fine": "21:00",
+        "palestra": "Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone",
+        "dal": "2026-10-01",
+        "al": "2027-06-30"
+      },
+      {
+        "id": "ven",
+        "giorno": 5,
+        "inizio": "18:30",
+        "fine": "20:00",
+        "palestra": "Scuola Media, Via G. B. Vico 4, 20851 Lissone",
+        "dal": "2026-10-01",
+        "al": "2027-06-30"
+      }
+    ],
+    "eccezioni": []
+  }
 }
