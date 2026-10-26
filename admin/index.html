@@ -20,6 +20,19 @@ button{cursor:pointer;border:0;background:#153b72;color:white;font-weight:700;ma
 .allen-item.modif{border-style:solid;border-color:#5d6573}.tag{display:inline-block;border-radius:5px;padding:2px 7px;font-size:12px;font-weight:750;margin-left:6px;background:#5d6573;color:#fff}.tag.off{background:#a72c35}
 h3.sub{margin:22px 0 6px}select{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box;background:#fff}
 .mini-form{margin-top:10px;padding:12px;border:1px solid #dce5f2;border-radius:10px;background:#f8faff}
+.st-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.st-tile{border:1px solid #dce2eb;border-radius:10px;padding:10px 6px;text-align:center}
+.st-tile b{display:block;font-size:22px}.st-tile span{font-size:12px;color:#647086}
+.indice{display:flex;gap:16px;align-items:center;border:1px solid #dce2eb;border-radius:12px;padding:14px;margin:12px 0}
+.indice .voto{font-size:44px;font-weight:800;min-width:90px;text-align:center;line-height:1}.indice .voto small{display:block;font-size:13px;font-weight:700;margin-top:4px}
+.indice ul{margin:0;padding-left:18px;font-size:14px;line-height:1.6}
+.st-graf{border:1px solid #dce2eb;border-radius:10px;padding:8px}.st-graf svg{width:100%;height:auto;display:block}
+.st-graf .b{fill:#153b72}.st-graf .b:hover{fill:#24569a}.st-graf text{fill:#647086;font-size:20px}.st-graf .g{stroke:#e5e9f0}
+.st-barre{display:grid;gap:6px}.st-barre div{display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;font-size:14px}
+.st-barre i{display:block;height:10px;border-radius:0 4px 4px 0;background:#153b72}.st-barre em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+table.acc{width:100%;border-collapse:collapse;font-size:13px}table.acc td,table.acc th{padding:7px 6px;border-bottom:1px solid #e5e9f0;text-align:left}
+table.acc .ko{color:#a72c35;font-weight:700}.periodo{display:flex;gap:6px;flex-wrap:wrap}.periodo button{width:auto;margin-top:0;padding:8px 14px}
+.periodo button.on{background:#153b72;color:#fff}
+@media(max-width:600px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.st-barre div{grid-template-columns:110px 1fr 40px}.indice{flex-direction:column;align-items:flex-start}}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -55,6 +68,15 @@ h3.sub{margin:22px 0 6px}select{font:inherit;padding:11px;border-radius:8px;bord
 <option value="Scuola Media, Via G. B. Vico 4, 20851 Lissone">
 <option value="Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone">
 </datalist>
+</section>
+<section class="panel" id="statPanel" hidden>
+<div class="section-heading"><h2>Statistiche del sito</h2>
+<div class="periodo" id="periodo"><button class="secondary" data-g="7">7 giorni</button><button class="secondary on" data-g="30">30 giorni</button><button class="secondary" data-g="90">90 giorni</button></div></div>
+<p class="muted">Dati anonimi: nessun cookie, nessun indirizzo IP, nessun nome. Le visite fatte dai dispositivi con cui accedi all'admin non vengono contate.</p>
+<div id="statBody"><p class="muted">Caricamento…</p></div>
+<h3 class="sub">Accessi alla pagina admin</h3>
+<p class="muted">Ultimi 40 tentativi. «Ripristino» è la riapertura della pagina con la sessione già attiva. Un «password errata» che non sei stato tu è un campanello d'allarme: in quel caso cambia la password su Cloudflare.</p>
+<div id="accessiBody"></div>
 </section>
 <div id="editorHome"></div>
 <section class="panel" id="editor" hidden>
@@ -116,7 +138,7 @@ async function loginWithPassword(candidate, automatic=false){
  $("loginStatus").textContent=automatic?"Ripristino della sessione…":"Verifica password in corso…";
  $("loginBtn").disabled=true;
  try{
-  await request("auth",{method:"POST",body:JSON.stringify({password})});
+  await request("auth",{method:"POST",body:JSON.stringify({password,tipo:automatic?"ripristino":"login"})});
   const d=await request("results");
   matches=Array.isArray(d.partite)?d.partite:[];
   allen=d.allenamenti&&Array.isArray(d.allenamenti.serie)?d.allenamenti:JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI));
@@ -124,7 +146,8 @@ async function loginWithPassword(candidate, automatic=false){
   // Conserva la password soltanto nella sessione della scheda, non in modo permanente.
   try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
   $("password").value="";
-  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();
+  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();$("statPanel").hidden=false;caricaStat();
+  try{localStorage.setItem("lvt-admin","1");}catch{}   // le visite da questo dispositivo non vengono contate
   $("loginStatus").textContent="";
   render();
   return true;
@@ -311,6 +334,105 @@ $("addSerieBtn").onclick = () => {
       `Nuovo allenamento del ${GIORNI[n.giorno].toLowerCase()} aggiunto`);
   };
 };
+
+// ================= STATISTICHE DEL SITO =================
+let giorniStat = 30;
+const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Classifica e statistiche", altre: "Altre partite" };
+const NOMI_FUNZ = { naviga: "Naviga (Google Maps)", locandina: "Locandina aperta", condividi: "Locandina condivisa", copia: "Locandina copiata",
+  scarica: "Locandina scaricata", retro: "Modalità Retro", crea_app: "Pulsante Crea app", app_installata: "App installata",
+  apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV" };
+const NOMI_ERR = { risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
+const somma = (dest, json) => { let o = {}; try { o = JSON.parse(json || "{}"); } catch {} for (const [k, v] of Object.entries(o)) dest[k] = (dest[k] || 0) + v; };
+const giorniDa = (dal, n) => { const [y, m, d] = dal.split("-").map(Number); return [...Array(n)].map((_, i) => isoData(new Date(y, m - 1, d + i))); };
+
+function barreSvg(valori, etichette, alt) {
+  const W = 640, H = 200, L = 46, B = 34, max = Math.max(1, ...valori), bw = (W - L) / valori.length;
+  const ystep = Math.max(1, Math.ceil(max / 4));
+  let g = ""; for (let v = 0; v <= max; v += ystep) { const y = H - B - (H - B - 8) * v / max; g += `<line class="g" x1="${L}" x2="${W}" y1="${y}" y2="${y}"/><text x="${L - 8}" y="${y + 7}" text-anchor="end">${v}</text>`; }
+  const barre = valori.map((v, i) => { const h = (H - B - 8) * v / max, x = L + i * bw + 1;
+    return `<rect class="b" x="${x}" y="${H - B - h}" width="${Math.max(1, bw - 2)}" height="${h}" rx="${h ? 2 : 0}"><title>${etichette[i].full}: ${v}</title></rect>`; }).join("");
+  const step = Math.ceil(valori.length / 6);
+  const lab = etichette.map((e, i) => i % step ? "" : `<text x="${L + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${e.short}</text>`).join("");
+  return `<div class="st-graf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${alt}">${g}${barre}${lab}</svg></div>`;
+}
+function listaBarre(obj, nomi) {
+  const l = Object.entries(obj).sort((x, y) => y[1] - x[1]); if (!l.length) return '<p class="muted">Ancora nessun dato.</p>';
+  const max = l[0][1];
+  return `<div class="st-barre">${l.map(([k, v]) => `<div><span>${esc(nomi[k] || k)}</span><i style="width:${Math.max(2, 100 * v / max)}%"></i><em>${v}</em></div>`).join("")}</div>`;
+}
+function calcolaStat(d) {
+  const visite = d.righe.filter(r => !r.seguito);
+  const perVisita = {};   // vid|giorno -> sezioni ed errori uniti (una visita può inviare più volte)
+  d.righe.forEach(r => { const k = r.vid + "|" + r.giorno; const v = perVisita[k] = perVisita[k] || { viste: {}, err: 0 };
+    somma(v.viste, r.viste); try { if (Object.keys(JSON.parse(r.errori || "{}")).length) v.err = 1; } catch {} });
+  const gruppi = Object.values(perVisita);
+  const viste = {}, funzioni = {}, errori = {};
+  d.righe.forEach(r => { somma(viste, r.viste); somma(funzioni, r.funzioni); somma(errori, r.errori); });
+  const giorni = giorniDa(d.dal, d.giorni), oggi = isoData(new Date());
+  const perGiorno = giorni.map(g => visite.filter(r => r.giorno === g).length);
+  const ore = [...Array(24)].map((_, h) => visite.filter(r => r.ora === h).length);
+  const vids = new Set(visite.map(r => r.vid));
+  const app = visite.filter(r => r.modalita === "app").length;
+  const disp = {}; visite.forEach(r => { disp[r.dispositivo] = (disp[r.dispositivo] || 0) + 1; });
+  const durate = visite.map(r => r.durata).filter(x => x > 0).sort((x, y) => x - y);
+  const mediana = durate.length ? durate[Math.floor(durate.length / 2)] : 0;
+  // fedeltà: chi è arrivato da almeno 7 giorni, è tornato entro una settimana?
+  const limite = isoData(new Date(Date.now() - 7 * 864e5));
+  const candidati = d.storico.filter(s => s.primo >= d.dal && s.primo <= limite);
+  const tornati = candidati.filter(s => { const p = new Date(s.primo), fine = isoData(new Date(p.getTime() + 7 * 864e5));
+    return String(s.giorni || "").split(",").some(g => g > s.primo && g <= fine); });
+  const fedelta = candidati.length >= 3 ? tornati.length / candidati.length : null;
+  const esplorazione = gruppi.length ? gruppi.reduce((a, g) => a + Object.keys(g.viste).length, 0) / gruppi.length : 0;
+  const affidabilita = gruppi.length ? 1 - gruppi.filter(g => g.err).length / gruppi.length : 1;
+  const quotaApp = visite.length ? app / visite.length : 0;
+  // indice di usabilità 0-100
+  const parti = [
+    { nome: "Fedeltà", peso: 40, v: fedelta === null ? null : Math.min(1, fedelta / 0.5), testo: fedelta === null ? "ancora pochi dati" : `${Math.round(fedelta * 100)}% torna entro 7 giorni` },
+    { nome: "Esplorazione", peso: 30, v: Math.max(0, Math.min(1, (esplorazione - 1) / 2)), testo: `${esplorazione.toFixed(1).replace(".", ",")} sezioni per visita` },
+    { nome: "Affidabilità", peso: 20, v: affidabilita, testo: `${Math.round(affidabilita * 100)}% delle visite senza errori` },
+    { nome: "Uso come app", peso: 10, v: Math.min(1, quotaApp / 0.3), testo: `${Math.round(quotaApp * 100)}% delle visite dall'app installata` },
+  ];
+  const valide = parti.filter(p => p.v !== null), pesoTot = valide.reduce((x, p) => x + p.peso, 0);
+  const indice = visite.length ? Math.round(100 * valide.reduce((x, p) => x + p.v * p.peso, 0) / pesoTot) : null;
+  return { visite, vids, app, disp, mediana, perGiorno, giorni, ore, viste, funzioni, errori, parti, indice, oggi };
+}
+function renderStat(d) {
+  const s = calcolaStat(d), box = $("statBody");
+  if (!s.visite.length) { box.innerHTML = `<p class="muted">Nessuna visita registrata negli ultimi ${d.giorni} giorni${d.visiteInterne ? ` (escluse ${d.visiteInterne} tue)` : ""}. I dati arrivano dalle visite successive all'aggiornamento del sito.</p>`; return; }
+  const giudizio = s.indice >= 75 ? ["ottimo", "#1f9d55"] : s.indice >= 50 ? ["buono", "#153b72"] : s.indice >= 30 ? ["migliorabile", "#c77700"] : ["basso", "#a72c35"];
+  const mm = Math.floor(s.mediana / 60), ss = s.mediana % 60;
+  const et = s.giorni.map(g => { const [y, m, dd] = g.split("-"); return { short: `${dd}/${m}`, full: `${dd}/${m}/${y}` }; });
+  box.innerHTML = `
+    <div class="st-tiles">
+      <div class="st-tile"><b>${s.visite.length}</b><span>Visite</span></div>
+      <div class="st-tile"><b>${s.vids.size}</b><span>Visitatori (stima)</span></div>
+      <div class="st-tile"><b>${s.visite.filter(r => r.nuovo).length}</b><span>Nuovi</span></div>
+      <div class="st-tile"><b>${mm}:${String(ss).padStart(2, "0")}</b><span>Durata tipica</span></div>
+    </div>
+    <div class="indice"><div class="voto" style="color:${giudizio[1]}">${s.indice}<small>${giudizio[0]}</small></div>
+      <div><strong>Indice di usabilità (0–100)</strong><ul>${s.parti.map(p => `<li><b>${p.nome}</b> (peso ${p.peso}): ${p.testo}</li>`).join("")}</ul></div></div>
+    <h3 class="sub">Visite al giorno</h3>${barreSvg(s.perGiorno, et, "Visite al giorno")}
+    <h3 class="sub">A che ora</h3>${barreSvg(s.ore, s.ore.map((_, h) => ({ short: `${h}`, full: `ore ${h}-${h + 1}` })), "Visite per ora del giorno")}
+    <p class="muted">Dispositivi: ${Object.entries(s.disp).map(([k, v]) => `${k} ${Math.round(100 * v / s.visite.length)}%`).join(" · ")} · da app installata ${Math.round(100 * s.app / s.visite.length)}%${d.visiteInterne ? ` · escluse ${d.visiteInterne} tue visite` : ""}</p>
+    <h3 class="sub">Sezioni più viste</h3>${listaBarre(s.viste, NOMI_VISTE)}
+    <h3 class="sub">Funzioni usate</h3>${listaBarre(s.funzioni, NOMI_FUNZ)}
+    <h3 class="sub">Problemi</h3>${Object.keys(s.errori).length ? listaBarre(s.errori, NOMI_ERR) : '<p class="muted">Nessun errore registrato 👍</p>'}`;
+  const acc = d.accessi || [];
+  $("accessiBody").innerHTML = acc.length ? `<table class="acc"><thead><tr><th>Quando</th><th>Esito</th><th>Dispositivo</th><th>Da</th></tr></thead><tbody>${acc.map(x => {
+    const t = new Date(x.ts), q = `${t.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" })} ${t.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`;
+    return `<tr><td>${q}</td><td class="${x.esito === "ok" ? "" : "ko"}">${x.esito === "ok" ? (x.tipo === "ripristino" ? "ok (ripristino)" : "ok") : "password errata"}</td><td>${esc(x.dispositivo)} · ${esc(x.browser)}</td><td>${esc(x.luogo || "–")}</td></tr>`; }).join("")}</tbody></table>`
+    : '<p class="muted">Nessun accesso registrato.</p>';
+}
+async function caricaStat() {
+  $("statBody").innerHTML = '<p class="muted">Caricamento…</p>';
+  try { renderStat(await request("stats", { method: "POST", body: JSON.stringify({ password, giorni: giorniStat }) })); }
+  catch (e) {
+    $("statBody").innerHTML = `<p class="status">Statistiche non disponibili: ${esc(e.message)}.${/non configurato|404|Endpoint/.test(e.message) ? " Serve aggiornare il Worker Cloudflare e collegare il database (vedi istruzioni)." : ""}</p>`;
+    $("accessiBody").innerHTML = "";
+  }
+}
+$("periodo").onclick = e => { const b = e.target.closest("button[data-g]"); if (!b) return;
+  giorniStat = Number(b.dataset.g); document.querySelectorAll("#periodo button").forEach(x => x.classList.toggle("on", x === b)); caricaStat(); };
 $("loginBtn").onclick=()=>loginWithPassword($("password").value);
 // Ripristina l'accesso al ricaricamento della pagina, finché la sessione della scheda è attiva.
 try{
@@ -335,5 +457,5 @@ async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;c
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 $("resetBtn").onclick=resetForm;
-$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
 </script></body></html>
