@@ -33,6 +33,12 @@ table.acc{width:100%;border-collapse:collapse;font-size:13px}table.acc td,table.
 table.acc .ko{color:#a72c35;font-weight:700}.periodo{display:flex;gap:6px;flex-wrap:wrap}.periodo button{width:auto;margin-top:0;padding:8px 14px}
 .periodo button.on{background:#153b72;color:#fff}
 @media(max-width:600px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.st-barre div{grid-template-columns:110px 1fr 40px}.indice{flex-direction:column;align-items:flex-start}}
+/* sezioni apribili/chiudibili */
+.barra-admin{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}.barra-admin[hidden]{display:none}.barra-admin button{width:auto;margin:0;padding:9px 18px}
+h2.apri{margin:0}h2.apri button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;cursor:pointer;font:inherit;font-weight:700;color:#172033}
+h2.apri button:focus-visible{outline:2px solid #153b72;outline-offset:4px;border-radius:6px}
+h2.apri .fr{color:#153b72;font-size:.8em;flex:none}h2.apri .conta{font-weight:600;color:#647086;font-size:.75em;margin-left:6px}
+.panel.chiusa .corpo-sez{display:none}.panel.chiusa{padding-top:16px;padding-bottom:16px}.corpo-sez{margin-top:14px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -46,11 +52,12 @@ table.acc .ko{color:#a72c35;font-weight:700}.periodo{display:flex;gap:6px;flex-w
 <p class="status" id="loginStatus" role="status"></p>
 <p class="muted">La password resta memorizzata solo nella sessione di questa scheda e viene cancellata quando premi Esci o chiudi la sessione del browser.</p>
 </section>
+<div class="barra-admin" id="barraAdmin" hidden><span class="muted">Tocca una sezione per aprirla o chiuderla.</span>
+<button class="secondary" id="logoutBtn">Esci</button></div>
 <section class="panel" id="matchesPanel" hidden>
 <div class="section-heading"><h2>Partite (dalla prima all'ultima)</h2></div>
 <p class="muted">Le partite concluse sono evidenziate in verde. Puoi comunque modificarle.</p>
 <div id="matches"></div>
-<button class="secondary" id="logoutBtn">Esci</button>
 </section>
 <section class="panel" id="allenPanel" hidden>
 <div class="section-heading"><h2>Allenamenti</h2></div>
@@ -129,7 +136,7 @@ function render(){
   const edit=document.createElement("button");edit.className="secondary";edit.textContent="Modifica";edit.onclick=()=>editMatch(m.id);
   const del=document.createElement("button");del.className="danger";del.textContent="Elimina";del.onclick=()=>deleteMatch(m.id);
   actions.append(edit,del);div.append(actions);box.append(div);
-  if(activeEditId!==null && String(activeEditId)===String(m.id)){const inline=document.createElement("div");inline.className="editor-inline";div.append(inline);inline.append(editor);}
+  if(activeEditId!==null && String(activeEditId)===String(m.id)){const inline=document.createElement("div");inline.className="editor-inline";div.append(inline);inline.append(editor);editor.classList.remove("chiusa");}
  }
 }
 async function loginWithPassword(candidate, automatic=false){
@@ -146,7 +153,7 @@ async function loginWithPassword(candidate, automatic=false){
   // Conserva la password soltanto nella sessione della scheda, non in modo permanente.
   try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
   $("password").value="";
-  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();$("statPanel").hidden=false;caricaStat();
+  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();$("statPanel").hidden=false;$("barraAdmin").hidden=false;if(sezioniAperte.statPanel)caricaStat();
   try{localStorage.setItem("lvt-admin","1");}catch{}   // le visite da questo dispositivo non vengono contate
   $("loginStatus").textContent="";
   render();
@@ -433,6 +440,38 @@ async function caricaStat() {
 }
 $("periodo").onclick = e => { const b = e.target.closest("button[data-g]"); if (!b) return;
   giorniStat = Number(b.dataset.g); document.querySelectorAll("#periodo button").forEach(x => x.classList.toggle("on", x === b)); caricaStat(); };
+
+// ================= SEZIONI APRIBILI / CHIUDIBILI =================
+const SEZIONI = ["matchesPanel", "editor", "allenPanel", "statPanel"];
+let sezioniAperte = {};
+try { sezioniAperte = JSON.parse(localStorage.getItem("lvt-admin-sezioni") || "{}"); } catch {}
+function rendiApribile(sec) {
+  const h = sec.querySelector("h2"), testa = h.closest(".section-heading") || h;
+  const corpo = document.createElement("div"); corpo.className = "corpo-sez";
+  while (testa.nextSibling) corpo.append(testa.nextSibling);
+  // eventuali comandi accanto al titolo (es. scelta del periodo) vanno nel corpo
+  if (testa !== h) [...testa.children].filter(x => x !== h).reverse().forEach(x => corpo.prepend(x));
+  const nuovo = document.createElement("h2"); nuovo.className = "apri";
+  const testo = document.createElement("span"); testo.textContent = h.textContent; if (h.id) testo.id = h.id;
+  const btn = document.createElement("button"); btn.type = "button";
+  const conta = document.createElement("span"); conta.className = "conta";
+  const fr = document.createElement("span"); fr.className = "fr"; fr.setAttribute("aria-hidden", "true");
+  const sx = document.createElement("span"); sx.append(testo, conta);
+  btn.append(sx, fr); nuovo.append(btn);
+  testa.replaceWith(nuovo); sec.append(corpo);
+  btn.onclick = () => impostaSezione(sec.id, sec.classList.contains("chiusa"));
+  impostaSezione(sec.id, !!sezioniAperte[sec.id], true);
+}
+function impostaSezione(id, aperta, iniziale) {
+  const sec = $(id); if (!sec) return;
+  sec.classList.toggle("chiusa", !aperta);
+  const btn = sec.querySelector("h2.apri button");
+  btn.setAttribute("aria-expanded", aperta);
+  btn.querySelector(".fr").textContent = aperta ? "▲" : "▼";
+  if (!iniziale) { sezioniAperte[id] = aperta; try { localStorage.setItem("lvt-admin-sezioni", JSON.stringify(sezioniAperte)); } catch {} }
+  if (aperta && id === "statPanel" && password && !iniziale) caricaStat();
+}
+SEZIONI.forEach(id => rendiApribile($(id)));
 $("loginBtn").onclick=()=>loginWithPassword($("password").value);
 // Ripristina l'accesso al ricaricamento della pagina, finché la sessione della scheda è attiva.
 try{
@@ -457,5 +496,5 @@ async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;c
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 $("resetBtn").onclick=resetForm;
-$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("barraAdmin").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
 </script></body></html>
