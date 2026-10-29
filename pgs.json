@@ -1,7 +1,7 @@
 {
-  "aggiornato": "2026-10-26T22:41:52.392Z",
+  "aggiornato": "2026-10-29T23:26:18.010Z",
   "classifica": {
-    "aggiornato": "2026-10-26T17:11:38.475Z",
+    "aggiornato": "2026-10-29T22:38:03.813Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
@@ -24,6 +24,15 @@
         "setPersi": 3
       },
       {
+        "squadra": "MOTTASTAMPI AGRATE",
+        "punti": 6,
+        "giocate": 3,
+        "vinte": 2,
+        "perse": 1,
+        "setVinti": 6,
+        "setPersi": 4
+      },
+      {
         "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
         "punti": 6,
         "giocate": 3,
@@ -35,20 +44,11 @@
       {
         "squadra": "PGS DOMANI",
         "punti": 3,
-        "giocate": 2,
+        "giocate": 3,
         "vinte": 1,
-        "perse": 1,
+        "perse": 2,
         "setVinti": 3,
-        "setPersi": 4
-      },
-      {
-        "squadra": "MOTTASTAMPI AGRATE",
-        "punti": 3,
-        "giocate": 2,
-        "vinte": 1,
-        "perse": 1,
-        "setVinti": 3,
-        "setPersi": 4
+        "setPersi": 7
       },
       {
         "squadra": "PAL. CONCOREZZO SSD",
@@ -194,9 +194,13 @@
       "ora": "21.00",
       "casa": "PGS DOMANI",
       "ospite": "MOTTASTAMPI AGRATE",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "15-25",
+        "22-25",
+        "19-25"
+      ],
       "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
     },
     {
