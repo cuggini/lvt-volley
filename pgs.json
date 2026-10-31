@@ -1,10 +1,19 @@
 {
-  "aggiornato": "2026-10-29T23:26:18.010Z",
+  "aggiornato": "2026-10-31T00:14:15.024Z",
   "classifica": {
-    "aggiornato": "2026-10-29T22:38:03.813Z",
+    "aggiornato": "2026-10-30T22:44:25.059Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
+      {
+        "squadra": "PLESIOS VOLLEY",
+        "punti": 9,
+        "giocate": 4,
+        "vinte": 3,
+        "perse": 1,
+        "setVinti": 10,
+        "setPersi": 3
+      },
       {
         "squadra": "NET VOLLEY CINISELLO BLU",
         "punti": 7,
@@ -13,15 +22,6 @@
         "perse": 1,
         "setVinti": 8,
         "setPersi": 4
-      },
-      {
-        "squadra": "PLESIOS VOLLEY",
-        "punti": 6,
-        "giocate": 3,
-        "vinte": 2,
-        "perse": 1,
-        "setVinti": 7,
-        "setPersi": 3
       },
       {
         "squadra": "MOTTASTAMPI AGRATE",
@@ -53,11 +53,11 @@
       {
         "squadra": "PAL. CONCOREZZO SSD",
         "punti": 0,
-        "giocate": 3,
+        "giocate": 4,
         "vinte": 0,
-        "perse": 3,
+        "perse": 4,
         "setVinti": 2,
-        "setPersi": 9
+        "setPersi": 12
       }
     ]
   },
@@ -209,9 +209,13 @@
       "ora": "20.30",
       "casa": "PLESIOS VOLLEY",
       "ospite": "PAL. CONCOREZZO SSD",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-19",
+        "25-23",
+        "25-21"
+      ],
       "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
     },
     {
