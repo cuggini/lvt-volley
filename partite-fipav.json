@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-25T23:23:26.195Z",
+  "aggiornato": "2026-10-31T20:09:11.264Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -121,10 +121,14 @@
       "ora": "18.00",
       "casa": "COOP LA VIGNETTA VOLLEY CORMANO",
       "ospite": "ASD POLISPORTIVA DI NOVA",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-15",
+        "25-13",
+        "25-23"
+      ],
+      "provvisorio": true,
       "campo": "PALAZZETTO BRUSUGLIO, CORMANO - BRUSUGLIO - VIA BIZZOZZERO 14"
     },
     {
@@ -133,10 +137,16 @@
       "ora": "18.00",
       "casa": "PRO VICTORIA PALLAVOLO FUCSIA",
       "ospite": "NUOVA LAVANDERIA BAREGGIA SERVICE",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 2,
+      "setOspite": 3,
+      "parziali": [
+        "20-25",
+        "25-21",
+        "25-19",
+        "20-25",
+        "13-15"
+      ],
+      "provvisorio": true,
       "campo": "SCUOLA MEDIA BELLANI, MONZA - VIA SILVIO PELLICO"
     },
     {

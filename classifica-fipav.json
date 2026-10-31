@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-25T23:23:26.194Z",
+  "aggiornato": "2026-10-31T20:09:11.262Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -16,40 +16,28 @@
       "puntiSubiti": "132"
     },
     {
-      "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
-      "societa": "LISSONE VOLLEY TEAM",
-      "punti": "3",
-      "giocate": "1",
-      "vinte": "1",
-      "perse": "0",
-      "setVinti": "3",
-      "setPersi": "1",
-      "puntiFatti": "94",
-      "puntiSubiti": "82"
-    },
-    {
       "squadra": "COOP LA VIGNETTA VOLLEY CORMANO",
       "societa": "ASD VOLLEY CORMANO",
-      "punti": "3",
-      "giocate": "2",
-      "vinte": "1",
+      "punti": "6",
+      "giocate": "3",
+      "vinte": "2",
       "perse": "1",
-      "setVinti": "4",
+      "setVinti": "7",
       "setPersi": "3",
-      "puntiFatti": "159",
-      "puntiSubiti": "148"
+      "puntiFatti": "234",
+      "puntiSubiti": "199"
     },
     {
-      "squadra": "ASD POLISPORTIVA DI NOVA",
-      "societa": "POLISPORTIVA DI NOVA",
-      "punti": "3",
+      "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
+      "societa": "LISSONE VOLLEY TEAM",
+      "punti": "5",
       "giocate": "2",
-      "vinte": "1",
-      "perse": "1",
-      "setVinti": "4",
-      "setPersi": "4",
-      "puntiFatti": "171",
-      "puntiSubiti": "170"
+      "vinte": "2",
+      "perse": "0",
+      "setVinti": "6",
+      "setPersi": "3",
+      "puntiFatti": "199",
+      "puntiSubiti": "185"
     },
     {
       "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
@@ -64,16 +52,28 @@
       "puntiSubiti": "175"
     },
     {
+      "squadra": "ASD POLISPORTIVA DI NOVA",
+      "societa": "POLISPORTIVA DI NOVA",
+      "punti": "3",
+      "giocate": "3",
+      "vinte": "1",
+      "perse": "2",
+      "setVinti": "4",
+      "setPersi": "7",
+      "puntiFatti": "222",
+      "puntiSubiti": "245"
+    },
+    {
       "squadra": "PRO VICTORIA PALLAVOLO FUCSIA",
       "societa": "PRO VICTORIA PALLAVOLO S.R.L.",
-      "punti": "0",
-      "giocate": "2",
+      "punti": "1",
+      "giocate": "3",
       "vinte": "0",
-      "perse": "2",
-      "setVinti": "1",
-      "setPersi": "6",
-      "puntiFatti": "133",
-      "puntiSubiti": "176"
+      "perse": "3",
+      "setVinti": "3",
+      "setPersi": "9",
+      "puntiFatti": "236",
+      "puntiSubiti": "281"
     },
     {
       "squadra": "VOLLEY CUSANO",
