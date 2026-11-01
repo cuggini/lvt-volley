@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-31T20:09:11.264Z",
+  "aggiornato": "2026-11-01T16:15:10.676Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -109,10 +109,14 @@
       "ora": "17.30",
       "casa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
       "ospite": "VOLLEY CUSANO",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-22",
+        "25-18",
+        "25-5"
+      ],
+      "provvisorio": true,
       "campo": "CENTRO SPORTIVO MONS. SALA, BOLLATE - VIALE REPUBBLICA 6"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-10-31T20:09:11.262Z",
+  "aggiornato": "2026-11-01T16:15:10.675Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -28,6 +28,18 @@
       "puntiSubiti": "199"
     },
     {
+      "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
+      "societa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
+      "punti": "6",
+      "giocate": "3",
+      "vinte": "2",
+      "perse": "1",
+      "setVinti": "7",
+      "setPersi": "4",
+      "puntiFatti": "251",
+      "puntiSubiti": "220"
+    },
+    {
       "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
       "societa": "LISSONE VOLLEY TEAM",
       "punti": "5",
@@ -38,18 +50,6 @@
       "setPersi": "3",
       "puntiFatti": "199",
       "puntiSubiti": "185"
-    },
-    {
-      "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "societa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "punti": "3",
-      "giocate": "2",
-      "vinte": "1",
-      "perse": "1",
-      "setVinti": "4",
-      "setPersi": "4",
-      "puntiFatti": "176",
-      "puntiSubiti": "175"
     },
     {
       "squadra": "ASD POLISPORTIVA DI NOVA",
@@ -79,13 +79,13 @@
       "squadra": "VOLLEY CUSANO",
       "societa": "VOLLEY ANGELS CUSANO ASD",
       "punti": "0",
-      "giocate": "1",
+      "giocate": "2",
       "vinte": "0",
-      "perse": "1",
+      "perse": "2",
       "setVinti": "0",
-      "setPersi": "3",
-      "puntiFatti": "57",
-      "puntiSubiti": "77"
+      "setPersi": "6",
+      "puntiFatti": "102",
+      "puntiSubiti": "152"
     }
   ]
 }
