@@ -1,8 +1,20 @@
 {
-  "aggiornato": "2026-11-01T16:15:10.675Z",
+  "aggiornato": "2026-11-07T22:26:07.738Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
+    {
+      "squadra": "COOP LA VIGNETTA VOLLEY CORMANO",
+      "societa": "ASD VOLLEY CORMANO",
+      "punti": "9",
+      "giocate": "4",
+      "vinte": "3",
+      "perse": "1",
+      "setVinti": "10",
+      "setPersi": "3",
+      "puntiFatti": "309",
+      "puntiSubiti": "241"
+    },
     {
       "squadra": "CA GROUP NET VOLLEY",
       "societa": "NET VOLLEY CINISELLO A.S.D.",
@@ -14,18 +26,6 @@
       "setPersi": "1",
       "puntiFatti": "170",
       "puntiSubiti": "132"
-    },
-    {
-      "squadra": "COOP LA VIGNETTA VOLLEY CORMANO",
-      "societa": "ASD VOLLEY CORMANO",
-      "punti": "6",
-      "giocate": "3",
-      "vinte": "2",
-      "perse": "1",
-      "setVinti": "7",
-      "setPersi": "3",
-      "puntiFatti": "234",
-      "puntiSubiti": "199"
     },
     {
       "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
@@ -79,13 +79,13 @@
       "squadra": "VOLLEY CUSANO",
       "societa": "VOLLEY ANGELS CUSANO ASD",
       "punti": "0",
-      "giocate": "2",
+      "giocate": "3",
       "vinte": "0",
-      "perse": "2",
+      "perse": "3",
       "setVinti": "0",
-      "setPersi": "6",
-      "puntiFatti": "102",
-      "puntiSubiti": "152"
+      "setPersi": "9",
+      "puntiFatti": "144",
+      "puntiSubiti": "227"
     }
   ]
 }

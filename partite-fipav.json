@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-01T16:15:10.676Z",
+  "aggiornato": "2026-11-07T22:26:07.739Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -171,10 +171,14 @@
       "ora": "18.30",
       "casa": "VOLLEY CUSANO",
       "ospite": "COOP LA VIGNETTA VOLLEY CORMANO",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "10-25",
+        "15-25",
+        "17-25"
+      ],
+      "provvisorio": true,
       "campo": "CENTRO POLISPORTIVO COMUNALE, CUSANO MILANINO - VIALE ROMA 2"
     },
     {
