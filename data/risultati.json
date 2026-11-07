@@ -339,6 +339,11 @@
         "inizio": "19:00",
         "fine": "21:00",
         "palestra": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
+      },
+      {
+        "data": "2026-12-25",
+        "serie": "ven",
+        "annullato": true
       }
     ]
   }
