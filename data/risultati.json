@@ -344,6 +344,11 @@
         "data": "2026-12-25",
         "serie": "ven",
         "annullato": true
+      },
+      {
+        "data": "2027-01-01",
+        "serie": "ven",
+        "annullato": true
       }
     ]
   }
