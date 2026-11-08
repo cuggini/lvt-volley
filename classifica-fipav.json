@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-07T22:26:07.738Z",
+  "aggiornato": "2026-11-08T15:25:51.335Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -18,14 +18,14 @@
     {
       "squadra": "CA GROUP NET VOLLEY",
       "societa": "NET VOLLEY CINISELLO A.S.D.",
-      "punti": "6",
-      "giocate": "2",
-      "vinte": "2",
+      "punti": "8",
+      "giocate": "3",
+      "vinte": "3",
       "perse": "0",
-      "setVinti": "6",
-      "setPersi": "1",
-      "puntiFatti": "170",
-      "puntiSubiti": "132"
+      "setVinti": "9",
+      "setPersi": "3",
+      "puntiFatti": "284",
+      "puntiSubiti": "237"
     },
     {
       "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
@@ -42,14 +42,14 @@
     {
       "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
       "societa": "LISSONE VOLLEY TEAM",
-      "punti": "5",
-      "giocate": "2",
+      "punti": "6",
+      "giocate": "3",
       "vinte": "2",
-      "perse": "0",
-      "setVinti": "6",
-      "setPersi": "3",
-      "puntiFatti": "199",
-      "puntiSubiti": "185"
+      "perse": "1",
+      "setVinti": "8",
+      "setPersi": "6",
+      "puntiFatti": "304",
+      "puntiSubiti": "299"
     },
     {
       "squadra": "ASD POLISPORTIVA DI NOVA",
