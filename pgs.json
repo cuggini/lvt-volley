@@ -1,10 +1,19 @@
 {
-  "aggiornato": "2026-11-08T15:25:41.524Z",
+  "aggiornato": "2026-11-09T10:31:22.089Z",
   "classifica": {
-    "aggiornato": "2026-11-08T16:19:57.932Z",
+    "aggiornato": "2026-11-09T09:04:10.301Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
+      {
+        "squadra": "PLESIOS VOLLEY",
+        "punti": 12,
+        "giocate": 5,
+        "vinte": 4,
+        "perse": 1,
+        "setVinti": 13,
+        "setPersi": 4
+      },
       {
         "squadra": "NET VOLLEY CINISELLO BLU",
         "punti": 10,
@@ -13,15 +22,6 @@
         "perse": 2,
         "setVinti": 12,
         "setPersi": 7
-      },
-      {
-        "squadra": "PLESIOS VOLLEY",
-        "punti": 9,
-        "giocate": 4,
-        "vinte": 3,
-        "perse": 1,
-        "setVinti": 10,
-        "setPersi": 3
       },
       {
         "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
@@ -35,11 +35,11 @@
       {
         "squadra": "MOTTASTAMPI AGRATE",
         "punti": 9,
-        "giocate": 4,
+        "giocate": 5,
         "vinte": 3,
-        "perse": 1,
-        "setVinti": 9,
-        "setPersi": 5
+        "perse": 2,
+        "setVinti": 10,
+        "setPersi": 8
       },
       {
         "squadra": "PGS DOMANI",
@@ -255,9 +255,14 @@
       "ora": "19.00",
       "casa": "MOTTASTAMPI AGRATE",
       "ospite": "PLESIOS VOLLEY",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "17-25",
+        "25-27",
+        "25-19",
+        "20-25"
+      ],
       "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
     },
     {
