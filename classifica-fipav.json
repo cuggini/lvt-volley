@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-08T15:25:51.335Z",
+  "aggiornato": "2026-11-11T18:48:17.474Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -54,26 +54,26 @@
     {
       "squadra": "ASD POLISPORTIVA DI NOVA",
       "societa": "POLISPORTIVA DI NOVA",
-      "punti": "3",
-      "giocate": "3",
-      "vinte": "1",
+      "punti": "6",
+      "giocate": "4",
+      "vinte": "2",
       "perse": "2",
-      "setVinti": "4",
-      "setPersi": "7",
-      "puntiFatti": "222",
-      "puntiSubiti": "245"
+      "setVinti": "7",
+      "setPersi": "8",
+      "puntiFatti": "315",
+      "puntiSubiti": "326"
     },
     {
       "squadra": "PRO VICTORIA PALLAVOLO FUCSIA",
       "societa": "PRO VICTORIA PALLAVOLO S.R.L.",
       "punti": "1",
-      "giocate": "3",
+      "giocate": "4",
       "vinte": "0",
-      "perse": "3",
-      "setVinti": "3",
-      "setPersi": "9",
-      "puntiFatti": "236",
-      "puntiSubiti": "281"
+      "perse": "4",
+      "setVinti": "4",
+      "setPersi": "12",
+      "puntiFatti": "317",
+      "puntiSubiti": "374"
     },
     {
       "squadra": "VOLLEY CUSANO",

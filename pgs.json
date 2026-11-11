@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-11T11:19:12.200Z",
+  "aggiornato": "2026-11-11T18:48:06.082Z",
   "classifica": {
     "aggiornato": "2026-11-11T10:03:45.676Z",
     "girone": "Girone 8",
@@ -296,17 +296,6 @@
       "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
     },
     {
-      "gara": "1458",
-      "data": "15/11/2026",
-      "ora": "15.00",
-      "casa": "NET VOLLEY CINISELLO BLU",
-      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
-    },
-    {
       "gara": "1456",
       "data": "15/11/2026",
       "ora": "18.00",
@@ -360,6 +349,17 @@
       "setOspite": null,
       "parziali": [],
       "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1458",
+      "data": "24/11/2026",
+      "ora": "21.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
     },
     {
       "gara": "1464",

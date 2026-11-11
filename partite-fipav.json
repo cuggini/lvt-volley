@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-08T15:25:51.336Z",
+  "aggiornato": "2026-11-11T18:48:17.475Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -159,10 +159,15 @@
       "ora": "18.30",
       "casa": "ASD POLISPORTIVA DI NOVA",
       "ospite": "PRO VICTORIA PALLAVOLO FUCSIA",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 3,
+      "setOspite": 1,
+      "parziali": [
+        "18-25",
+        "25-14",
+        "25-20",
+        "25-22"
+      ],
+      "provvisorio": true,
       "campo": "PALESTRA SCUOLA ELEMENTARE, NOVA MILANESE - VIA VENEZIA"
     },
     {
