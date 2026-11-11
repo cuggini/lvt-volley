@@ -1,10 +1,19 @@
 {
-  "aggiornato": "2026-11-09T10:31:22.089Z",
+  "aggiornato": "2026-11-11T11:19:12.200Z",
   "classifica": {
-    "aggiornato": "2026-11-09T09:04:10.301Z",
+    "aggiornato": "2026-11-11T10:03:45.676Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
+      {
+        "squadra": "NET VOLLEY CINISELLO BLU",
+        "punti": 13,
+        "giocate": 6,
+        "vinte": 4,
+        "perse": 2,
+        "setVinti": 15,
+        "setPersi": 7
+      },
       {
         "squadra": "PLESIOS VOLLEY",
         "punti": 12,
@@ -13,15 +22,6 @@
         "perse": 1,
         "setVinti": 13,
         "setPersi": 4
-      },
-      {
-        "squadra": "NET VOLLEY CINISELLO BLU",
-        "punti": 10,
-        "giocate": 5,
-        "vinte": 3,
-        "perse": 2,
-        "setVinti": 12,
-        "setPersi": 7
       },
       {
         "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
@@ -53,11 +53,11 @@
       {
         "squadra": "PAL. CONCOREZZO SSD",
         "punti": 0,
-        "giocate": 4,
+        "giocate": 5,
         "vinte": 0,
-        "perse": 4,
+        "perse": 5,
         "setVinti": 2,
-        "setPersi": 12
+        "setPersi": 15
       }
     ]
   },
@@ -271,9 +271,13 @@
       "ora": "10.00",
       "casa": "PAL. CONCOREZZO SSD",
       "ospite": "NET VOLLEY CINISELLO BLU",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "8-25",
+        "18-25",
+        "19-25"
+      ],
       "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
     },
     {
