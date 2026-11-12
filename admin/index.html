@@ -39,6 +39,12 @@ h2.apri{margin:0}h2.apri button{all:unset;box-sizing:border-box;display:flex;ali
 h2.apri button:focus-visible{outline:2px solid #153b72;outline-offset:4px;border-radius:6px}
 h2.apri .fr{color:#153b72;font-size:.8em;flex:none}h2.apri .conta{font-weight:600;color:#647086;font-size:.75em;margin-left:6px}
 .panel.chiusa .corpo-sez{display:none}.panel.chiusa{padding-top:16px;padding-bottom:16px}.corpo-sez{margin-top:14px}
+/* notifiche */
+textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box;min-height:80px;resize:vertical}
+.proposta{position:fixed;left:12px;right:12px;bottom:12px;z-index:9000;max-width:560px;margin:auto;background:#fff;border:2px solid #153b72;border-radius:14px;padding:14px;box-shadow:0 8px 30px #15223840}
+.proposta[hidden]{display:none}.proposta strong{display:block;margin-bottom:6px}.proposta textarea{min-height:70px}
+.notif-item{border-bottom:1px solid #e5e9f0;padding:8px 0;font-size:14px}.notif-item small{color:#647086}
+.cifra{font-size:28px;font-weight:800}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -76,6 +82,20 @@ h2.apri .fr{color:#153b72;font-size:.8em;flex:none}h2.apri .conta{font-weight:60
 <option value="Palazzetto Piermarini, Via Gian Lorenzo Bernini 15, 20851 Lissone">
 </datalist>
 </section>
+<section class="panel" id="notifPanel" hidden>
+<div class="section-heading"><h2>Notifiche e diretta</h2></div>
+<p class="muted">Le notifiche arrivano sui telefoni dei genitori che hanno toccato «🔔 AVVISI» sul sito. Quando cambi orari, date o palestre di partite e allenamenti l'admin ti propone in automatico di avvisarli.</p>
+<p><span class="cifra" id="iscritti">–</span> <span class="muted">telefoni iscritti alle notifiche</span></p>
+<h3 class="sub">Invia un avviso</h3>
+<label for="notifTitolo">Titolo</label><input id="notifTitolo" value="LVT · Avviso" maxlength="80">
+<label for="notifTesto" style="margin-top:10px">Messaggio</label><textarea id="notifTesto" maxlength="300" placeholder="Es. Sabato ritrovo alle 14.15 in palestra, divisa blu"></textarea>
+<button id="notifInvia">📣 Invia notifica</button>
+<p class="status" id="notifStatus" role="status"></p>
+<h3 class="sub">Ultime notifiche inviate</h3>
+<div id="notifLista"><p class="muted">–</p></div>
+<h3 class="sub">Punteggio in diretta</h3>
+<p class="muted">Il genitore in palestra apre <a href="/lvt-volley/live/" target="_blank">cuggini.github.io/lvt-volley/live/</a> e segna i punti con la password della diretta (diversa da quella admin). Sul sito compare il riquadro rosso «IN DIRETTA».</p>
+</section>
 <section class="panel" id="statPanel" hidden>
 <div class="section-heading"><h2>Statistiche del sito</h2>
 <div class="periodo" id="periodo"><button class="secondary" data-g="7">7 giorni</button><button class="secondary on" data-g="30">30 giorni</button><button class="secondary" data-g="90">90 giorni</button></div></div>
@@ -107,6 +127,13 @@ h2.apri .fr{color:#153b72;font-size:.8em;flex:none}h2.apri .conta{font-weight:60
 <div class="status" id="status" role="status"></div>
 </section>
 </main>
+<div class="proposta" id="proposta" hidden role="dialog" aria-label="Avvisare i genitori?">
+<strong>📣 Avvisare i genitori con una notifica?</strong>
+<label for="propTesto" class="muted" style="font-weight:400">Puoi modificare il testo prima di inviarlo:</label>
+<textarea id="propTesto" maxlength="300"></textarea>
+<div class="actions"><button id="propInvia">Invia notifica</button><button class="secondary" id="propNo">Non inviare</button></div>
+<p class="status" id="propStatus" role="status"></p>
+</div>
 <script>
 const endpoint="https://lvt.cicciodesimone.workers.dev";
 let matches=[], password="", activeEditId=null;
@@ -153,7 +180,7 @@ async function loginWithPassword(candidate, automatic=false){
   // Conserva la password soltanto nella sessione della scheda, non in modo permanente.
   try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
   $("password").value="";
-  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();$("statPanel").hidden=false;$("barraAdmin").hidden=false;if(sezioniAperte.statPanel)caricaStat();
+  $("editor").hidden=false;$("matchesPanel").hidden=false;$("loginPanel").hidden=true;$("allenPanel").hidden=false;renderAllen();$("statPanel").hidden=false;$("notifPanel").hidden=false;$("barraAdmin").hidden=false;if(sezioniAperte.statPanel)caricaStat();if(sezioniAperte.notifPanel)caricaNotifiche();
   try{localStorage.setItem("lvt-admin","1");}catch{}   // le visite da questo dispositivo non vengono contate
   $("loginStatus").textContent="";
   render();
@@ -206,11 +233,11 @@ async function salvaAllen(descrizione) {
   allen = res.allenamenti;
   allenStatus(descrizione + " ✔");
 }
-async function modificaAllen(fn, descrizione) {
+async function modificaAllen(fn, descrizione, avviso) {
   const vecchio = JSON.parse(JSON.stringify(allen));
   fn();
   formAperto = null; renderAllen();
-  try { await salvaAllen(descrizione); renderAllen(); }
+  try { await salvaAllen(descrizione); renderAllen(); proponiNotifica("LVT · Allenamenti", "🏐 " + (avviso || descrizione)); }
   catch (e) { allen = vecchio; renderAllen(); allenStatus("Salvataggio non riuscito: " + e.message); }
 }
 
@@ -269,11 +296,13 @@ function renderAllen() {
               allen.serie.push(nuova);
               allen.eccezioni.forEach(e => { if (e.serie === s.id && e.data >= n.dal) e.serie = nuova.id; });
             }
-          }, `${GIORNI[s.giorno]}: nuovi orari/palestra salvati dal ${itData(n.dal)}`);
+          }, `${GIORNI[s.giorno]}: nuovi orari/palestra salvati dal ${itData(n.dal)}`,
+            `Dal ${itData(n.dal)} l'allenamento del ${GIORNI[s.giorno].toLowerCase()} è ${n.inizio.replace(":", ".")}–${n.fine.replace(":", ".")} · ${n.palestra}`);
         } else {
           if (!/^\d{4}-\d{2}-\d{2}$/.test(n.dal)) return allenStatus("Inserisci la data.");
           if (!confirm(`Togliere tutti gli allenamenti del ${GIORNI[s.giorno].toLowerCase()} dopo il ${itData(n.dal)}?`)) return;
-          modificaAllen(() => { s.al = n.dal; }, `Serie del ${GIORNI[s.giorno].toLowerCase()} terminata il ${itData(n.dal)}`);
+          modificaAllen(() => { s.al = n.dal; }, `Serie del ${GIORNI[s.giorno].toLowerCase()} terminata il ${itData(n.dal)}`,
+            `Dopo il ${itData(n.dal)} non ci sarà più l'allenamento del ${GIORNI[s.giorno].toLowerCase()}`);
         }
       };
     };
@@ -300,10 +329,11 @@ function renderAllen() {
     div.onclick = e => {
       const b = e.target.closest("button[data-a]"); if (!b || b.closest(".mini-form")) return;
       const quando = `${GIORNI[x.d.getDay()].toLowerCase()} ${itData(x.data)}`;
-      if (b.dataset.a === "ripristina") return modificaAllen(togli, `Allenamento di ${quando} ripristinato`);
+      if (b.dataset.a === "ripristina") { const s0 = allen.serie.find(z => z.id === x.serie) || {};
+        return modificaAllen(togli, `Allenamento di ${quando} ripristinato`, `Allenamento di ${quando} confermato: ${String(s0.inizio || "").replace(":", ".")}–${String(s0.fine || "").replace(":", ".")} · ${s0.palestra || ""}`); }
       if (b.dataset.a === "elimina") {
         if (!confirm(`Eliminare l'allenamento di ${quando}?`)) return;
-        return modificaAllen(() => { togli(); allen.eccezioni.push({ data: x.data, serie: x.serie, annullato: true }); }, `Allenamento di ${quando} eliminato`);
+        return modificaAllen(() => { togli(); allen.eccezioni.push({ data: x.data, serie: x.serie, annullato: true }); }, `Allenamento di ${quando} eliminato`, `Allenamento di ${quando} annullato`);
       }
       if (b.dataset.a === "modifica") {
         renderAllen();
@@ -319,7 +349,7 @@ function renderAllen() {
             togli();
             if (n.inizio !== s.inizio || n.fine !== s.fine || n.palestra !== s.palestra)
               allen.eccezioni.push({ data: x.data, serie: x.serie, inizio: n.inizio, fine: n.fine, palestra: n.palestra });
-          }, `Allenamento di ${quando} modificato`);
+          }, `Allenamento di ${quando} modificato`, `Allenamento di ${quando} cambiato: ${n.inizio.replace(":", ".")}–${n.fine.replace(":", ".")} · ${n.palestra}`);
         };
       }
     };
@@ -338,17 +368,19 @@ $("addSerieBtn").onclick = () => {
     const n = leggiForm(box); const err = validi(n); if (err) return allenStatus(err);
     const fineStagione = allen.serie.reduce((m, s) => s.al > m ? s.al : m, "2027-06-30");
     modificaAllen(() => allen.serie.push({ id: `g${n.giorno}-${n.dal}-${Date.now() % 100000}`, giorno: n.giorno, inizio: n.inizio, fine: n.fine, palestra: n.palestra, dal: n.dal, al: fineStagione }),
-      `Nuovo allenamento del ${GIORNI[n.giorno].toLowerCase()} aggiunto`);
+      `Nuovo allenamento del ${GIORNI[n.giorno].toLowerCase()} aggiunto`,
+      `Nuovo allenamento ogni ${GIORNI[n.giorno].toLowerCase()} dal ${itData(n.dal)}: ${n.inizio.replace(":", ".")}–${n.fine.replace(":", ".")} · ${n.palestra}`);
   };
 };
 
 // ================= STATISTICHE DEL SITO =================
 let giorniStat = 30;
-const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Classifica e statistiche", altre: "Altre partite" };
+const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Classifica e statistiche", altre: "Tutte le partite" };
 const NOMI_FUNZ = { naviga: "Naviga (Google Maps)", locandina: "Locandina aperta", condividi: "Locandina condivisa", copia: "Locandina copiata",
   scarica: "Locandina scaricata", retro: "Modalità Retro", crea_app: "Pulsante Crea app", app_installata: "App installata",
-  apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV" };
-const NOMI_ERR = { risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
+  apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV",
+  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato" };
+const NOMI_ERR = { avvisi: "Attivazione notifiche fallita", risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
 const somma = (dest, json) => { let o = {}; try { o = JSON.parse(json || "{}"); } catch {} for (const [k, v] of Object.entries(o)) dest[k] = (dest[k] || 0) + v; };
 const giorniDa = (dal, n) => { const [y, m, d] = dal.split("-").map(Number); return [...Array(n)].map((_, i) => isoData(new Date(y, m - 1, d + i))); };
 
@@ -442,7 +474,7 @@ $("periodo").onclick = e => { const b = e.target.closest("button[data-g]"); if (
   giorniStat = Number(b.dataset.g); document.querySelectorAll("#periodo button").forEach(x => x.classList.toggle("on", x === b)); caricaStat(); };
 
 // ================= SEZIONI APRIBILI / CHIUDIBILI =================
-const SEZIONI = ["matchesPanel", "editor", "allenPanel", "statPanel"];
+const SEZIONI = ["matchesPanel", "editor", "allenPanel", "notifPanel", "statPanel"];
 let sezioniAperte = {};
 try { sezioniAperte = JSON.parse(localStorage.getItem("lvt-admin-sezioni") || "{}"); } catch {}
 function rendiApribile(sec) {
@@ -470,6 +502,7 @@ function impostaSezione(id, aperta, iniziale) {
   btn.querySelector(".fr").textContent = aperta ? "▲" : "▼";
   if (!iniziale) { sezioniAperte[id] = aperta; try { localStorage.setItem("lvt-admin-sezioni", JSON.stringify(sezioniAperte)); } catch {} }
   if (aperta && id === "statPanel" && password && !iniziale) caricaStat();
+  if (aperta && id === "notifPanel" && password && !iniziale) caricaNotifiche();
 }
 SEZIONI.forEach(id => rendiApribile($(id)));
 $("loginBtn").onclick=()=>loginWithPassword($("password").value);
@@ -485,16 +518,44 @@ $("matchForm").onsubmit=async e=>{
  const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
  const oldMatches=JSON.parse(JSON.stringify(matches));
  const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
- try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");}
+ try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");
+  const nuova=!existing.id, cambiata=!nuova&&(existing.data!==m.data||String(existing.ora||"")!==m.ora||String(existing.campo||"")!==m.campo);
+  if((nuova||cambiata)&&!isCompleted(m)&&(m.data||"")>=isoData(new Date())) proponiNotifica("LVT · "+(nuova?"Nuova partita":"Cambio partita"),`${nuova?"📅 Nuova partita":"📅 Partita cambiata"}${m.competizione?" "+m.competizione:""}: ${m.squadraCasa} – ${m.squadraOspite}, ${descriviQuando(m)}${m.campo?" · "+m.campo:""}`);}
  catch(err){matches=oldMatches;render();showStatus(err.message==="Password errata"
   ? "Salvataggio non riuscito: password non riconosciuta dal Worker. Esci e accedi di nuovo verificando la password."
   : "Salvataggio non riuscito: "+err.message);}
 };
 function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
  $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
-async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");
+ const t=old.find(x=>String(x.id)===String(id));if(t&&!isCompleted(t)&&(t.data||"")>=isoData(new Date()))proponiNotifica("LVT · Partita annullata",`❌ Partita annullata: ${t.squadraCasa} – ${t.squadraOspite} di ${descriviQuando(t)}`);}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+// ================= NOTIFICHE =================
+function descriviQuando(m){const d=m.data?new Date(m.data+"T12:00"):null;return (d&&!isNaN(d)?`${GIORNI[d.getDay()].toLowerCase()} ${itData(m.data)}`:"data da definire")+(m.ora?` ore ${m.ora}`:"");}
+let propostaTitolo="";
+function proponiNotifica(titolo,testo){propostaTitolo=titolo;$("propTesto").value=testo.slice(0,300);$("propStatus").textContent="";$("propInvia").disabled=false;$("proposta").hidden=false;}
+$("propNo").onclick=()=>{$("proposta").hidden=true;};
+async function inviaNotifica(titolo,testo,stato){
+  let da=0,inviate=0,giro=0,r;
+  do{r=await request("push/invia",{method:"POST",body:JSON.stringify({password,titolo,testo,da})});inviate+=r.inviate;da=r.prossimo;stato(`Invio… ${inviate} telefoni avvisati`);}while(da!==null&&da!==undefined&&++giro<50);
+  return {inviate,totale:r.totale};
+}
+$("propInvia").onclick=async()=>{const testo=$("propTesto").value.trim();if(!testo)return;$("propInvia").disabled=true;
+  try{const r=await inviaNotifica(propostaTitolo,testo,t=>$("propStatus").textContent=t);$("propStatus").textContent=`✔ Notifica inviata a ${r.inviate} telefoni.`;setTimeout(()=>{$("proposta").hidden=true;},2500);if(sezioniAperte.notifPanel)caricaNotifiche();}
+  catch(e){$("propInvia").disabled=false;$("propStatus").textContent="Invio non riuscito: "+e.message;}};
+$("notifInvia").onclick=async()=>{const titolo=$("notifTitolo").value.trim()||"LVT · Avviso",testo=$("notifTesto").value.trim();
+  if(!testo){$("notifStatus").textContent="Scrivi il messaggio.";return;}
+  if(!confirm(`Inviare questa notifica a tutti i telefoni iscritti?\n\n${titolo}\n${testo}`))return;
+  $("notifInvia").disabled=true;
+  try{const r=await inviaNotifica(titolo,testo,t=>$("notifStatus").textContent=t);$("notifStatus").textContent=`✔ Notifica inviata a ${r.inviate} telefoni.`;$("notifTesto").value="";caricaNotifiche();}
+  catch(e){$("notifStatus").textContent="Invio non riuscito: "+e.message;}finally{$("notifInvia").disabled=false;}};
+async function caricaNotifiche(){
+  try{const r=await request("push/stato",{method:"POST",body:JSON.stringify({password})});
+    $("iscritti").textContent=r.iscritti;
+    $("notifLista").innerHTML=r.ultime.length?r.ultime.map(n=>{const t=new Date(n.ts);return `<div class="notif-item"><small>${t.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})} ${t.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</small><br><b>${esc(n.titolo)}</b> — ${esc(n.testo)}</div>`;}).join(""):'<p class="muted">Nessuna notifica inviata finora.</p>';}
+  catch(e){$("notifLista").innerHTML=`<p class="status">Notifiche non disponibili: ${esc(e.message)}. Serve aggiornare il Worker Cloudflare (vedi istruzioni).</p>`;}
+}
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 $("resetBtn").onclick=resetForm;
-$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("barraAdmin").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("notifPanel").hidden=true;$("proposta").hidden=true;$("barraAdmin").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
 </script></body></html>

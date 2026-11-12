@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#153b72">
+<title>LVT · Punteggio in diretta</title>
+<style>
+  :root { --bg: #f3f5f8; --card: #fff; --text: #172033; --muted: #667085; --line: #dfe4ec; --blu: #153b72;
+    --rosso: #d62828; --verde: #1f9d55; --fipav: #1e5bd8; --pgs: #e8b400; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 4px 0 2px; }
+  .sub { color: var(--muted); font-size: .85rem; margin: 0 0 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+  input[type=password] { width: 100%; font: inherit; font-size: 1.1rem; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+  button { font: inherit; cursor: pointer; }
+  .btn { display: block; width: 100%; padding: 13px; border-radius: 12px; border: 0; background: var(--blu); color: #fff; font-weight: 700; font-size: 1rem; margin-top: 10px; }
+  .btn.sec { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+  .btn.rosso { background: var(--rosso); }
+  .btn.verde { background: var(--verde); }
+  .btn:disabled { opacity: .45; }
+  .msg { min-height: 1.2em; font-size: .88rem; margin-top: 8px; }
+  .msg.err { color: var(--rosso); } .msg.ok { color: var(--verde); }
+  .partita { display: block; width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line);
+    border-left: 5px solid var(--fipav); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+  .partita.pgs { border-left-color: var(--pgs); }
+  .partita small { display: block; color: var(--muted); font-size: .78rem; margin-bottom: 3px; }
+  .partita b { font-size: .95rem; }
+  h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 8px; }
+  /* tabellone */
+  .testa { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); }
+  .testa .stato { font-weight: 700; }
+  .tab { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .lato { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 12px 10px; text-align: center; }
+  .lato.noi { border-color: var(--blu); }
+  .lato .nome { font-weight: 800; font-size: .85rem; min-height: 2.4em; display: flex; align-items: center; justify-content: center; line-height: 1.2; }
+  .lato .set-vinti { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+  .lato .punti { font-size: 4rem; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 6px 0; }
+  .lato .piu { width: 100%; padding: 22px 0; border-radius: 14px; border: 0; background: var(--blu); color: #fff; font-size: 2rem; font-weight: 900;
+    touch-action: manipulation; }
+  .lato:not(.noi) .piu { background: #44506a; }
+  .lato .meno { width: 100%; margin-top: 8px; padding: 8px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font-weight: 700; touch-action: manipulation; }
+  .setlist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; justify-content: center; }
+  .setlist span { padding: 5px 10px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .setlist span.ora { border-color: var(--rosso); color: var(--rosso); }
+  .sync { text-align: center; font-size: .8rem; color: var(--muted); margin-top: 8px; min-height: 1.2em; }
+  .sync.err { color: var(--rosso); font-weight: 700; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-top: 12px; font-size: .9rem; }
+  .check input { width: 22px; height: 22px; flex: none; }
+  .riga-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .indietro { background: none; border: 0; color: var(--blu); font-weight: 700; padding: 0; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏐 Punteggio in diretta</h1>
+  <p class="sub">Per chi è in palestra: ogni punto che segni lo vedono subito tutti sul sito LVT.</p>
+
+  <section id="login" class="card">
+    <label for="pw">Password diretta</label>
+    <input id="pw" type="password" autocomplete="current-password" enterkeyhint="go">
+    <button class="btn" id="entra">Entra</button>
+    <div class="msg" id="msg-login"></div>
+  </section>
+
+  <section id="scelta" hidden></section>
+
+  <section id="partita" hidden>
+    <button class="indietro" id="torna">‹ Cambia partita</button>
+    <div class="testa"><span id="info"></span><span class="stato" id="numset"></span></div>
+    <div class="tab" id="tab"></div>
+    <div class="setlist" id="setlist"></div>
+    <div class="sync" id="sync"></div>
+    <button class="btn verde" id="chiudi-set" hidden></button>
+    <div class="riga-btn">
+      <button class="btn sec" id="riapri" hidden>↩︎ Riapri set precedente</button>
+      <button class="btn sec" id="nuovo-set">Chiudi set e vai al prossimo</button>
+    </div>
+    <div class="card" id="fine-box" style="margin-top:14px">
+      <b>Fine partita</b>
+      <p class="sub" style="margin:4px 0 0">Salva il risultato sul sito (solo i set conclusi) e chiude la diretta.</p>
+      <label class="check"><input type="checkbox" id="notifica" checked> Avvisa i genitori con una notifica del risultato finale</label>
+      <button class="btn" id="fine">Salva risultato finale</button>
+      <button class="btn sec" id="annulla">Annulla diretta (non salvare nulla)</button>
+      <div class="msg" id="msg-fine"></div>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  const WORKER = "https://lvt.cicciodesimone.workers.dev";
+  const MIA_SOCIETA = /LISSONE VOLLEY TEAM|BAREGGIA|\bLVT\b/i;
+  const GIORNI = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const post = (path, corpo) => fetch(WORKER + path, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, ...corpo }) }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.status); return j; });
+  let password = "", partite = [], corrente = null, set = [[0, 0]], timer = null, inAttesa = false;
+  try { password = sessionStorage.getItem("lvt-live-pw") || ""; } catch (e) {}
+
+  const chiuso = ([a, b], i) => Math.max(a, b) >= (i === 4 ? 15 : 25) && Math.abs(a - b) >= 2;
+  const setVinti = () => { const v = [0, 0]; set.forEach((s, i) => { if (chiuso(s, i)) v[s[0] > s[1] ? 0 : 1]++; }); return v; };
+  function parseData(s) {
+    const m = String(s || "").trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/) ;
+    const iso = String(s || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+    if (!m) return null; let y = +m[3]; if (y < 100) y += 2000; return new Date(y, +m[2] - 1, +m[1]);
+  }
+  const giornoTxt = d => `${GIORNI[d.getDay()]} ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+  async function entra() {
+    const pw = $("pw").value.trim() || password;
+    if (!pw) return;
+    $("msg-login").className = "msg"; $("msg-login").textContent = "Controllo…";
+    password = pw;
+    try {
+      await post("/live/auth", {});
+      try { sessionStorage.setItem("lvt-live-pw", pw); } catch (e) {}
+      $("login").hidden = true;
+      await caricaPartite();
+    } catch (e) {
+      password = "";
+      $("msg-login").className = "msg err";
+      $("msg-login").textContent = String(e.message).includes("Password") ? "Password errata." : "Collegamento non riuscito, riprova.";
+    }
+  }
+  $("entra").onclick = entra;
+  $("pw").addEventListener("keydown", e => { if (e.key === "Enter") entra(); });
+
+  async function caricaPartite() {
+    const j = await fetch(`../data/risultati.json?t=${Date.now()}`, { cache: "no-store" }).then(r => r.json());
+    partite = (j.partite || []).map(p => ({ ...p, d: parseData(p.data) })).filter(p => p.d).sort((a, b) => a.d - b.d || String(a.ora).localeCompare(String(b.ora)));
+    const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+    const daOggi = n => Math.round((n.d - oggi) / 864e5);
+    const senzaRis = p => !(Number(p.setCasa) || Number(p.setOspite));
+    const diOggi = partite.filter(p => daOggi(p) === 0);
+    const vicine = partite.filter(p => daOggi(p) !== 0 && daOggi(p) >= -2 && daOggi(p) <= 7 && senzaRis(p));
+    const bottone = p => `<button class="partita ${String(p.competizione).toUpperCase() === "PGS" ? "pgs" : ""}" data-id="${p.id}">
+        <small>${giornoTxt(p.d)} · ore ${esc(p.ora)} · ${esc(p.competizione || "")} · Gara ${esc(p.gara)}</small>
+        <b>${esc(p.squadraCasa)}</b> – <b>${esc(p.squadraOspite)}</b></button>`;
+    $("scelta").innerHTML = `<h2>Partite di oggi</h2>${diOggi.length ? diOggi.map(bottone).join("") : '<p class="sub">Oggi non ci sono partite LVT in calendario.</p>'}
+      ${vicine.length ? `<h2>Altre partite vicine</h2>${vicine.map(bottone).join("")}` : ""}`;
+    $("scelta").hidden = false;
+  }
+  $("scelta").addEventListener("click", e => {
+    const b = e.target.closest(".partita"); if (!b) return;
+    apriPartita(partite.find(p => String(p.id) === b.dataset.id));
+  });
+
+  async function apriPartita(p) {
+    corrente = p;
+    set = [[0, 0]];
+    try { const salvato = JSON.parse(localStorage.getItem(`lvt-live-${p.id}`) || "null"); if (salvato && salvato.length) set = salvato; } catch (e) {}
+    try {   // se un altro genitore ha già iniziato, riparto dal suo punteggio
+      const j = await fetch(`${WORKER}/live?t=${Date.now()}`, { cache: "no-store" }).then(r => r.json());
+      const d = (j.dirette || []).find(x => x.id === Number(p.id));
+      if (d && d.set && d.set.length) set = d.set;
+    } catch (e) {}
+    $("scelta").hidden = true; $("partita").hidden = false;
+    $("info").textContent = `${giornoTxt(p.d)} · ${p.competizione || ""} · Gara ${p.gara}`;
+    $("msg-fine").textContent = "";
+    disegna();
+    invia(true);
+  }
+  $("torna").onclick = () => { corrente = null; $("partita").hidden = true; caricaPartite(); };
+
+  function disegna() {
+    const p = corrente, i = set.length - 1, cur = set[i], v = setVinti();
+    const lato = (nome, k) => `<div class="lato ${MIA_SOCIETA.test(nome) ? "noi" : ""}">
+        <div class="nome">${esc(nome)}</div><div class="set-vinti">set vinti: <b>${v[k]}</b></div>
+        <div class="punti">${cur[k]}</div>
+        <button class="piu" data-k="${k}" aria-label="Punto a ${esc(nome)}">+1</button>
+        <button class="meno" data-k="${k}" aria-label="Togli un punto a ${esc(nome)}">−1</button></div>`;
+    $("tab").innerHTML = lato(p.squadraCasa, 0) + lato(p.squadraOspite, 1);
+    $("numset").textContent = v[0] === 3 || v[1] === 3 ? "PARTITA FINITA" : `${i + 1}° SET${i === 4 ? " (tie-break a 15)" : ""}`;
+    $("setlist").innerHTML = set.map((s, j) => `<span class="${j === i ? "ora" : ""}">${s[0]}-${s[1]}</span>`).join("");
+    const finita = v[0] === 3 || v[1] === 3;
+    $("chiudi-set").hidden = !(chiuso(cur, i) && !finita);
+    $("chiudi-set").textContent = `✓ Set finito ${cur[0]}-${cur[1]}: inizia il ${i + 2}° set`;
+    $("nuovo-set").hidden = finita || set.length >= 5;
+    $("riapri").hidden = set.length < 2;
+    $("fine").disabled = !finita;
+    $("fine").textContent = finita ? `Salva risultato finale ${v[0]}-${v[1]}` : "Salva risultato finale (serve un 3-x)";
+    try { localStorage.setItem(`lvt-live-${p.id}`, JSON.stringify(set)); } catch (e) {}
+  }
+  $("tab").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const cur = set[set.length - 1], k = +b.dataset.k;
+    if (b.classList.contains("piu")) cur[k]++; else if (cur[k] > 0) cur[k]--;
+    if (navigator.vibrate) navigator.vibrate(15);
+    disegna(); invia();
+  });
+  const prossimoSet = () => { set.push([0, 0]); disegna(); invia(); };
+  $("chiudi-set").onclick = prossimoSet;
+  $("nuovo-set").onclick = () => {
+    const cur = set[set.length - 1];
+    if (!chiuso(cur, set.length - 1) && !confirm(`Il set è ${cur[0]}-${cur[1]}: non sembra finito. Chiuderlo comunque?`)) return;
+    prossimoSet();
+  };
+  $("riapri").onclick = () => {
+    if (!confirm("Riaprire il set precedente? Il set in corso verrà cancellato.")) return;
+    set.pop(); disegna(); invia();
+  };
+
+  // invio al Worker: raggruppo i tocchi ravvicinati, e se la rete manca riprovo
+  function invia(subito) {
+    clearTimeout(timer);
+    $("sync").className = "sync"; $("sync").textContent = "Invio…";
+    timer = setTimeout(async () => {
+      if (inAttesa) return invia();
+      inAttesa = true;
+      try {
+        await post("/live", { id: Number(corrente.id), set });
+        $("sync").textContent = `✓ Inviato alle ${new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+      } catch (e) {
+        $("sync").className = "sync err"; $("sync").textContent = "⚠ Non inviato (rete?). Riprovo tra 5 secondi…";
+        setTimeout(() => corrente && invia(true), 5000);
+      } finally { inAttesa = false; }
+    }, subito ? 0 : 700);
+  }
+
+  $("fine").onclick = async () => {
+    const v = setVinti();
+    if (!confirm(`Salvare il risultato finale ${corrente.squadraCasa} ${v[0]}-${v[1]} ${corrente.squadraOspite}?`)) return;
+    $("fine").disabled = true; $("msg-fine").className = "msg"; $("msg-fine").textContent = "Salvataggio…";
+    try {
+      clearTimeout(timer);
+      const r = await post("/live/fine", { id: Number(corrente.id), set, notifica: $("notifica").checked });
+      if (r.notifica) {   // i telefoni vengono avvisati a gruppi: continuo finché ce ne sono
+        let da = r.notifica.prossimo, giri = 0;
+        while (da !== null && da !== undefined && giri++ < 50) {
+          $("msg-fine").textContent = `Invio notifiche… ${r.notifica.inviate} telefoni avvisati`;
+          const x = await post("/push/invia", { da });
+          r.notifica.inviate += x.inviate; da = x.prossimo;
+        }
+      }
+      try { localStorage.removeItem(`lvt-live-${corrente.id}`); } catch (e) {}
+      $("msg-fine").className = "msg ok";
+      $("msg-fine").textContent = `✓ Risultato ${r.setCasa}-${r.setOspite} salvato: sul sito compare entro un paio di minuti.` +
+        (r.notifica ? ` Notifica inviata a ${r.notifica.inviate} telefoni.` : "");
+    } catch (e) {
+      $("fine").disabled = false;
+      $("msg-fine").className = "msg err"; $("msg-fine").textContent = "Salvataggio non riuscito: " + e.message;
+    }
+  };
+  $("annulla").onclick = async () => {
+    if (!confirm("Annullare la diretta? Il punteggio sparisce dal sito e non viene salvato nulla.")) return;
+    clearTimeout(timer);
+    try { await post("/live/annulla", { id: Number(corrente.id), set: [] }); } catch (e) {}
+    try { localStorage.removeItem(`lvt-live-${corrente.id}`); } catch (e) {}
+    corrente = null; $("partita").hidden = true; caricaPartite();
+  };
+
+  if (password) { $("pw").value = ""; entra(); }
+})();
+</script>
+</body>
+</html>
