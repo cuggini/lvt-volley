@@ -22,10 +22,12 @@ export default {
       try { authBody = await request.json(); } catch { return json({ error: "JSON non valido" }, 400, cors); }
       const supplied = String(authBody.password || "").trim();
       const configured = String(env.ADMIN_PASSWORD || "").trim();
-      const ok = !!configured && supplied === configured;
-      await registraAccessoAdmin(request, env, ok, authBody.tipo === "ripristino" ? "ripristino" : "login");
-      if (!ok) return json({ error: "Password errata" }, 401, cors);
-      return json({ ok: true }, 200, cors);
+      const admin = !!configured && supplied === configured;
+      const notifiche = !admin && passwordNotifiche(env, supplied);   // utenza che gestisce solo le notifiche
+      const tipo = (authBody.tipo === "ripristino" ? "ripristino" : "login") + (notifiche ? " · solo notifiche" : "");
+      await registraAccessoAdmin(request, env, admin || notifiche, tipo);
+      if (!admin && !notifiche) return json({ error: "Password errata" }, 401, cors);
+      return json({ ok: true, ruolo: admin ? "admin" : "notifiche" }, 200, cors);
     }
     if (url.pathname !== "/results") return json({ error: "Endpoint non trovato" }, 404, cors);
     if (request.method === "GET") {
@@ -198,6 +200,7 @@ async function firmaVapid(chiavi, endpoint) {
   const firma = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, chiave, new TextEncoder().encode(`${intest}.${corpo}`));
   return `vapid t=${intest}.${corpo}.${b64u(firma)}, k=${chiavi.pubblica}`;
 }
+const passwordNotifiche = (env, pw) => !!(env.NEWS_PASSWORD && String(pw || "").trim() && String(pw).trim() === String(env.NEWS_PASSWORD).trim());
 const passwordOk = (env, pw, anchePapa) => {
   const p = String(pw || "").trim();
   if (!p) return false;
@@ -240,7 +243,7 @@ async function gestisciPush(request, env, cors, path) {
     if (path === "/push/chiave") return json({ chiave: (await chiaviVapid(env)).pubblica }, 200, cors);
     if (path === "/push/ultima") {   // l'ultima news inviata (o rimandata): il clic apre il sito su quella news
       const n = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 1`).first();
-      return json(n ? { ...n, url: `${SITO}?news=${n.id}` } : { titolo: "LVT Volley", testo: "Ci sono novità sul sito", url: SITO }, 200, cors);
+      return json(n ? { ...n, url: `${SITO}?news=${n.id}` } : { titolo: "LVT Volley", testo: "Nuova comunicazione della squadra", url: SITO }, 200, cors);
     }
     if (path === "/push/news") {   // archivio pubblico delle news
       const r = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 50`).all();
@@ -263,8 +266,8 @@ async function gestisciPush(request, env, cors, path) {
       await env.DB.prepare(`DELETE FROM iscrizioni WHERE endpoint = ?`).bind(String(b.endpoint || "")).run();
       return json({ ok: true }, 200, cors);
     }
-    // chi segna la diretta può solo completare l'invio (a lotti) della notifica di fine partita appena creata
-    let ammesso = passwordOk(env, b.password);
+    // con la password della diretta si può solo completare l'invio (a lotti) della notifica di fine partita appena creata
+    let ammesso = passwordOk(env, b.password) || passwordNotifiche(env, b.password);
     if (!ammesso && path === "/push/invia" && Number(b.da) > 0 && passwordOk(env, b.password, true)) {
       const ult = await env.DB.prepare(`SELECT ts FROM notifiche ORDER BY ts DESC LIMIT 1`).first();
       ammesso = !!ult && Date.now() - ult.ts < 10 * 60000;
@@ -305,7 +308,7 @@ async function gestisciPush(request, env, cors, path) {
 }
 
 // ================= PUNTEGGIO IN DIRETTA =================
-// Un genitore in palestra aggiorna i set con la password "live" (variabile LIVE_PASSWORD);
+// Il punteggio viene aggiornato dal campo con la password della diretta (variabile LIVE_PASSWORD);
 // il sito legge /live ogni 20 secondi quando c'è una partita LVT in giornata.
 const DURATA_LIVE = 5 * 3600 * 1000;   // dopo 5 ore senza aggiornamenti la diretta sparisce
 function pulisciLive(b) {
@@ -349,7 +352,7 @@ async function gestisciLive(request, env, cors, path) {
       await env.DB.prepare(`DELETE FROM live WHERE id = ?`).bind(d.id).run();
       let notifica = null;
       if (b.notifica) {
-        await creaNotifica(env, `🏐 Finale ${partita.competizione || ""}`.trim(),
+        await creaNotifica(env, `LVT · Risultato finale ${partita.competizione || ""}`.trim(),
           `${partita.squadraCasa} ${setCasa}-${setOspite} ${partita.squadraOspite} (${partita.punteggiSet.join(", ")})`);
         notifica = await inviaLotto(env, 0);
       }

@@ -53,30 +53,25 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 </head>
 <body><a class="board-link" href="/lvt-volley/" aria-label="Torna al sito pubblico LVT Volley">BOARD</a><main class="wrap">
 <h1>Amministrazione LVT Volley</h1>
-<p class="muted">Accedi per gestire i risultati. Le modifiche vengono salvate nel file data/risultati.json del repository.</p>
+<p class="muted">Area riservata.</p>
 <section class="panel" id="loginPanel">
-<label for="password">Password amministratore</label>
+<label for="password">Password</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="Inserisci la password">
-<button id="loginBtn">Accedi e carica risultati</button>
+<button id="loginBtn">Accedi</button>
 <p class="status" id="loginStatus" role="status"></p>
-<p class="muted">La password resta memorizzata solo nella sessione di questa scheda e viene cancellata quando premi Esci o chiudi la sessione del browser.</p>
 </section>
-<div class="barra-admin" id="barraAdmin" hidden><span class="muted">Tocca una sezione per aprirla o chiuderla.</span>
+<div class="barra-admin" id="barraAdmin" hidden><span class="muted" id="ruoloInfo"></span>
 <button class="secondary" id="logoutBtn">Esci</button></div>
 <section class="panel" id="matchesPanel" hidden>
-<div class="section-heading"><h2>Partite (dalla prima all'ultima)</h2></div>
-<p class="muted">Le partite concluse sono evidenziate in verde. Puoi comunque modificarle.</p>
+<div class="section-heading"><h2>Partite</h2></div>
 <div id="matches"></div>
 </section>
 <section class="panel" id="allenPanel" hidden>
 <div class="section-heading"><h2>Allenamenti</h2></div>
-<p class="muted">Compaiono in grigio solo nel Calendario del sito. Ogni modifica viene salvata subito.</p>
 <h3 class="sub">Serie settimanali</h3>
-<p class="muted">Per cambiare orario o palestra <b>per sempre</b> (es. tutti i lunedì) usa «Cambia per sempre».</p>
 <div id="serieList"></div>
-<button class="secondary" id="addSerieBtn">+ Aggiungi un giorno di allenamento</button>
+<button class="secondary" id="addSerieBtn">+ Nuova serie settimanale</button>
 <h3 class="sub">Prossimi allenamenti</h3>
-<p class="muted">Per un <b>singolo</b> allenamento: «Modifica» cambia solo quel giorno, «Elimina» lo toglie dal calendario.</p>
 <div id="allenList"></div>
 <button class="secondary" id="moreAllenBtn">Mostra altre 4 settimane</button>
 <p class="status" id="allenStatus" role="status"></p>
@@ -86,29 +81,27 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 </datalist>
 </section>
 <section class="panel" id="notifPanel" hidden>
-<div class="section-heading"><h2>Notifiche e diretta</h2></div>
-<p class="muted">Le notifiche arrivano sui telefoni dei genitori che hanno toccato «🔔 AVVISI» sul sito. Quando cambi orari, date o palestre di partite e allenamenti l'admin ti propone in automatico di avvisarli.</p>
-<p><span class="cifra" id="iscritti">–</span> <span class="muted">telefoni iscritti alle notifiche</span></p>
-<details id="iscrittiBox"><summary class="muted" style="cursor:pointer">Vedi l'elenco dei telefoni iscritti</summary><div id="iscrittiLista"></div>
-<p class="muted" style="font-size:13px">Le iscrizioni sono anonime: solo tipo di telefono e date, nessun nome.</p></details>
-<h3 class="sub">Invia un avviso</h3>
-<label for="notifTitolo">Titolo</label><input id="notifTitolo" value="LVT · Avviso" maxlength="80">
-<label for="notifTesto" style="margin-top:10px">Messaggio</label><textarea id="notifTesto" maxlength="300" placeholder="Es. Sabato ritrovo alle 14.15 in palestra, divisa blu"></textarea>
-<button id="notifInvia">📣 Invia notifica</button>
+<div class="section-heading"><h2>Comunicazioni e diretta</h2></div>
+<p><span class="cifra" id="iscritti">–</span> <span class="muted">dispositivi iscritti alle notifiche</span></p>
+<details id="iscrittiBox"><summary class="muted" style="cursor:pointer">Elenco dispositivi</summary><div id="iscrittiLista"></div>
+<p class="muted" style="font-size:13px">Iscrizioni anonime: sono registrati solo il tipo di dispositivo e le date.</p></details>
+<h3 class="sub">Nuova comunicazione</h3>
+<label for="notifTitolo">Titolo</label><input id="notifTitolo" value="LVT · Comunicazione" maxlength="80">
+<label for="notifTesto" style="margin-top:10px">Testo</label><textarea id="notifTesto" maxlength="300" placeholder="Es. Sabato ritrovo alle ore 14.15 in palestra, divisa blu."></textarea>
+<button id="notifInvia">Invia</button>
 <p class="status" id="notifStatus" role="status"></p>
-<h3 class="sub">News inviate</h3>
-<p class="muted" style="font-size:13px">Sono le news che i genitori vedono nel pulsante «📣 NEWS» del sito. Puoi rimandarle, modificarle o cancellarle.</p>
+<h3 class="sub">Comunicazioni inviate</h3>
 <div id="notifLista"><p class="muted">–</p></div>
 <h3 class="sub">Punteggio in diretta</h3>
-<p class="muted">Il genitore in palestra apre <a href="/lvt-volley/live/" target="_blank">cuggini.github.io/lvt-volley/live/</a> e segna i punti con la password della diretta (diversa da quella admin). Sul sito compare il riquadro rosso «IN DIRETTA».</p>
+<p class="muted">Aggiornamento del punteggio dal campo: <a href="/lvt-volley/live/" target="_blank">cuggini.github.io/lvt-volley/live/</a> (password dedicata).</p>
 </section>
 <section class="panel" id="statPanel" hidden>
 <div class="section-heading"><h2>Statistiche del sito</h2>
 <div class="periodo" id="periodo"><button class="secondary" data-g="7">7 giorni</button><button class="secondary on" data-g="30">30 giorni</button><button class="secondary" data-g="90">90 giorni</button></div></div>
-<p class="muted">Dati anonimi: nessun cookie, nessun indirizzo IP, nessun nome. Le visite fatte dai dispositivi con cui accedi all'admin non vengono contate.</p>
+<p class="muted">Dati anonimi, senza cookie. Le visite dai dispositivi amministratori sono escluse.</p>
 <div id="statBody"><p class="muted">Caricamento…</p></div>
-<h3 class="sub">Accessi alla pagina admin</h3>
-<p class="muted">Ultimi 40 tentativi. «Ripristino» è la riapertura della pagina con la sessione già attiva. Un «password errata» che non sei stato tu è un campanello d'allarme: in quel caso cambia la password su Cloudflare.</p>
+<h3 class="sub">Registro accessi</h3>
+<p class="muted">Ultimi 40 accessi. In presenza di tentativi non riconosciuti, sostituire la password.</p>
 <div id="accessiBody"></div>
 </section>
 <div id="editorHome"></div>
@@ -128,16 +121,16 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 <div style="grid-column:1/-1"><label for="setScores">Punteggi set (facoltativo)</label><input id="setScores" placeholder="25-20, 22-25, 25-18, 25-21"></div>
 <div style="grid-column:1/-1"><label for="venue">Palestra / indirizzo</label><input id="venue" placeholder="Palestra e indirizzo"></div>
 </div>
-<div class="actions"><button type="submit">Salva partita</button><button class="secondary" type="button" id="resetBtn">Annulla / nuova partita</button></div>
+<div class="actions"><button type="submit">Salva partita</button><button class="secondary" type="button" id="resetBtn">Annulla</button></div>
 </form>
 <div class="status" id="status" role="status"></div>
 </section>
 </main>
-<div class="proposta" id="proposta" hidden role="dialog" aria-label="Avvisare i genitori?">
-<strong>📣 Avvisare i genitori con una notifica?</strong>
-<label for="propTesto" class="muted" style="font-weight:400">Puoi modificare il testo prima di inviarlo:</label>
+<div class="proposta" id="proposta" hidden role="dialog" aria-label="Inviare una comunicazione?">
+<strong>Inviare una comunicazione sulla variazione?</strong>
+<label for="propTesto" class="muted" style="font-weight:400">Testo della comunicazione</label>
 <textarea id="propTesto" maxlength="300"></textarea>
-<div class="actions"><button id="propInvia">Invia notifica</button><button class="secondary" id="propNo">Non inviare</button></div>
+<div class="actions"><button id="propInvia">Invia</button><button class="secondary" id="propNo">Non inviare</button></div>
 <p class="status" id="propStatus" role="status"></p>
 </div>
 <script>
@@ -176,7 +169,7 @@ async function usaUfficiale(id,r){
   const old=JSON.parse(JSON.stringify(matches));
   const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
   Object.assign(m,{setCasa:r.setCasa,setOspite:r.setOspite,punteggiSet:r.punteggiSet});
-  try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});render();showStatus("Risultato ufficiale salvato.");}
+  try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});render();showStatus("Risultato allineato a quello ufficiale.");}
   catch(e){matches=old;render();showStatus("Salvataggio non riuscito: "+e.message,true);}
 }
 function render(){
@@ -193,8 +186,8 @@ function render(){
   const info=document.createElement("p");info.className="muted";info.textContent=[m.gara?"Gara "+m.gara:"",m.competizione,(m.punteggiSet||[]).join(" · "),m.campo].filter(Boolean).join(" | ");div.append(info);
   const uff=confrontoUfficiale(m);
   if(uff){const w=document.createElement("div");w.className="diverso";
-    w.innerHTML=`⚠️ Il sito <b>${esc(m.competizione)}</b> dice <b>${uff.setCasa}-${uff.setOspite}</b> (${esc(uff.punteggiSet.join(", "))})${isCompleted(m)?`, qui è salvato <b>${m.setCasa}-${m.setOspite}</b> (${esc((m.punteggiSet||[]).join(", "))})`:", qui non c'è ancora il risultato"}. Sul sito pubblico vale già quello ufficiale.<br>`;
-    const fix=document.createElement("button");fix.textContent="Usa il risultato ufficiale";fix.onclick=()=>usaUfficiale(m.id,uff);w.append(fix);div.append(w);}
+    w.innerHTML=`⚠️ Risultato ufficiale ${esc(m.competizione)}: <b>${uff.setCasa}-${uff.setOspite}</b> (${esc(uff.punteggiSet.join(", "))}). ${isCompleted(m)?`Risultato registrato: <b>${m.setCasa}-${m.setOspite}</b> (${esc((m.punteggiSet||[]).join(", "))}).`:"Nessun risultato registrato."} Sul sito è pubblicato il risultato ufficiale.<br>`;
+    const fix=document.createElement("button");fix.textContent="Allinea al risultato ufficiale";fix.onclick=()=>usaUfficiale(m.id,uff);w.append(fix);div.append(w);}
   const actions=document.createElement("div");actions.className="actions";
   const edit=document.createElement("button");edit.className="secondary";edit.textContent="Modifica";edit.onclick=()=>editMatch(m.id);
   const del=document.createElement("button");del.className="danger";del.textContent="Elimina";del.onclick=()=>deleteMatch(m.id);
@@ -202,13 +195,24 @@ function render(){
   if(activeEditId!==null && String(activeEditId)===String(m.id)){const inline=document.createElement("div");inline.className="editor-inline";div.append(inline);inline.append(editor);editor.classList.remove("chiusa");}
  }
 }
+let ruolo="admin";
 async function loginWithPassword(candidate, automatic=false){
  password=String(candidate||"").trim();
  if(!password){$("loginStatus").textContent="Inserisci la password.";return false;}
  $("loginStatus").textContent=automatic?"Ripristino della sessione…":"Verifica password in corso…";
  $("loginBtn").disabled=true;
  try{
-  await request("auth",{method:"POST",body:JSON.stringify({password,tipo:automatic?"ripristino":"login"})});
+  const au=await request("auth",{method:"POST",body:JSON.stringify({password,tipo:automatic?"ripristino":"login"})});
+  try{sessionStorage.setItem("lvtAdminPassword",password);}catch{}
+  if(au&&au.ruolo==="notifiche"){   // utenza "solo notifiche": vede e usa soltanto la gestione delle notifiche
+   ruolo="notifiche";$("password").value="";$("loginPanel").hidden=true;
+   ["editor","matchesPanel","allenPanel","statPanel"].forEach(id=>$(id).hidden=true);
+   $("notifPanel").hidden=false;$("barraAdmin").hidden=false;
+   impostaSezione("notifPanel",true,true);caricaNotifiche();
+   try{localStorage.setItem("lvt-admin","1");}catch{}
+   $("loginStatus").textContent="";return true;
+  }
+  ruolo="admin";$("ruoloInfo").textContent="";
   const [d]=await Promise.all([request("results"),caricaUfficiali()]);
   matches=Array.isArray(d.partite)?d.partite:[];
   allen=d.allenamenti&&Array.isArray(d.allenamenti.serie)?d.allenamenti:JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI));
@@ -265,7 +269,7 @@ function allenStatus(msg) { $("allenStatus").textContent = msg; }
 
 async function salvaAllen(descrizione) {
   const res = await request("results", { method: "PUT", body: JSON.stringify({ password, partite: matches, allenamenti: allen }) });
-  if (!res.allenamenti) throw new Error("il servizio di salvataggio (Worker Cloudflare) non è ancora aggiornato: gli allenamenti non vengono salvati.");
+  if (!res.allenamenti) throw new Error("salvataggio degli allenamenti non disponibile. Riprovare più tardi.");
   allen = res.allenamenti;
   allenStatus(descrizione + " ✔");
 }
@@ -273,7 +277,7 @@ async function modificaAllen(fn, descrizione, avviso) {
   const vecchio = JSON.parse(JSON.stringify(allen));
   fn();
   formAperto = null; renderAllen();
-  try { await salvaAllen(descrizione); renderAllen(); proponiNotifica("LVT · Allenamenti", "🏐 " + (avviso || descrizione)); }
+  try { await salvaAllen(descrizione); renderAllen(); proponiNotifica("LVT · Allenamenti", (avviso || descrizione) + "."); }
   catch (e) { allen = vecchio; renderAllen(); allenStatus("Salvataggio non riuscito: " + e.message); }
 }
 
@@ -502,7 +506,7 @@ async function caricaStat() {
   $("statBody").innerHTML = '<p class="muted">Caricamento…</p>';
   try { renderStat(await request("stats", { method: "POST", body: JSON.stringify({ password, giorni: giorniStat }) })); }
   catch (e) {
-    $("statBody").innerHTML = `<p class="status">Statistiche non disponibili: ${esc(e.message)}.${/non configurato|404|Endpoint/.test(e.message) ? " Serve aggiornare il Worker Cloudflare e collegare il database (vedi istruzioni)." : ""}</p>`;
+    $("statBody").innerHTML = `<p class="status">Statistiche non disponibili: ${esc(e.message)}.${/non configurato|404|Endpoint/.test(e.message) ? "" : ""}</p>`;
     $("accessiBody").innerHTML = "";
   }
 }
@@ -554,17 +558,17 @@ $("matchForm").onsubmit=async e=>{
  const m={...existing,id:Number(id),data:$("date").value,ora:$("time").value.trim(),gara:$("game").value.trim(),competizione:$("competition").value.trim(),squadraCasa:$("home").value.trim(),squadraOspite:$("away").value.trim(),setCasa:Number($("homeSets").value),setOspite:Number($("awaySets").value),punteggiSet:$("setScores").value.split(",").map(s=>s.trim()).filter(Boolean),campo:$("venue").value.trim()};
  const oldMatches=JSON.parse(JSON.stringify(matches));
  const idx=matches.findIndex(x=>String(x.id)===String(m.id));if(idx>=0)matches[idx]=m;else matches.push(m);
- try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});activeEditId=null;resetFields();render();showStatus("Risultati salvati su GitHub.");
+ try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});activeEditId=null;resetFields();render();showStatus("Modifiche salvate.");
   const nuova=!existing.id, cambiata=!nuova&&(existing.data!==m.data||String(existing.ora||"")!==m.ora||String(existing.campo||"")!==m.campo);
-  if((nuova||cambiata)&&!isCompleted(m)&&(m.data||"")>=isoData(new Date())) proponiNotifica("LVT · "+(nuova?"Nuova partita":"Cambio partita"),`${nuova?"📅 Nuova partita":"📅 Partita cambiata"}${m.competizione?" "+m.competizione:""}: ${m.squadraCasa} – ${m.squadraOspite}, ${descriviQuando(m)}${m.campo?" · "+m.campo:""}`);}
+  if((nuova||cambiata)&&!isCompleted(m)&&(m.data||"")>=isoData(new Date())) proponiNotifica("LVT · "+(nuova?"Nuova partita":"Variazione calendario"),`${nuova?"Nuova partita":"Variazione partita"}${m.competizione?" "+m.competizione:""}: ${m.squadraCasa} – ${m.squadraOspite}, ${descriviQuando(m)}${m.campo?", "+m.campo:""}.`);}
  catch(err){matches=oldMatches;render();showStatus(err.message==="Password errata"
-  ? "Salvataggio non riuscito: password non riconosciuta dal Worker. Esci e accedi di nuovo verificando la password."
+  ? "Salvataggio non riuscito: password non riconosciuta. Uscire e accedere di nuovo."
   : "Salvataggio non riuscito: "+err.message);}
 };
 function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
  $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");
- const t=old.find(x=>String(x.id)===String(id));if(t&&!isCompleted(t)&&(t.data||"")>=isoData(new Date()))proponiNotifica("LVT · Partita annullata",`❌ Partita annullata: ${t.squadraCasa} – ${t.squadraOspite} di ${descriviQuando(t)}`);}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+ const t=old.find(x=>String(x.id)===String(id));if(t&&!isCompleted(t)&&(t.data||"")>=isoData(new Date()))proponiNotifica("LVT · Partita annullata",`Partita annullata: ${t.squadraCasa} – ${t.squadraOspite} di ${descriviQuando(t)}.`);}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
 // ================= NOTIFICHE =================
 function descriviQuando(m){const d=m.data?new Date(m.data+"T12:00"):null;return (d&&!isNaN(d)?`${GIORNI[d.getDay()].toLowerCase()} ${itData(m.data)}`:"data da definire")+(m.ora?` ore ${m.ora}`:"");}
 let propostaTitolo="";
@@ -573,20 +577,20 @@ $("propNo").onclick=()=>{$("proposta").hidden=true;};
 async function inviaNotifica(titolo,testo,stato,primo){
   // primo: chiamata iniziale alternativa (rimanda / modifica e rimanda); poi continuo a lotti con push/invia
   let r=await request(primo?primo.path:"push/invia",{method:"POST",body:JSON.stringify(primo?{password,...primo.corpo}:{password,titolo,testo,da:0})});
-  let inviate=r.inviate,da=r.prossimo,giro=0;stato(`Invio… ${inviate} telefoni avvisati`);
-  while(da!==null&&da!==undefined&&++giro<50){r=await request("push/invia",{method:"POST",body:JSON.stringify({password,da})});inviate+=r.inviate;da=r.prossimo;stato(`Invio… ${inviate} telefoni avvisati`);}
+  let inviate=r.inviate,da=r.prossimo,giro=0;stato(`Invio in corso… ${inviate} dispositivi raggiunti`);
+  while(da!==null&&da!==undefined&&++giro<50){r=await request("push/invia",{method:"POST",body:JSON.stringify({password,da})});inviate+=r.inviate;da=r.prossimo;stato(`Invio in corso… ${inviate} dispositivi raggiunti`);}
   return {inviate,totale:r.totale};
 }
 let newsAdmin=[],newsInModifica=null;
 function disegnaNews(){
   const qd=t=>{const d=new Date(t);return `${d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})} ${d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`;};
   $("notifLista").innerHTML=newsAdmin.length?newsAdmin.map(n=>String(n.id)===String(newsInModifica)
-    ?`<div class="notif-item" data-id="${n.id}"><small>Modifica news del ${qd(n.ts)}</small>
+    ?`<div class="notif-item" data-id="${n.id}"><small>Modifica comunicazione del ${qd(n.ts)}</small>
        <input data-c="titolo" maxlength="80" value="${esc(n.titolo)}"><textarea data-c="testo" maxlength="300">${esc(n.testo)}</textarea>
-       <div class="actions"><button data-a="salva-invia">💾 Salva e rimanda</button><button class="secondary" data-a="salva">Salva senza inviare</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`
+       <div class="actions"><button data-a="salva-invia">Salva e invia</button><button class="secondary" data-a="salva">Salva senza inviare</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`
     :`<div class="notif-item" data-id="${n.id}"><small>${qd(n.ts)}</small><br><b>${esc(n.titolo)}</b> — ${esc(n.testo)}
-       <div class="actions"><button class="secondary" data-a="rimanda">🔁 Rimanda</button><button class="secondary" data-a="modifica">✏️ Modifica</button><button class="danger" data-a="cancella">🗑 Cancella</button></div></div>`).join("")
-    :'<p class="muted">Nessuna news inviata finora.</p>';
+       <div class="actions"><button class="secondary" data-a="rimanda">Invia di nuovo</button><button class="secondary" data-a="modifica">Modifica</button><button class="danger" data-a="cancella">Elimina</button></div></div>`).join("")
+    :'<p class="muted">Nessuna comunicazione inviata.</p>';
 }
 $("notifLista").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-a]");if(!b)return;
@@ -596,30 +600,30 @@ $("notifLista").addEventListener("click",async e=>{
   if(a==="annulla"){newsInModifica=null;return disegnaNews();}
   try{
     if(a==="cancella"){
-      if(!confirm(`Cancellare questa news?\n\n${n.titolo}\n${n.testo}\n\nSparisce dall'archivio del sito (le notifiche già arrivate sui telefoni restano).`))return;
-      await request("push/cancella",{method:"POST",body:JSON.stringify({password,id})});stato("🗑 News cancellata.");
+      if(!confirm(`Eliminare questa comunicazione?\n\n${n.titolo}\n${n.testo}\n\nLa comunicazione verrà rimossa dall'archivio del sito.`))return;
+      await request("push/cancella",{method:"POST",body:JSON.stringify({password,id})});stato("Comunicazione eliminata.");
     }else if(a==="rimanda"){
-      if(!confirm(`Rimandare la notifica a tutti i telefoni iscritti?\n\n${n.titolo}\n${n.testo}`))return;
-      b.disabled=true;const r=await inviaNotifica(n.titolo,n.testo,stato,{path:"push/rimanda",corpo:{id}});stato(`✔ News rimandata a ${r.inviate} telefoni.`);
+      if(!confirm(`Inviare di nuovo la comunicazione a tutti i dispositivi iscritti?\n\n${n.titolo}\n${n.testo}`))return;
+      b.disabled=true;const r=await inviaNotifica(n.titolo,n.testo,stato,{path:"push/rimanda",corpo:{id}});stato(`✔ Comunicazione inviata di nuovo a ${r.inviate} dispositivi.`);
     }else{
       const titolo=box.querySelector('[data-c=titolo]').value.trim()||"LVT · Avviso",testo=box.querySelector('[data-c=testo]').value.trim();
-      if(!testo){stato("Scrivi il testo della news.");return;}
+      if(!testo){stato("Inserire il testo.");return;}
       b.disabled=true;
-      if(a==="salva"){await request("push/modifica",{method:"POST",body:JSON.stringify({password,id,titolo,testo,invia:false})});stato("✔ News modificata (non inviata).");}
-      else{const r=await inviaNotifica(titolo,testo,stato,{path:"push/modifica",corpo:{id,titolo,testo,invia:true}});stato(`✔ News modificata e rimandata a ${r.inviate} telefoni.`);}
+      if(a==="salva"){await request("push/modifica",{method:"POST",body:JSON.stringify({password,id,titolo,testo,invia:false})});stato("✔ Comunicazione modificata, non inviata.");}
+      else{const r=await inviaNotifica(titolo,testo,stato,{path:"push/modifica",corpo:{id,titolo,testo,invia:true}});stato(`✔ Comunicazione modificata e inviata a ${r.inviate} dispositivi.`);}
       newsInModifica=null;
     }
     caricaNotifiche();
   }catch(err){b.disabled=false;stato("Operazione non riuscita: "+err.message);}
 });
 $("propInvia").onclick=async()=>{const testo=$("propTesto").value.trim();if(!testo)return;$("propInvia").disabled=true;
-  try{const r=await inviaNotifica(propostaTitolo,testo,t=>$("propStatus").textContent=t);$("propStatus").textContent=`✔ Notifica inviata a ${r.inviate} telefoni.`;setTimeout(()=>{$("proposta").hidden=true;},2500);if(sezioniAperte.notifPanel)caricaNotifiche();}
+  try{const r=await inviaNotifica(propostaTitolo,testo,t=>$("propStatus").textContent=t);$("propStatus").textContent=`✔ Comunicazione inviata a ${r.inviate} dispositivi.`;setTimeout(()=>{$("proposta").hidden=true;},2500);if(sezioniAperte.notifPanel)caricaNotifiche();}
   catch(e){$("propInvia").disabled=false;$("propStatus").textContent="Invio non riuscito: "+e.message;}};
 $("notifInvia").onclick=async()=>{const titolo=$("notifTitolo").value.trim()||"LVT · Avviso",testo=$("notifTesto").value.trim();
-  if(!testo){$("notifStatus").textContent="Scrivi il messaggio.";return;}
-  if(!confirm(`Inviare questa notifica a tutti i telefoni iscritti?\n\n${titolo}\n${testo}`))return;
+  if(!testo){$("notifStatus").textContent="Inserire il testo.";return;}
+  if(!confirm(`Inviare la comunicazione a tutti i dispositivi iscritti?\n\n${titolo}\n${testo}`))return;
   $("notifInvia").disabled=true;
-  try{const r=await inviaNotifica(titolo,testo,t=>$("notifStatus").textContent=t);$("notifStatus").textContent=`✔ Notifica inviata a ${r.inviate} telefoni.`;$("notifTesto").value="";caricaNotifiche();}
+  try{const r=await inviaNotifica(titolo,testo,t=>$("notifStatus").textContent=t);$("notifStatus").textContent=`✔ Comunicazione inviata a ${r.inviate} dispositivi.`;$("notifTesto").value="";caricaNotifiche();}
   catch(e){$("notifStatus").textContent="Invio non riuscito: "+e.message;}finally{$("notifInvia").disabled=false;}};
 async function caricaNotifiche(){
   try{const r=await request("push/stato",{method:"POST",body:JSON.stringify({password})});
@@ -628,9 +632,9 @@ async function caricaNotifiche(){
     const ico={iPhone:"📱",iPad:"📱",Android:"📱","Tablet Android":"📱",Mac:"💻","PC Windows":"💻",Computer:"💻"};
     const conti={};(r.elenco||[]).forEach(x=>conti[x.disp]=(conti[x.disp]||0)+1);
     $("iscrittiLista").innerHTML=(r.elenco||[]).length?`<p style="margin:8px 0">${Object.entries(conti).map(([k,v])=>`<b>${v}</b> ${esc(k)}`).join(" · ")}</p>`+
-      r.elenco.map(x=>`<div class="notif-item">${ico[x.disp]||"❔"} <b>${esc(x.disp)}</b> · iscritto il ${gg(x.dal)} · ultima apertura ${gg(x.ultimo)}</div>`).join(""):'<p class="muted">Nessun telefono iscritto.</p>';
+      r.elenco.map(x=>`<div class="notif-item">${ico[x.disp]||"❔"} <b>${esc(x.disp)}</b> · iscritto il ${gg(x.dal)} · ultima apertura ${gg(x.ultimo)}</div>`).join(""):'<p class="muted">Nessun dispositivo iscritto.</p>';
     newsAdmin=r.ultime||[];disegnaNews();}
-  catch(e){$("notifLista").innerHTML=`<p class="status">Notifiche non disponibili: ${esc(e.message)}. Serve aggiornare il Worker Cloudflare (vedi istruzioni).</p>`;}
+  catch(e){$("notifLista").innerHTML=`<p class="status">Servizio comunicazioni non disponibile: ${esc(e.message)}.</p>`;}
 }
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}

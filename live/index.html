@@ -59,10 +59,10 @@
 <body>
 <div class="wrap">
   <h1>🏐 Punteggio in diretta</h1>
-  <p class="sub">Per chi è in palestra: ogni punto che segni lo vedono subito tutti sul sito LVT.</p>
+  <p class="sub">Aggiornamento del punteggio dal campo, pubblicato in tempo reale sul sito LVT.</p>
 
   <section id="login" class="card">
-    <label for="pw">Password diretta</label>
+    <label for="pw">Password</label>
     <input id="pw" type="password" autocomplete="current-password" enterkeyhint="go">
     <button class="btn" id="entra">Entra</button>
     <div class="msg" id="msg-login"></div>
@@ -83,10 +83,10 @@
     </div>
     <div class="card" id="fine-box" style="margin-top:14px">
       <b>Fine partita</b>
-      <p class="sub" style="margin:4px 0 0">Salva il risultato sul sito (solo i set conclusi) e chiude la diretta.</p>
-      <label class="check"><input type="checkbox" id="notifica" checked> Avvisa i genitori con una notifica del risultato finale</label>
-      <button class="btn" id="fine">Salva risultato finale</button>
-      <button class="btn sec" id="annulla">Annulla diretta (non salvare nulla)</button>
+      <p class="sub" style="margin:4px 0 0">Registra il risultato definitivo e chiude la diretta.</p>
+      <label class="check"><input type="checkbox" id="notifica" checked> Invia una notifica con il risultato finale</label>
+      <button class="btn" id="fine">Registra risultato finale</button>
+      <button class="btn sec" id="annulla">Annulla diretta</button>
       <div class="msg" id="msg-fine"></div>
     </div>
   </section>
@@ -126,7 +126,7 @@
     } catch (e) {
       password = "";
       $("msg-login").className = "msg err";
-      $("msg-login").textContent = String(e.message).includes("Password") ? "Password errata." : "Collegamento non riuscito, riprova.";
+      $("msg-login").textContent = String(e.message).includes("Password") ? "Password errata." : "Collegamento non riuscito. Riprovare.";
     }
   }
   $("entra").onclick = entra;
@@ -143,8 +143,8 @@
     const bottone = p => `<button class="partita ${String(p.competizione).toUpperCase() === "PGS" ? "pgs" : ""}" data-id="${p.id}">
         <small>${giornoTxt(p.d)} · ore ${esc(p.ora)} · ${esc(p.competizione || "")} · Gara ${esc(p.gara)}</small>
         <b>${esc(p.squadraCasa)}</b> – <b>${esc(p.squadraOspite)}</b></button>`;
-    $("scelta").innerHTML = `<h2>Partite di oggi</h2>${diOggi.length ? diOggi.map(bottone).join("") : '<p class="sub">Oggi non ci sono partite LVT in calendario.</p>'}
-      ${vicine.length ? `<h2>Altre partite vicine</h2>${vicine.map(bottone).join("")}` : ""}`;
+    $("scelta").innerHTML = `<h2>Partite di oggi</h2>${diOggi.length ? diOggi.map(bottone).join("") : '<p class="sub">Nessuna partita LVT in calendario oggi.</p>'}
+      ${vicine.length ? `<h2>Altre partite in programma</h2>${vicine.map(bottone).join("")}` : ""}`;
     $("scelta").hidden = false;
   }
   $("scelta").addEventListener("click", e => {
@@ -156,7 +156,7 @@
     corrente = p;
     set = [[0, 0]];
     try { const salvato = JSON.parse(localStorage.getItem(`lvt-live-${p.id}`) || "null"); if (salvato && salvato.length) set = salvato; } catch (e) {}
-    try {   // se un altro genitore ha già iniziato, riparto dal suo punteggio
+    try {   // se la diretta è già stata avviata da un altro dispositivo, riparto da quel punteggio
       const j = await fetch(`${WORKER}/live?t=${Date.now()}`, { cache: "no-store" }).then(r => r.json());
       const d = (j.dirette || []).find(x => x.id === Number(p.id));
       if (d && d.set && d.set.length) set = d.set;
@@ -185,7 +185,7 @@
     $("nuovo-set").hidden = finita || set.length >= 5;
     $("riapri").hidden = set.length < 2;
     $("fine").disabled = !finita;
-    $("fine").textContent = finita ? `Salva risultato finale ${v[0]}-${v[1]}` : "Salva risultato finale (serve un 3-x)";
+    $("fine").textContent = finita ? `Registra risultato finale ${v[0]}-${v[1]}` : "Registra risultato finale (disponibile a fine partita)";
     try { localStorage.setItem(`lvt-live-${p.id}`, JSON.stringify(set)); } catch (e) {}
   }
   $("tab").addEventListener("click", e => {
@@ -218,7 +218,7 @@
         await post("/live", { id: Number(corrente.id), set });
         $("sync").textContent = `✓ Inviato alle ${new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
       } catch (e) {
-        $("sync").className = "sync err"; $("sync").textContent = "⚠ Non inviato (rete?). Riprovo tra 5 secondi…";
+        $("sync").className = "sync err"; $("sync").textContent = "⚠ Invio non riuscito. Nuovo tentativo tra 5 secondi…";
         setTimeout(() => corrente && invia(true), 5000);
       } finally { inAttesa = false; }
     }, subito ? 0 : 700);
@@ -226,30 +226,30 @@
 
   $("fine").onclick = async () => {
     const v = setVinti();
-    if (!confirm(`Salvare il risultato finale ${corrente.squadraCasa} ${v[0]}-${v[1]} ${corrente.squadraOspite}?`)) return;
-    $("fine").disabled = true; $("msg-fine").className = "msg"; $("msg-fine").textContent = "Salvataggio…";
+    if (!confirm(`Registrare il risultato finale ${corrente.squadraCasa} ${v[0]}-${v[1]} ${corrente.squadraOspite}?`)) return;
+    $("fine").disabled = true; $("msg-fine").className = "msg"; $("msg-fine").textContent = "Registrazione in corso…";
     try {
       clearTimeout(timer);
       const r = await post("/live/fine", { id: Number(corrente.id), set, notifica: $("notifica").checked });
       if (r.notifica) {   // i telefoni vengono avvisati a gruppi: continuo finché ce ne sono
         let da = r.notifica.prossimo, giri = 0;
         while (da !== null && da !== undefined && giri++ < 50) {
-          $("msg-fine").textContent = `Invio notifiche… ${r.notifica.inviate} telefoni avvisati`;
+          $("msg-fine").textContent = `Invio notifiche in corso… ${r.notifica.inviate} dispositivi raggiunti`;
           const x = await post("/push/invia", { da });
           r.notifica.inviate += x.inviate; da = x.prossimo;
         }
       }
       try { localStorage.removeItem(`lvt-live-${corrente.id}`); } catch (e) {}
       $("msg-fine").className = "msg ok";
-      $("msg-fine").textContent = `✓ Risultato ${r.setCasa}-${r.setOspite} salvato: sul sito compare entro un paio di minuti.` +
-        (r.notifica ? ` Notifica inviata a ${r.notifica.inviate} telefoni.` : "");
+      $("msg-fine").textContent = `✓ Risultato ${r.setCasa}-${r.setOspite} registrato. Sarà visibile sul sito entro pochi minuti.` +
+        (r.notifica ? ` Notifica inviata a ${r.notifica.inviate} dispositivi.` : "");
     } catch (e) {
       $("fine").disabled = false;
-      $("msg-fine").className = "msg err"; $("msg-fine").textContent = "Salvataggio non riuscito: " + e.message;
+      $("msg-fine").className = "msg err"; $("msg-fine").textContent = "Registrazione non riuscita: " + e.message;
     }
   };
   $("annulla").onclick = async () => {
-    if (!confirm("Annullare la diretta? Il punteggio sparisce dal sito e non viene salvato nulla.")) return;
+    if (!confirm("Annullare la diretta? Il punteggio verrà rimosso dal sito senza registrare alcun risultato.")) return;
     clearTimeout(timer);
     try { await post("/live/annulla", { id: Number(corrente.id), set: [] }); } catch (e) {}
     try { localStorage.removeItem(`lvt-live-${corrente.id}`); } catch (e) {}
