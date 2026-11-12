@@ -45,6 +45,7 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 .proposta[hidden]{display:none}.proposta strong{display:block;margin-bottom:6px}.proposta textarea{min-height:70px}
 .notif-item{border-bottom:1px solid #e5e9f0;padding:8px 0;font-size:14px}.notif-item small{color:#647086}
 .cifra{font-size:28px;font-weight:800}
+.diverso{margin:8px 0;padding:10px;border-radius:8px;background:#fff6e0;border:1px solid #e8b400;font-size:14px}.diverso button{margin-top:8px;width:auto;padding:8px 12px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -149,6 +150,32 @@ async function request(path, options={}) {
   return data;
 }
 function isCompleted(m){return Number(m.setCasa)>=3 || Number(m.setOspite)>=3;}
+// ================= CONFRONTO CON I SITI UFFICIALI =================
+let ufficiali={};   // "FIPAV-50575" -> partita ufficiale
+const LVT_RE=/LISSONE VOLLEY TEAM|BAREGGIA|\bLVT\b/i;
+async function caricaUfficiali(){
+  const leggi=f=>fetch(`../${f}?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const [fv,pg]=await Promise.all([leggi("partite-fipav.json"),leggi("pgs.json")]);
+  ufficiali={};
+  ((fv&&fv.partite)||[]).forEach(x=>ufficiali["FIPAV-"+x.gara]=x);
+  ((pg&&pg.partite)||[]).forEach(x=>ufficiali["PGS-"+x.gara]=x);
+}
+function confrontoUfficiale(m){   // risultato ufficiale finale se diverso da quello salvato, altrimenti null
+  const u=ufficiali[`${String(m.competizione||"").toUpperCase()}-${m.gara}`];
+  if(!u||u.setCasa==null||Math.max(+u.setCasa,+u.setOspite)!==3)return null;
+  const gira=LVT_RE.test(u.casa)!==LVT_RE.test(m.squadraCasa);
+  const r={setCasa:gira?+u.setOspite:+u.setCasa,setOspite:gira?+u.setCasa:+u.setOspite,
+    punteggiSet:(u.parziali||[]).map(x=>{const [a,b]=String(x).split("-").map(n=>+n);return gira?`${b}-${a}`:`${a}-${b}`;})};
+  const uguale=+m.setCasa===r.setCasa&&+m.setOspite===r.setOspite&&(m.punteggiSet||[]).join(",").replace(/\s/g,"")===r.punteggiSet.join(",");
+  return uguale?null:r;
+}
+async function usaUfficiale(id,r){
+  const old=JSON.parse(JSON.stringify(matches));
+  const m=matches.find(x=>String(x.id)===String(id));if(!m)return;
+  Object.assign(m,{setCasa:r.setCasa,setOspite:r.setOspite,punteggiSet:r.punteggiSet});
+  try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});render();showStatus("Risultato ufficiale salvato.");}
+  catch(e){matches=old;render();showStatus("Salvataggio non riuscito: "+e.message,true);}
+}
 function render(){
  const box=$("matches"), editor=$("editor"), home=$("editorHome");
  // Riporta temporaneamente il modulo nella sua sede prima di ricostruire l'elenco.
@@ -161,6 +188,10 @@ function render(){
   if(isCompleted(m)){const badge=document.createElement("span");badge.className="completed-label";badge.textContent="PARTITA CONCLUSA";div.append(badge);}
   const title=document.createElement("strong");title.className="match-title";title.textContent=`${m.data||"Data da definire"} · ${m.ora||"Ora da definire"} — ${m.squadraCasa} ${m.setCasa} - ${m.setOspite} ${m.squadraOspite}`;div.append(title);
   const info=document.createElement("p");info.className="muted";info.textContent=[m.gara?"Gara "+m.gara:"",m.competizione,(m.punteggiSet||[]).join(" · "),m.campo].filter(Boolean).join(" | ");div.append(info);
+  const uff=confrontoUfficiale(m);
+  if(uff){const w=document.createElement("div");w.className="diverso";
+    w.innerHTML=`⚠️ Il sito <b>${esc(m.competizione)}</b> dice <b>${uff.setCasa}-${uff.setOspite}</b> (${esc(uff.punteggiSet.join(", "))})${isCompleted(m)?`, qui è salvato <b>${m.setCasa}-${m.setOspite}</b> (${esc((m.punteggiSet||[]).join(", "))})`:", qui non c'è ancora il risultato"}. Sul sito pubblico vale già quello ufficiale.<br>`;
+    const fix=document.createElement("button");fix.textContent="Usa il risultato ufficiale";fix.onclick=()=>usaUfficiale(m.id,uff);w.append(fix);div.append(w);}
   const actions=document.createElement("div");actions.className="actions";
   const edit=document.createElement("button");edit.className="secondary";edit.textContent="Modifica";edit.onclick=()=>editMatch(m.id);
   const del=document.createElement("button");del.className="danger";del.textContent="Elimina";del.onclick=()=>deleteMatch(m.id);
@@ -175,7 +206,7 @@ async function loginWithPassword(candidate, automatic=false){
  $("loginBtn").disabled=true;
  try{
   await request("auth",{method:"POST",body:JSON.stringify({password,tipo:automatic?"ripristino":"login"})});
-  const d=await request("results");
+  const [d]=await Promise.all([request("results"),caricaUfficiali()]);
   matches=Array.isArray(d.partite)?d.partite:[];
   allen=d.allenamenti&&Array.isArray(d.allenamenti.serie)?d.allenamenti:JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI));
   if(!Array.isArray(allen.eccezioni)) allen.eccezioni=[];

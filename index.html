@@ -1225,14 +1225,20 @@
     if (r) apriSquadra(r.dataset.camp, r.dataset.sq);
   });
 
-  // partite LVT: se nell'admin mancano risultato o palestra, li prendo dal sito ufficiale (stesso numero gara)
+  // partite LVT: il sito ufficiale (stesso numero gara) comanda. Se ha il risultato finale, vale quello e corregge
+  // eventuali errori di admin o genitori; altrimenti uso il risultato salvato. Palestra: dal sito ufficiale se manca.
+  const testoRis = r => `${r.score[0]}-${r.score[1]} (${r.parziali.map(x => x.join("-")).join(", ")})`;
+  const giraRis = r => parseRisultato(`${r.score[1]}-${r.score[0]} (${r.parziali.map(([a, b]) => `${b}-${a}`).join(", ")})`);
   caricaPartiteUfficiali().then(({ tutte }) => {
     const perGara = Object.fromEntries(tutte.map(p => [`${p.camp}-${p.gara}`, p]));
     let cambiate = 0;
     partite.forEach(p => {
       const u = perGara[`${p.camp}-${p.gara}`];
       if (!u) return;
-      if (!p.ris && u.ris) { p.ris = u.ris; p.risUfficiale = true; cambiate++; }
+      if (u.ris && u.ris.finita) {
+        const r = eNoi(u.casa) === eNoi(p.casa) ? u.ris : giraRis(u.ris);   // stesso verso casa/ospite dell'admin
+        if (!p.ris || p.live || testoRis(p.ris) !== testoRis(r)) { p.ris = r; p.risUfficiale = true; p.live = false; cambiate++; }
+      } else if (!p.ris && u.ris) { p.ris = u.ris; p.risUfficiale = true; cambiate++; }
       if (!p.campo && u.campo) { p.campo = u.campo; p.campoUfficiale = true; cambiate++; }
     });
     if (cambiate && ["agenda", "calendario"].includes(stato.vista)) render();
@@ -1541,7 +1547,7 @@
       if (!p) return "";
       const ris = risDaSet(dr.set || []);
       if (!ris) return "";
-      if (!p.ris || p.live) { p.ris = ris; p.live = true; cambiate = true; }
+      if (!p.risUfficiale && (!p.ris || p.live)) { p.ris = ris; p.live = true; cambiate = true; }
       const min = Math.max(0, Math.round((Date.now() - dr.ts) / 60000));
       const setOra = (dr.set || []).length ? dr.set[dr.set.length - 1] : null;
       return `<button class="diretta" data-id="${p.id}">
