@@ -238,9 +238,13 @@ async function gestisciPush(request, env, cors, path) {
   if (!(await preparaTabelle(env))) return json({ error: "archivio non configurato: collega al Worker un database D1 con il nome DB" }, 501, cors);
   try {
     if (path === "/push/chiave") return json({ chiave: (await chiaviVapid(env)).pubblica }, 200, cors);
-    if (path === "/push/ultima") {
-      const n = await env.DB.prepare(`SELECT ts, titolo, testo, url FROM notifiche ORDER BY id DESC LIMIT 1`).first();
-      return json(n || { titolo: "LVT Volley", testo: "Ci sono novità sul sito", url: SITO }, 200, cors);
+    if (path === "/push/ultima") {   // l'ultima news inviata (o rimandata): il clic apre il sito su quella news
+      const n = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 1`).first();
+      return json(n ? { ...n, url: `${SITO}?news=${n.id}` } : { titolo: "LVT Volley", testo: "Ci sono novità sul sito", url: SITO }, 200, cors);
+    }
+    if (path === "/push/news") {   // archivio pubblico delle news
+      const r = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 50`).all();
+      return json({ news: r.results || [] }, 200, cors);
     }
     if (request.method !== "POST") return json({ error: "Metodo non consentito" }, 405, cors);
     const b = await request.json().catch(() => ({}));
@@ -262,7 +266,7 @@ async function gestisciPush(request, env, cors, path) {
     // chi segna la diretta può solo completare l'invio (a lotti) della notifica di fine partita appena creata
     let ammesso = passwordOk(env, b.password);
     if (!ammesso && path === "/push/invia" && Number(b.da) > 0 && passwordOk(env, b.password, true)) {
-      const ult = await env.DB.prepare(`SELECT ts FROM notifiche ORDER BY id DESC LIMIT 1`).first();
+      const ult = await env.DB.prepare(`SELECT ts FROM notifiche ORDER BY ts DESC LIMIT 1`).first();
       ammesso = !!ult && Date.now() - ult.ts < 10 * 60000;
     }
     if (!ammesso) return json({ error: "Password errata" }, 401, cors);
@@ -270,8 +274,26 @@ async function gestisciPush(request, env, cors, path) {
       const righe = (await env.DB.prepare(`SELECT dati, ts FROM iscrizioni ORDER BY ts DESC`).all()).results || [];
       const elenco = righe.map(r => { let d = {}; try { d = JSON.parse(r.dati || "{}"); } catch (e) {} return { disp: d.disp || "Sconosciuto", dal: d.dal || r.ts, ultimo: r.ts }; })
         .sort((a, b) => b.dal - a.dal);
-      const ultime = (await env.DB.prepare(`SELECT ts, titolo, testo FROM notifiche ORDER BY id DESC LIMIT 10`).all()).results || [];
+      const ultime = (await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 30`).all()).results || [];
       return json({ iscritti: elenco.length, elenco, ultime }, 200, cors);
+    }
+    if (["/push/cancella", "/push/rimanda", "/push/modifica"].includes(path)) {
+      const id = Number(b.id);
+      const n = await env.DB.prepare(`SELECT id FROM notifiche WHERE id = ?`).bind(id).first();
+      if (!n) return json({ error: "News non trovata" }, 404, cors);
+      if (path === "/push/cancella") {
+        await env.DB.prepare(`DELETE FROM notifiche WHERE id = ?`).bind(id).run();
+        return json({ ok: true }, 200, cors);
+      }
+      if (path === "/push/modifica") {
+        if (!String(b.testo || "").trim()) return json({ error: "Scrivi il testo della notifica" }, 400, cors);
+        await env.DB.prepare(`UPDATE notifiche SET titolo = ?, testo = ? WHERE id = ?`)
+          .bind(String(b.titolo || "LVT Volley").slice(0, 80), String(b.testo).slice(0, 300), id).run();
+        if (!b.invia) return json({ ok: true }, 200, cors);
+      }
+      // rimanda: la news torna in cima (è quella che i telefoni mostreranno) e parte di nuovo
+      await env.DB.prepare(`UPDATE notifiche SET ts = ? WHERE id = ?`).bind(Date.now(), id).run();
+      return json({ ok: true, ...(await inviaLotto(env, 0)) }, 200, cors);
     }
     if (path === "/push/invia") {
       const da = Math.max(0, Number(b.da) || 0);

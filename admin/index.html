@@ -43,7 +43,9 @@ h2.apri .fr{color:#153b72;font-size:.8em;flex:none}h2.apri .conta{font-weight:60
 textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box;min-height:80px;resize:vertical}
 .proposta{position:fixed;left:12px;right:12px;bottom:12px;z-index:9000;max-width:560px;margin:auto;background:#fff;border:2px solid #153b72;border-radius:14px;padding:14px;box-shadow:0 8px 30px #15223840}
 .proposta[hidden]{display:none}.proposta strong{display:block;margin-bottom:6px}.proposta textarea{min-height:70px}
-.notif-item{border-bottom:1px solid #e5e9f0;padding:8px 0;font-size:14px}.notif-item small{color:#647086}
+.notif-item{border-bottom:1px solid #e5e9f0;padding:10px 0;font-size:14px}
+.notif-item .actions{margin-top:8px}.notif-item .actions button{width:auto;padding:7px 10px;font-size:13px}
+.notif-item input,.notif-item textarea{margin-top:6px}.notif-item small{color:#647086}
 .cifra{font-size:28px;font-weight:800}
 .diverso{margin:8px 0;padding:10px;border-radius:8px;background:#fff6e0;border:1px solid #e8b400;font-size:14px}.diverso button{margin-top:8px;width:auto;padding:8px 12px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
@@ -94,7 +96,8 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 <label for="notifTesto" style="margin-top:10px">Messaggio</label><textarea id="notifTesto" maxlength="300" placeholder="Es. Sabato ritrovo alle 14.15 in palestra, divisa blu"></textarea>
 <button id="notifInvia">📣 Invia notifica</button>
 <p class="status" id="notifStatus" role="status"></p>
-<h3 class="sub">Ultime notifiche inviate</h3>
+<h3 class="sub">News inviate</h3>
+<p class="muted" style="font-size:13px">Sono le news che i genitori vedono nel pulsante «📣 NEWS» del sito. Puoi rimandarle, modificarle o cancellarle.</p>
 <div id="notifLista"><p class="muted">–</p></div>
 <h3 class="sub">Punteggio in diretta</h3>
 <p class="muted">Il genitore in palestra apre <a href="/lvt-volley/live/" target="_blank">cuggini.github.io/lvt-volley/live/</a> e segna i punti con la password della diretta (diversa da quella admin). Sul sito compare il riquadro rosso «IN DIRETTA».</p>
@@ -412,7 +415,7 @@ const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Cl
 const NOMI_FUNZ = { naviga: "Naviga (Google Maps)", locandina: "Locandina aperta", condividi: "Locandina condivisa", copia: "Locandina copiata",
   scarica: "Locandina scaricata", retro: "Modalità Retro", crea_app: "Pulsante Crea app", app_installata: "App installata",
   apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV",
-  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato" };
+  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato", news: "Archivio news aperto", news_notifica: "News aperta da notifica" };
 const NOMI_ERR = { avvisi: "Attivazione notifiche fallita", risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
 const somma = (dest, json) => { let o = {}; try { o = JSON.parse(json || "{}"); } catch {} for (const [k, v] of Object.entries(o)) dest[k] = (dest[k] || 0) + v; };
 const giorniDa = (dal, n) => { const [y, m, d] = dal.split("-").map(Number); return [...Array(n)].map((_, i) => isoData(new Date(y, m - 1, d + i))); };
@@ -567,11 +570,48 @@ function descriviQuando(m){const d=m.data?new Date(m.data+"T12:00"):null;return 
 let propostaTitolo="";
 function proponiNotifica(titolo,testo){propostaTitolo=titolo;$("propTesto").value=testo.slice(0,300);$("propStatus").textContent="";$("propInvia").disabled=false;$("proposta").hidden=false;}
 $("propNo").onclick=()=>{$("proposta").hidden=true;};
-async function inviaNotifica(titolo,testo,stato){
-  let da=0,inviate=0,giro=0,r;
-  do{r=await request("push/invia",{method:"POST",body:JSON.stringify({password,titolo,testo,da})});inviate+=r.inviate;da=r.prossimo;stato(`Invio… ${inviate} telefoni avvisati`);}while(da!==null&&da!==undefined&&++giro<50);
+async function inviaNotifica(titolo,testo,stato,primo){
+  // primo: chiamata iniziale alternativa (rimanda / modifica e rimanda); poi continuo a lotti con push/invia
+  let r=await request(primo?primo.path:"push/invia",{method:"POST",body:JSON.stringify(primo?{password,...primo.corpo}:{password,titolo,testo,da:0})});
+  let inviate=r.inviate,da=r.prossimo,giro=0;stato(`Invio… ${inviate} telefoni avvisati`);
+  while(da!==null&&da!==undefined&&++giro<50){r=await request("push/invia",{method:"POST",body:JSON.stringify({password,da})});inviate+=r.inviate;da=r.prossimo;stato(`Invio… ${inviate} telefoni avvisati`);}
   return {inviate,totale:r.totale};
 }
+let newsAdmin=[],newsInModifica=null;
+function disegnaNews(){
+  const qd=t=>{const d=new Date(t);return `${d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})} ${d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`;};
+  $("notifLista").innerHTML=newsAdmin.length?newsAdmin.map(n=>String(n.id)===String(newsInModifica)
+    ?`<div class="notif-item" data-id="${n.id}"><small>Modifica news del ${qd(n.ts)}</small>
+       <input data-c="titolo" maxlength="80" value="${esc(n.titolo)}"><textarea data-c="testo" maxlength="300">${esc(n.testo)}</textarea>
+       <div class="actions"><button data-a="salva-invia">💾 Salva e rimanda</button><button class="secondary" data-a="salva">Salva senza inviare</button><button class="secondary" data-a="annulla">Annulla</button></div></div>`
+    :`<div class="notif-item" data-id="${n.id}"><small>${qd(n.ts)}</small><br><b>${esc(n.titolo)}</b> — ${esc(n.testo)}
+       <div class="actions"><button class="secondary" data-a="rimanda">🔁 Rimanda</button><button class="secondary" data-a="modifica">✏️ Modifica</button><button class="danger" data-a="cancella">🗑 Cancella</button></div></div>`).join("")
+    :'<p class="muted">Nessuna news inviata finora.</p>';
+}
+$("notifLista").addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-a]");if(!b)return;
+  const box=b.closest(".notif-item"),id=Number(box.dataset.id),n=newsAdmin.find(x=>x.id===id),a=b.dataset.a;
+  const stato=t=>{$("notifStatus").textContent=t;};
+  if(a==="modifica"){newsInModifica=id;return disegnaNews();}
+  if(a==="annulla"){newsInModifica=null;return disegnaNews();}
+  try{
+    if(a==="cancella"){
+      if(!confirm(`Cancellare questa news?\n\n${n.titolo}\n${n.testo}\n\nSparisce dall'archivio del sito (le notifiche già arrivate sui telefoni restano).`))return;
+      await request("push/cancella",{method:"POST",body:JSON.stringify({password,id})});stato("🗑 News cancellata.");
+    }else if(a==="rimanda"){
+      if(!confirm(`Rimandare la notifica a tutti i telefoni iscritti?\n\n${n.titolo}\n${n.testo}`))return;
+      b.disabled=true;const r=await inviaNotifica(n.titolo,n.testo,stato,{path:"push/rimanda",corpo:{id}});stato(`✔ News rimandata a ${r.inviate} telefoni.`);
+    }else{
+      const titolo=box.querySelector('[data-c=titolo]').value.trim()||"LVT · Avviso",testo=box.querySelector('[data-c=testo]').value.trim();
+      if(!testo){stato("Scrivi il testo della news.");return;}
+      b.disabled=true;
+      if(a==="salva"){await request("push/modifica",{method:"POST",body:JSON.stringify({password,id,titolo,testo,invia:false})});stato("✔ News modificata (non inviata).");}
+      else{const r=await inviaNotifica(titolo,testo,stato,{path:"push/modifica",corpo:{id,titolo,testo,invia:true}});stato(`✔ News modificata e rimandata a ${r.inviate} telefoni.`);}
+      newsInModifica=null;
+    }
+    caricaNotifiche();
+  }catch(err){b.disabled=false;stato("Operazione non riuscita: "+err.message);}
+});
 $("propInvia").onclick=async()=>{const testo=$("propTesto").value.trim();if(!testo)return;$("propInvia").disabled=true;
   try{const r=await inviaNotifica(propostaTitolo,testo,t=>$("propStatus").textContent=t);$("propStatus").textContent=`✔ Notifica inviata a ${r.inviate} telefoni.`;setTimeout(()=>{$("proposta").hidden=true;},2500);if(sezioniAperte.notifPanel)caricaNotifiche();}
   catch(e){$("propInvia").disabled=false;$("propStatus").textContent="Invio non riuscito: "+e.message;}};
@@ -589,7 +629,7 @@ async function caricaNotifiche(){
     const conti={};(r.elenco||[]).forEach(x=>conti[x.disp]=(conti[x.disp]||0)+1);
     $("iscrittiLista").innerHTML=(r.elenco||[]).length?`<p style="margin:8px 0">${Object.entries(conti).map(([k,v])=>`<b>${v}</b> ${esc(k)}`).join(" · ")}</p>`+
       r.elenco.map(x=>`<div class="notif-item">${ico[x.disp]||"❔"} <b>${esc(x.disp)}</b> · iscritto il ${gg(x.dal)} · ultima apertura ${gg(x.ultimo)}</div>`).join(""):'<p class="muted">Nessun telefono iscritto.</p>';
-    $("notifLista").innerHTML=r.ultime.length?r.ultime.map(n=>{const t=new Date(n.ts);return `<div class="notif-item"><small>${t.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})} ${t.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</small><br><b>${esc(n.titolo)}</b> — ${esc(n.testo)}</div>`;}).join(""):'<p class="muted">Nessuna notifica inviata finora.</p>';}
+    newsAdmin=r.ultime||[];disegnaNews();}
   catch(e){$("notifLista").innerHTML=`<p class="status">Notifiche non disponibili: ${esc(e.message)}. Serve aggiornare il Worker Cloudflare (vedi istruzioni).</p>`;}
 }
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
