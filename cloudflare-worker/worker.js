@@ -224,6 +224,16 @@ async function inviaLotto(env, da) {   // avvisa i telefoni da "da" in poi, LOTT
   const prossimo = da - scadute.length + subs.length;
   return { inviate, rimosse: scadute.length, prossimo: subs.length === LOTTO && prossimo < totale ? prossimo : null, totale };
 }
+function tipoDispositivo(ua) {
+  ua = String(ua || "");
+  if (/iPhone|iPod/.test(ua)) return "iPhone";
+  if (/iPad/.test(ua)) return "iPad";
+  if (/Android/.test(ua)) return /Mobile/.test(ua) ? "Android" : "Tablet Android";
+  if (/Macintosh/.test(ua)) return "Mac";
+  if (/Windows/.test(ua)) return "PC Windows";
+  if (/Linux|CrOS/.test(ua)) return "Computer";
+  return "Sconosciuto";
+}
 async function gestisciPush(request, env, cors, path) {
   if (!(await preparaTabelle(env))) return json({ error: "archivio non configurato: collega al Worker un database D1 con il nome DB" }, 501, cors);
   try {
@@ -237,8 +247,12 @@ async function gestisciPush(request, env, cors, path) {
     if (path === "/push/iscrivi") {
       const s = b.iscrizione || {};
       if (!/^https:\/\//.test(s.endpoint || "") || String(s.endpoint).length > 800) return json({ error: "iscrizione non valida" }, 400, cors);
-      await env.DB.prepare(`INSERT INTO iscrizioni (endpoint, dati, ts) VALUES (?,?,?) ON CONFLICT(endpoint) DO UPDATE SET ts = excluded.ts`)
-        .bind(s.endpoint, "{}", Date.now()).run();
+      // solo dati tecnici: tipo di dispositivo (dal browser) e data della prima iscrizione
+      const prima = await env.DB.prepare(`SELECT dati, ts FROM iscrizioni WHERE endpoint = ?`).bind(s.endpoint).first();
+      let vecchi = {}; try { vecchi = JSON.parse(prima && prima.dati || "{}"); } catch (e) {}
+      const dati = { disp: tipoDispositivo(request.headers.get("User-Agent")), dal: vecchi.dal || (prima ? prima.ts : Date.now()) };
+      await env.DB.prepare(`INSERT INTO iscrizioni (endpoint, dati, ts) VALUES (?,?,?) ON CONFLICT(endpoint) DO UPDATE SET dati = excluded.dati, ts = excluded.ts`)
+        .bind(s.endpoint, JSON.stringify(dati), Date.now()).run();
       return json({ ok: true }, 200, cors);
     }
     if (path === "/push/annulla") {
@@ -253,9 +267,11 @@ async function gestisciPush(request, env, cors, path) {
     }
     if (!ammesso) return json({ error: "Password errata" }, 401, cors);
     if (path === "/push/stato") {
-      const iscritti = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM iscrizioni`).first()).n;
+      const righe = (await env.DB.prepare(`SELECT dati, ts FROM iscrizioni ORDER BY ts DESC`).all()).results || [];
+      const elenco = righe.map(r => { let d = {}; try { d = JSON.parse(r.dati || "{}"); } catch (e) {} return { disp: d.disp || "Sconosciuto", dal: d.dal || r.ts, ultimo: r.ts }; })
+        .sort((a, b) => b.dal - a.dal);
       const ultime = (await env.DB.prepare(`SELECT ts, titolo, testo FROM notifiche ORDER BY id DESC LIMIT 10`).all()).results || [];
-      return json({ iscritti, ultime }, 200, cors);
+      return json({ iscritti: elenco.length, elenco, ultime }, 200, cors);
     }
     if (path === "/push/invia") {
       const da = Math.max(0, Number(b.da) || 0);

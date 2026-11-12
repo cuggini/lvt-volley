@@ -86,6 +86,8 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 <div class="section-heading"><h2>Notifiche e diretta</h2></div>
 <p class="muted">Le notifiche arrivano sui telefoni dei genitori che hanno toccato «🔔 AVVISI» sul sito. Quando cambi orari, date o palestre di partite e allenamenti l'admin ti propone in automatico di avvisarli.</p>
 <p><span class="cifra" id="iscritti">–</span> <span class="muted">telefoni iscritti alle notifiche</span></p>
+<details id="iscrittiBox"><summary class="muted" style="cursor:pointer">Vedi l'elenco dei telefoni iscritti</summary><div id="iscrittiLista"></div>
+<p class="muted" style="font-size:13px">Le iscrizioni sono anonime: solo tipo di telefono e date, nessun nome.</p></details>
 <h3 class="sub">Invia un avviso</h3>
 <label for="notifTitolo">Titolo</label><input id="notifTitolo" value="LVT · Avviso" maxlength="80">
 <label for="notifTesto" style="margin-top:10px">Messaggio</label><textarea id="notifTesto" maxlength="300" placeholder="Es. Sabato ritrovo alle 14.15 in palestra, divisa blu"></textarea>
@@ -551,6 +553,11 @@ $("notifInvia").onclick=async()=>{const titolo=$("notifTitolo").value.trim()||"L
 async function caricaNotifiche(){
   try{const r=await request("push/stato",{method:"POST",body:JSON.stringify({password})});
     $("iscritti").textContent=r.iscritti;
+    const gg=t=>new Date(t).toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"2-digit"});
+    const ico={iPhone:"📱",iPad:"📱",Android:"📱","Tablet Android":"📱",Mac:"💻","PC Windows":"💻",Computer:"💻"};
+    const conti={};(r.elenco||[]).forEach(x=>conti[x.disp]=(conti[x.disp]||0)+1);
+    $("iscrittiLista").innerHTML=(r.elenco||[]).length?`<p style="margin:8px 0">${Object.entries(conti).map(([k,v])=>`<b>${v}</b> ${esc(k)}`).join(" · ")}</p>`+
+      r.elenco.map(x=>`<div class="notif-item">${ico[x.disp]||"❔"} <b>${esc(x.disp)}</b> · iscritto il ${gg(x.dal)} · ultima apertura ${gg(x.ultimo)}</div>`).join(""):'<p class="muted">Nessun telefono iscritto.</p>';
     $("notifLista").innerHTML=r.ultime.length?r.ultime.map(n=>{const t=new Date(n.ts);return `<div class="notif-item"><small>${t.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})} ${t.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</small><br><b>${esc(n.titolo)}</b> — ${esc(n.testo)}</div>`;}).join(""):'<p class="muted">Nessuna notifica inviata finora.</p>';}
   catch(e){$("notifLista").innerHTML=`<p class="status">Notifiche non disponibili: ${esc(e.message)}. Serve aggiornare il Worker Cloudflare (vedi istruzioni).</p>`;}
 }
