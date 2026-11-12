@@ -46,8 +46,12 @@
       "squadraCasa": "LVT LISSONE VOLLEY TEAM",
       "squadraOspite": "PLESIOS VOLLEY",
       "setCasa": 0,
-      "setOspite": 0,
-      "punteggiSet": [],
+      "setOspite": 3,
+      "punteggiSet": [
+        "19-25",
+        "21-25",
+        "22-25"
+      ],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
     },
     {
