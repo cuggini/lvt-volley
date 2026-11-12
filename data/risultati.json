@@ -98,9 +98,15 @@
       "competizione": "FIPAV",
       "squadraCasa": "LVT LISSONE VOLLEY TEAM",
       "squadraOspite": "CA GROUP NET VOLLEY",
-      "setCasa": 0,
-      "setOspite": 0,
-      "punteggiSet": [],
+      "setCasa": 2,
+      "setOspite": 3,
+      "punteggiSet": [
+        "19-25",
+        "28-26",
+        "23-25",
+        "25-23",
+        "10-15"
+      ],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
     },
     {
