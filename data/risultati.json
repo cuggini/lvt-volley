@@ -79,9 +79,15 @@
       "competizione": "FIPAV",
       "squadraCasa": "PRO VICTORIA PALLAVOLO FUCSIA",
       "squadraOspite": "LVT LISSONE VOLLEY TEAM",
-      "setCasa": 0,
-      "setOspite": 0,
-      "punteggiSet": [],
+      "setCasa": 2,
+      "setOspite": 3,
+      "punteggiSet": [
+        "20-25",
+        "25-21",
+        "25-19",
+        "20-25",
+        "13-15"
+      ],
       "campo": "Scuola Media Bellani, Via Silvio Pellico, 20900 Monza"
     },
     {
