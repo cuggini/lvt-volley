@@ -473,7 +473,7 @@
     <button data-v="agenda" class="active">Agenda</button>
     <button data-v="calendario">Calendario</button>
     <button data-v="classifica">Classifica</button>
-    <button data-v="altre">Altre partite</button>
+    <button data-v="altre">Tutte le partite</button>
   </div>
   <div class="summary" id="summary"></div>
   <p class="aggiornato" id="aggiornato"></p>
@@ -641,6 +641,7 @@
       };
     }).filter(Boolean).sort((a, b) => a.d - b.d);
 
+  const eNoi = nome => MIA_SOCIETA.test(nome || "");
   const me = norm(MIA_SQUADRA || "");
   const isMe = t => me && norm(t) === me;
   const inCasa = p => isMe(p.casa);
@@ -658,8 +659,9 @@
   }
 
   function card(p, isNext, opt = {}) {
-    const nomeSq = n => opt.squadreCliccabili
-      ? `<button class="sq-link" data-camp="${p.camp}" data-sq="${esc(n)}">${esc(n)}</button>` : esc(n);
+    const nomeSq = n => opt.squadreCliccabili && !(opt.soloAvversari && (isMe(n) || eNoi(n)))
+      ? `<button class="sq-link" data-camp="${p.camp}" data-sq="${esc(n)}" data-gara="${esc(p.gara)}">${esc(n)}</button>` : esc(n);
+    const evid = n => isMe(n) || opt.evidenzia === norm(n) || (opt.squadreCliccabili && !opt.soloAvversari && eNoi(n));
     const cls = p.camp.toLowerCase();
     const dataTxt = `${GIORNI[p.d.getDay()]} ${String(p.d.getDate()).padStart(2, "0")}/${String(p.d.getMonth() + 1).padStart(2, "0")}/${String(p.d.getFullYear()).slice(2)}`;
     const e = esito(p);
@@ -689,9 +691,9 @@
               title="Locandina da condividere" aria-label="Crea la locandina della partita">📤</button>` : ""}
         </div>
         <div class="row">
-          <div class="team home ${isMe(p.casa) || opt.evidenzia === norm(p.casa) ? "me" : ""}">${nomeSq(p.casa)}</div>
+          <div class="team home ${evid(p.casa) ? "me" : ""}">${nomeSq(p.casa)}</div>
           ${centro}
-          <div class="team ${isMe(p.ospite) || opt.evidenzia === norm(p.ospite) ? "me" : ""}">${nomeSq(p.ospite)}</div>
+          <div class="team ${evid(p.ospite) ? "me" : ""}">${nomeSq(p.ospite)}</div>
         </div>
         ${sets ? `<div class="sets">${sets}</div>` : ""}
         ${warn}
@@ -718,7 +720,7 @@
   }
 
   // sezioni dell'Agenda apribili/chiudibili (chiuse all'apertura del sito)
-  const sezioniAperte = { risultati: false, prossime: false };
+  const sezioniAperte = { risultati: false, prossime: false, tutteRisultati: false, tutteProssime: false, sqRisultati: true, sqProssime: true };
   const testataSezione = (id, titolo, n) => `<h2 class="toggle"><button type="button" data-sezione="${id}" aria-expanded="${sezioniAperte[id]}">
       <span>${titolo} <small>(${n})</small></span><span class="freccia" aria-hidden="true">${sezioniAperte[id] ? "▲" : "▼"}</span></button></h2>`;
   function renderAgenda(lista) {
@@ -726,19 +728,25 @@
     const daGiocare = lista.filter(p => !p.ris);
     document.getElementById("risultati").innerHTML = testataSezione("risultati", "Risultati", giocate.length) +
       `<div class="corpo-sezione" ${sezioniAperte.risultati ? "" : "hidden"}>` +
-      (giocate.length ? giocate.map(p => card(p, false)).join("") : '<div class="empty">Nessun risultato ancora.</div>') + "</div>";
+      (giocate.length ? giocate.map(p => card(p, false, { squadreCliccabili: true, soloAvversari: true })).join("") : '<div class="empty">Nessun risultato ancora.</div>') + "</div>";
     document.getElementById("prossime").innerHTML = testataSezione("prossime", "Prossime partite", daGiocare.length) +
       `<div class="corpo-sezione" ${sezioniAperte.prossime ? "" : "hidden"}>` +
-      (daGiocare.length ? daGiocare.map((p, i) => card(p, i === 0)).join("") : '<div class="empty">Stagione conclusa!</div>') + "</div>";
+      (daGiocare.length ? daGiocare.map((p, i) => card(p, i === 0, { squadreCliccabili: true, soloAvversari: true })).join("") : '<div class="empty">Stagione conclusa!</div>') + "</div>";
   }
-  document.getElementById("vista-agenda").addEventListener("click", e => {
-    const b = e.target.closest("button[data-sezione]"); if (!b) return;
+  function apriChiudiSezione(e) {
+    const b = e.target.closest("button[data-sezione]"); if (!b) return false;
     conta("funzioni", "apri_sezione");
     const id = b.dataset.sezione, aperta = !sezioniAperte[id];
     sezioniAperte[id] = aperta;
     b.setAttribute("aria-expanded", aperta);
     b.querySelector(".freccia").textContent = aperta ? "▲" : "▼";
     b.closest("h2").nextElementSibling.hidden = !aperta;
+    return true;
+  }
+  document.getElementById("vista-agenda").addEventListener("click", e => {
+    if (apriChiudiSezione(e)) return;
+    const s = e.target.closest(".sq-link");
+    if (s) apriSquadra(s.dataset.camp, s.dataset.sq, s.dataset.gara);
   });
 
   function renderCalendario() {
@@ -1116,7 +1124,6 @@
     cachePartite = { t: Date.now(), p };
     return p;
   }
-  const eNoi = nome => MIA_SOCIETA.test(nome || "");
 
   const PROSSIME_VISIBILI = 8;
   let mostraTutteProssime = false;
@@ -1126,27 +1133,39 @@
     caricaPartiteUfficiali().then(({ fipav, pgs, tutte }) => {
       if (stato.vista !== "altre") return;
       const sq = stato.squadra;
-      const scelte = tutte.filter(p => passa(p) && (sq
-        ? p.camp === sq.camp && (norm(p.casa) === norm(sq.nome) || norm(p.ospite) === norm(sq.nome))   // tutte le partite di quella squadra
-        : !eNoi(p.casa) && !eNoi(p.ospite)));                                                         // solo le altre squadre
+      if (sq && sq.gara) {   // nome scritto nell'admin: lo traduco nel nome ufficiale grazie al numero gara
+        const delCamp = tutte.filter(p => p.camp === sq.camp);
+        if (!delCamp.some(p => norm(p.casa) === norm(sq.nome) || norm(p.ospite) === norm(sq.nome))) {
+          const g = delCamp.find(p => String(p.gara) === String(sq.gara));
+          if (g) sq.nome = eNoi(g.casa) ? g.ospite : g.casa;
+        }
+        delete sq.gara;
+      }
+      const scelte = tutte.filter(p => passa(p) && (!sq ||
+        p.camp === sq.camp && (norm(p.casa) === norm(sq.nome) || norm(p.ospite) === norm(sq.nome))));   // tutte, o solo quella squadra
       const giocate = scelte.filter(p => p.ris).sort((a, b) => b.d - a.d);
       const future = scelte.filter(p => !p.ris).sort((a, b) => a.d - b.d);
       const futureVisibili = sq || mostraTutteProssime ? future : future.slice(0, PROSSIME_VISIBILI);
       const opt = { senzaNaviga: true, squadreCliccabili: true, evidenzia: sq ? norm(sq.nome) : null };
       const mancano = [stato.filtro !== "PGS" && !fipav && "FIPAV", stato.filtro !== "FIPAV" && !pgs && "PGS"].filter(Boolean);
       const girone = c => c === "FIPAV" ? "Girone J" : "Girone 8";
-      box.innerHTML = `<h2>${sq ? esc(sq.nome) : "Altre partite"}</h2>
+      const kR = sq ? "sqRisultati" : "tutteRisultati", kP = sq ? "sqProssime" : "tutteProssime";
+      box.innerHTML = `<h2>${sq ? esc(sq.nome) : "Tutte le partite"}</h2>
         ${sq ? `<div class="filtro-squadra ${sq.camp.toLowerCase()}">
             <span>Partite di <b>${esc(sq.nome)}</b> · ${sq.camp} ${girone(sq.camp)}</span>
             <button id="togli-squadra">✕ Tutte</button></div>`
-          : `<p class="fonte">ℹ️ Partite delle altre squadre dei nostri gironi, dai siti ufficiali:
+          : `<p class="fonte">ℹ️ Tutte le partite dei nostri gironi, comprese quelle LVT, dai siti ufficiali:
               <b>FIPAV</b> e <b>PGS</b> controllati in automatico più volte al giorno. Tocca una squadra per vedere solo le sue partite.</p>`}
         ${mancano.length ? `<div class="empty">Partite ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
-        <h3 class="sotto">Risultati</h3>
+        ${testataSezione(kR, "Risultati", giocate.length)}
+        <div class="corpo-sezione" ${sezioniAperte[kR] ? "" : "hidden"}>
         ${giocate.length ? giocate.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}
-        <h3 class="sotto">Prossime partite</h3>
+        </div>
+        ${testataSezione(kP, "Prossime partite", future.length)}
+        <div class="corpo-sezione" ${sezioniAperte[kP] ? "" : "hidden"}>
         ${futureVisibili.length ? futureVisibili.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessuna partita in programma.</div>'}
-        ${futureVisibili.length < future.length ? `<button class="mostra-tutte" id="mostra-prossime">Mostra tutte (${future.length})</button>` : ""}`;
+        ${futureVisibili.length < future.length ? `<button class="mostra-tutte" id="mostra-prossime">Mostra tutte (${future.length})</button>` : ""}
+        </div>`;
       if (document.body.classList.contains("retro")) box.querySelectorAll("h2, h3").forEach(x => x.classList.add("matita"));
     });
   }
@@ -1157,18 +1176,20 @@
     if (filtro) stato.filtro = filtro;
     if (vista) stato.vista = vista;
     stato.squadra = squadra;
+    if (squadra) sezioniAperte.sqRisultati = sezioniAperte.sqProssime = true;   // squadra scelta: partite subito visibili
     mostraTutteProssime = false;
     document.querySelectorAll("#filters button").forEach(x => x.classList.toggle("active", x.dataset.f === stato.filtro));
     document.querySelectorAll("#views button").forEach(x => x.classList.toggle("active", x.dataset.v === stato.vista));
     render();
     document.getElementById("views").scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  function apriSquadra(camp, nome) {
+  function apriSquadra(camp, nome, gara) {
     conta("funzioni", "squadra");
-    if (eNoi(nome)) vai({ vista: "agenda", filtro: camp });
-    else vai({ vista: "altre", filtro: camp, squadra: { camp, nome } });
+    if (eNoi(nome) || isMe(nome)) vai({ vista: "agenda", filtro: camp });
+    else vai({ vista: "altre", filtro: camp, squadra: { camp, nome, gara } });
   }
   document.getElementById("vista-altre").addEventListener("click", e => {
+    if (apriChiudiSezione(e)) return;
     const s = e.target.closest(".sq-link");
     if (s) return apriSquadra(s.dataset.camp, s.dataset.sq);
     if (e.target.closest("#togli-squadra")) return vai({ vista: "altre" });
