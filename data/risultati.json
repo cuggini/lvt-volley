@@ -118,8 +118,12 @@
       "squadraCasa": "PGS DOMANI",
       "squadraOspite": "LVT LISSONE VOLLEY TEAM",
       "setCasa": 0,
-      "setOspite": 0,
-      "punteggiSet": [],
+      "setOspite": 3,
+      "punteggiSet": [
+        "20-25",
+        "13-25",
+        "14-25"
+      ],
       "campo": ""
     },
     {
