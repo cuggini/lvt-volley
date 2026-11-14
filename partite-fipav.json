@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-11T18:48:17.475Z",
+  "aggiornato": "2026-11-14T21:37:36.100Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -210,10 +210,15 @@
       "ora": "17.30",
       "casa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
       "ospite": "CA GROUP NET VOLLEY",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "18-25",
+        "27-29",
+        "26-24",
+        "15-25"
+      ],
+      "provvisorio": true,
       "campo": "CENTRO SPORTIVO MONS. SALA, BOLLATE - VIALE REPUBBLICA 6"
     },
     {
@@ -222,10 +227,15 @@
       "ora": "18.00",
       "casa": "PRO VICTORIA PALLAVOLO FUCSIA",
       "ospite": "VOLLEY CUSANO",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "20-25",
+        "25-23",
+        "20-25",
+        "26-28"
+      ],
+      "provvisorio": true,
       "campo": "SCUOLA MEDIA BELLANI, MONZA - VIA SILVIO PELLICO"
     },
     {
