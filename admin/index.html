@@ -28,11 +28,16 @@ h3.sub{margin:22px 0 6px}select{font:inherit;padding:11px;border-radius:8px;bord
 .st-graf{border:1px solid #dce2eb;border-radius:10px;padding:8px}.st-graf svg{width:100%;height:auto;display:block}
 .st-graf .b{fill:#153b72}.st-graf .b:hover{fill:#24569a}.st-graf text{fill:#647086;font-size:20px}.st-graf .g{stroke:#e5e9f0}
 .st-barre{display:grid;gap:6px}.st-barre div{display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;font-size:14px}
+.st-barre button.voce{all:unset;box-sizing:border-box;display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;font-size:14px;cursor:pointer;padding:4px 6px;margin:0 -6px;border-radius:6px;width:calc(100% + 12px)}
+.st-barre button.voce:hover,.st-barre button.voce.on{background:#eef3fb}.st-barre button.voce span{text-decoration:underline dotted #8a96aa;text-underline-offset:3px}
+.st-dett{margin:10px 0 18px;padding:14px;border:2px solid #153b72;border-radius:12px;background:#fff}
+.st-dett h4{margin:0 0 10px;font-size:16px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.st-dett h4 button{width:auto;margin:0;padding:4px 10px}
+.st-dett .st-tiles{margin-bottom:10px}.st-dett .var{font-size:13px}.st-dett .su{color:#1f9d55}.st-dett .giu{color:#a72c35}
 .st-barre i{display:block;height:10px;border-radius:0 4px 4px 0;background:#153b72}.st-barre em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
 table.acc{width:100%;border-collapse:collapse;font-size:13px}table.acc td,table.acc th{padding:7px 6px;border-bottom:1px solid #e5e9f0;text-align:left}
 table.acc .ko{color:#a72c35;font-weight:700}.periodo{display:flex;gap:6px;flex-wrap:wrap}.periodo button{width:auto;margin-top:0;padding:8px 14px}
 .periodo button.on{background:#153b72;color:#fff}
-@media(max-width:600px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.st-barre div{grid-template-columns:110px 1fr 40px}.indice{flex-direction:column;align-items:flex-start}}
+@media(max-width:600px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.st-barre div,.st-barre button.voce{grid-template-columns:110px 1fr 40px}.indice{flex-direction:column;align-items:flex-start}}
 /* sezioni apribili/chiudibili */
 .barra-admin{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}.barra-admin[hidden]{display:none}.barra-admin button{width:auto;margin:0;padding:9px 18px}
 h2.apri{margin:0}h2.apri button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;cursor:pointer;font:inherit;font-weight:700;color:#172033}
@@ -107,8 +112,8 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 </section>
 <section class="panel" id="statPanel" hidden>
 <div class="section-heading"><h2>Statistiche del sito</h2>
-<div class="periodo" id="periodo"><button class="secondary" data-g="7">7 giorni</button><button class="secondary on" data-g="30">30 giorni</button><button class="secondary" data-g="90">90 giorni</button></div></div>
-<p class="muted">Dati anonimi, senza cookie. Le visite dai dispositivi amministratori sono escluse.</p>
+<div class="periodo" id="periodo"><button class="secondary" data-g="7">7 giorni</button><button class="secondary on" data-g="30">30 giorni</button><button class="secondary" data-g="90">90 giorni</button><button class="secondary" data-g="365">Dall'inizio</button></div></div>
+<p class="muted">Dati anonimi, senza cookie. Le visite dai dispositivi amministratori sono escluse. Selezionare una sezione o una funzione per l'andamento nel tempo.</p>
 <div id="statBody"><p class="muted">Caricamento…</p></div>
 <h3 class="sub">Registro accessi</h3>
 <p class="muted">Ultimi 40 accessi. In presenza di tentativi non riconosciuti, sostituire la password.</p>
@@ -459,11 +464,73 @@ function barreSvg(valori, etichette, alt) {
   const lab = etichette.map((e, i) => i % step ? "" : `<text x="${L + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${e.short}</text>`).join("");
   return `<div class="st-graf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${alt}">${g}${barre}${lab}</svg></div>`;
 }
-function listaBarre(obj, nomi) {
+function listaBarre(obj, nomi, cat) {
   const l = Object.entries(obj).sort((x, y) => y[1] - x[1]); if (!l.length) return '<p class="muted">Ancora nessun dato.</p>';
   const max = l[0][1];
-  return `<div class="st-barre">${l.map(([k, v]) => `<div><span>${esc(nomi[k] || k)}</span><i style="width:${Math.max(2, 100 * v / max)}%"></i><em>${v}</em></div>`).join("")}</div>`;
+  return `<div class="st-barre" data-cat="${cat}">${l.map(([k, v]) => `<button class="voce" data-cat="${cat}" data-k="${esc(k)}" aria-expanded="false"><span>${esc(nomi[k] || k)}</span><i style="width:${Math.max(2, 100 * v / max)}%"></i><em>${v}</em></button>`).join("")}</div><div class="st-dett-box" data-cat="${cat}"></div>`;
 }
+// ---------- andamento nel tempo di una sezione / funzione ----------
+let ultimoStat = null;   // { d: dati del periodo, prev: righe del periodo precedente (se disponibili) }
+const CAMPO_CAT = { viste: "viste", funzioni: "funzioni", errori: "errori" };
+const NOMI_CAT = () => ({ viste: NOMI_VISTE, funzioni: NOMI_FUNZ, errori: NOMI_ERR });
+function serieVoce(righe, cat, k) {   // volte per giorno e visite distinte che l'hanno usata
+  const volte = {}, visite = {}, viste = new Set();
+  righe.forEach(r => { let o = {}; try { o = JSON.parse(r[CAMPO_CAT[cat]] || "{}"); } catch {} const v = Number(o[k]) || 0; if (!v) return;
+    volte[r.giorno] = (volte[r.giorno] || 0) + v;
+    const id = r.vid + "|" + r.giorno; if (!viste.has(id)) { viste.add(id); visite[r.giorno] = (visite[r.giorno] || 0) + 1; } });
+  const tot = Object.values(volte).reduce((a, b) => a + b, 0);
+  return { volte, visite, tot, visiteTot: viste.size };
+}
+function dettaglioVoce(cat, k) {
+  const { d, prev } = ultimoStat, nome = NOMI_CAT()[cat][k] || k;
+  const sr = serieVoce(d.righe, cat, k), giorni = giorniDa(d.dal, d.giorni);
+  const visiteTot = new Set(d.righe.filter(r => !r.seguito).map(r => r.vid + "|" + r.giorno)).size;
+  // giornaliero fino a 45 giorni, poi settimanale
+  const settimanale = giorni.length > 45;
+  let valori, et;
+  if (!settimanale) {
+    valori = giorni.map(g => sr.volte[g] || 0);
+    et = giorni.map(g => { const [y, m, dd] = g.split("-"); return { short: `${dd}/${m}`, full: `${dd}/${m}/${y}` }; });
+  } else {
+    valori = []; et = [];
+    for (let i = 0; i < giorni.length; i += 7) {
+      const blocco = giorni.slice(i, i + 7); valori.push(blocco.reduce((a, g) => a + (sr.volte[g] || 0), 0));
+      const [y, m, dd] = blocco[0].split("-"); et.push({ short: `${dd}/${m}`, full: `settimana dal ${dd}/${m}/${y}` });
+    }
+  }
+  const picco = Object.entries(sr.volte).sort((a, b) => b[1] - a[1])[0];
+  const primo = Object.keys(sr.volte).sort()[0];
+  let confronto = "";
+  if (prev) {
+    const sp = serieVoce(prev, cat, k);
+    if (sp.tot) { const delta = Math.round(100 * (sr.tot - sp.tot) / sp.tot);
+      confronto = `<span class="var ${delta >= 0 ? "su" : "giu"}">${delta >= 0 ? "▲ +" : "▼ "}${delta}% rispetto ai ${d.giorni} giorni precedenti (${sp.tot})</span>`; }
+    else if (sr.tot) confronto = `<span class="var su">Nessun utilizzo nei ${d.giorni} giorni precedenti</span>`;
+  }
+  const it = g => g ? g.split("-").reverse().join("/") : "–";
+  return `<div class="st-dett"><h4><span>${esc(nome)}</span><button class="secondary" data-chiudi="1">Chiudi</button></h4>
+    <div class="st-tiles">
+      <div class="st-tile"><b>${sr.tot}</b><span>Volte</span></div>
+      <div class="st-tile"><b>${sr.visiteTot}</b><span>Visite che l'hanno usata</span></div>
+      <div class="st-tile"><b>${visiteTot ? Math.round(100 * sr.visiteTot / visiteTot) : 0}%</b><span>Delle visite</span></div>
+      <div class="st-tile"><b>${picco ? `${picco[1]}` : "–"}</b><span>Picco${picco ? ` il ${it(picco[0])}` : ""}</span></div>
+    </div>
+    ${confronto ? `<p style="margin:0 0 8px">${confronto}</p>` : ""}
+    ${barreSvg(valori, et, `${nome}: andamento ${settimanale ? "settimanale" : "giornaliero"}`)}
+    <p class="muted" style="font-size:13px;margin:6px 0 0">Andamento ${settimanale ? "per settimana" : "per giorno"} · primo utilizzo nel periodo: ${it(primo)}.</p></div>`;
+}
+$("statBody").addEventListener("click", e => {
+  const chiudi = e.target.closest("button[data-chiudi]");
+  if (chiudi) { const box = chiudi.closest(".st-dett-box"); box.innerHTML = ""; box.previousElementSibling.querySelectorAll(".voce").forEach(v => { v.classList.remove("on"); v.setAttribute("aria-expanded", "false"); }); return; }
+  const b = e.target.closest("button.voce"); if (!b || !ultimoStat) return;
+  const box = $("statBody").querySelector(`.st-dett-box[data-cat="${b.dataset.cat}"]`);
+  const giaAperta = b.classList.contains("on");
+  b.parentElement.querySelectorAll(".voce").forEach(v => { v.classList.remove("on"); v.setAttribute("aria-expanded", "false"); });
+  if (giaAperta) { box.innerHTML = ""; return; }
+  b.classList.add("on"); b.setAttribute("aria-expanded", "true");
+  box.innerHTML = dettaglioVoce(b.dataset.cat, b.dataset.k);
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
 function calcolaStat(d) {
   const visite = d.righe.filter(r => !r.seguito);
   const perVisita = {};   // vid|giorno -> sezioni ed errori uniti (una visita può inviare più volte)
@@ -518,9 +585,9 @@ function renderStat(d) {
     <h3 class="sub">Visite al giorno</h3>${barreSvg(s.perGiorno, et, "Visite al giorno")}
     <h3 class="sub">A che ora</h3>${barreSvg(s.ore, s.ore.map((_, h) => ({ short: `${h}`, full: `ore ${h}-${h + 1}` })), "Visite per ora del giorno")}
     <p class="muted">Dispositivi: ${Object.entries(s.disp).map(([k, v]) => `${k} ${Math.round(100 * v / s.visite.length)}%`).join(" · ")} · da app installata ${Math.round(100 * s.app / s.visite.length)}%${d.visiteInterne ? ` · escluse ${d.visiteInterne} tue visite` : ""}</p>
-    <h3 class="sub">Sezioni più viste</h3>${listaBarre(s.viste, NOMI_VISTE)}
-    <h3 class="sub">Funzioni usate</h3>${listaBarre(s.funzioni, NOMI_FUNZ)}
-    <h3 class="sub">Problemi</h3>${Object.keys(s.errori).length ? listaBarre(s.errori, NOMI_ERR) : '<p class="muted">Nessun errore registrato 👍</p>'}`;
+    <h3 class="sub">Sezioni più viste</h3>${listaBarre(s.viste, NOMI_VISTE, "viste")}
+    <h3 class="sub">Funzioni usate</h3>${listaBarre(s.funzioni, NOMI_FUNZ, "funzioni")}
+    <h3 class="sub">Problemi</h3>${Object.keys(s.errori).length ? listaBarre(s.errori, NOMI_ERR, "errori") : '<p class="muted">Nessun errore registrato 👍</p>'}`;
   const acc = d.accessi || [];
   $("accessiBody").innerHTML = acc.length ? `<table class="acc"><thead><tr><th>Quando</th><th>Esito</th><th>Dispositivo</th><th>Da</th></tr></thead><tbody>${acc.map(x => {
     const t = new Date(x.ts), q = `${t.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" })} ${t.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`;
@@ -529,7 +596,20 @@ function renderStat(d) {
 }
 async function caricaStat() {
   $("statBody").innerHTML = '<p class="muted">Caricamento…</p>';
-  try { renderStat(await request("stats", { method: "POST", body: JSON.stringify({ password, giorni: giorniStat }) })); }
+  try {
+    // chiedo il doppio del periodo: la seconda metà serve solo per il confronto con il periodo precedente
+    const doppio = giorniStat * 2 <= 365, g = doppio ? giorniStat * 2 : giorniStat;
+    const tutto = await request("stats", { method: "POST", body: JSON.stringify({ password, giorni: g }) });
+    const dal = giorniDa(tutto.dal, tutto.giorni)[tutto.giorni - giorniStat];
+    let d = doppio ? { ...tutto, giorni: giorniStat, dal, righe: tutto.righe.filter(r => r.giorno >= dal) } : tutto;
+    if (!doppio && d.righe.length) {   // "Dall'inizio": parto dal primo giorno con dati
+      const primo = d.righe.reduce((m, r) => r.giorno < m ? r.giorno : m, d.righe[0].giorno);
+      const n = Math.round((new Date(isoData(new Date()) + "T12:00") - new Date(primo + "T12:00")) / 864e5) + 1;
+      d = { ...d, dal: primo, giorni: Math.max(1, n) };
+    }
+    ultimoStat = { d, prev: doppio ? tutto.righe.filter(r => r.giorno < dal) : null };
+    renderStat(d);
+  }
   catch (e) {
     $("statBody").innerHTML = `<p class="status">Statistiche non disponibili: ${esc(e.message)}.${/non configurato|404|Endpoint/.test(e.message) ? "" : ""}</p>`;
     $("accessiBody").innerHTML = "";
