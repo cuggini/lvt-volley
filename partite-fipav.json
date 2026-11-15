@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-14T21:37:36.100Z",
+  "aggiornato": "2026-11-15T15:18:30.825Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -244,10 +244,14 @@
       "ora": "18.30",
       "casa": "ASD POLISPORTIVA DI NOVA",
       "ospite": "NUOVA LAVANDERIA BAREGGIA SERVICE",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "19-25",
+        "18-25",
+        "23-25"
+      ],
+      "provvisorio": true,
       "campo": "PALESTRA SCUOLA ELEMENTARE, NOVA MILANESE - VIA VENEZIA"
     },
     {

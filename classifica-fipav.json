@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-14T21:37:36.100Z",
+  "aggiornato": "2026-11-15T15:18:30.824Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -30,14 +30,14 @@
     {
       "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
       "societa": "LISSONE VOLLEY TEAM",
-      "punti": "6",
-      "giocate": "3",
-      "vinte": "2",
+      "punti": "9",
+      "giocate": "4",
+      "vinte": "3",
       "perse": "1",
-      "setVinti": "8",
+      "setVinti": "11",
       "setPersi": "6",
-      "puntiFatti": "304",
-      "puntiSubiti": "299"
+      "puntiFatti": "379",
+      "puntiSubiti": "359"
     },
     {
       "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
@@ -55,13 +55,13 @@
       "squadra": "ASD POLISPORTIVA DI NOVA",
       "societa": "POLISPORTIVA DI NOVA",
       "punti": "6",
-      "giocate": "4",
+      "giocate": "5",
       "vinte": "2",
-      "perse": "2",
+      "perse": "3",
       "setVinti": "7",
-      "setPersi": "8",
-      "puntiFatti": "315",
-      "puntiSubiti": "326"
+      "setPersi": "11",
+      "puntiFatti": "375",
+      "puntiSubiti": "401"
     },
     {
       "squadra": "VOLLEY CUSANO",
