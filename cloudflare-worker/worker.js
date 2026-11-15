@@ -1,6 +1,10 @@
 const JSON_PATH = "data/risultati.json";
 
 export default {
+  // eseguito da Cloudflare a orari fissi (Cron Trigger, ogni 30 minuti): promemoria automatici delle partite
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(giroPromemoria(env).catch(e => console.log("promemoria:", e.message)));
+  },
   async fetch(request, env, ctx) {
     const origin = request.headers.get("Origin") || "";
     const allowed = env.ALLOWED_ORIGIN || "";
@@ -16,6 +20,8 @@ export default {
     if (url.pathname === "/stats") return statistiche(request, env, cors);
     if (url.pathname.startsWith("/push/")) return gestisciPush(request, env, cors, url.pathname);
     if (url.pathname.startsWith("/live")) return gestisciLive(request, env, cors, url.pathname);
+    if (url.pathname === "/calendario.ics") return calendarioIcs(url);
+    if (url.pathname === "/promemoria") return impostaPromemoria(request, env, cors);
     if (url.pathname === "/auth") {
       if (request.method !== "POST") return json({ error: "Metodo non consentito" }, 405, cors);
       let authBody;
@@ -33,8 +39,11 @@ export default {
     if (request.method === "GET") {
       try {
         const file = await githubFile(env);
-        return json(JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, ""))))), 200, cors);
+        const dati = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, "")))));
+        if (file._scadenza) dati._tokenScadenza = file._scadenza;   // scadenza della chiave GitHub (avviso in admin)
+        return json(dati, 200, cors);
       } catch (e) {
+        if (/^401/.test(e.message)) return json({ error: "La chiave di accesso a GitHub (GH_TOKEN) è scaduta o non valida.", token: true }, 502, cors);
         return json({ error: "Impossibile leggere risultati.json: " + e.message }, 502, cors);
       }
     }
@@ -105,10 +114,12 @@ async function preparaTabelle(env) {
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS iscrizioni (endpoint TEXT PRIMARY KEY, dati TEXT, ts INTEGER)`),
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS notifiche (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, titolo TEXT, testo TEXT, url TEXT)`),
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS impostazioni (nome TEXT PRIMARY KEY, valore TEXT)`),
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS promemoria_inviati (chiave TEXT PRIMARY KEY, ts INTEGER)`),
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS live (id INTEGER PRIMARY KEY, dati TEXT, ts INTEGER)`),
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS accessi_admin (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, esito TEXT,
       tipo TEXT, dispositivo TEXT, browser TEXT, luogo TEXT)`),
   ]);
+  try { await env.DB.prepare(`ALTER TABLE notifiche ADD COLUMN tipo TEXT`).run(); } catch (e) {}   // già presente
   tabellePronte = true;
   return true;
 }
@@ -207,11 +218,12 @@ const passwordOk = (env, pw, anchePapa) => {
   if (env.ADMIN_PASSWORD && p === String(env.ADMIN_PASSWORD).trim()) return true;
   return !!(anchePapa && env.LIVE_PASSWORD && p === String(env.LIVE_PASSWORD).trim());
 };
-async function creaNotifica(env, titolo, testo) {
+async function creaNotifica(env, titolo, testo, tipo = "news", url = SITO) {
   titolo = String(titolo || "LVT Volley").slice(0, 80); testo = String(testo || "").slice(0, 300);
-  const r = await env.DB.prepare(`INSERT INTO notifiche (ts, titolo, testo, url) VALUES (?,?,?,?)`).bind(Date.now(), titolo, testo, SITO).run();
+  const r = await env.DB.prepare(`INSERT INTO notifiche (ts, titolo, testo, url, tipo) VALUES (?,?,?,?,?)`).bind(Date.now(), titolo, testo, url, tipo).run();
   return r.meta.last_row_id;
 }
+const SOLO_NEWS = `COALESCE(tipo, 'news') = 'news'`;   // i promemoria automatici non entrano nell'archivio news
 async function inviaLotto(env, da) {   // avvisa i telefoni da "da" in poi, LOTTO alla volta
   const chiavi = await chiaviVapid(env);
   const subs = (await env.DB.prepare(`SELECT endpoint FROM iscrizioni ORDER BY ts LIMIT ? OFFSET ?`).bind(LOTTO, da).all()).results || [];
@@ -242,11 +254,12 @@ async function gestisciPush(request, env, cors, path) {
   try {
     if (path === "/push/chiave") return json({ chiave: (await chiaviVapid(env)).pubblica }, 200, cors);
     if (path === "/push/ultima") {   // l'ultima news inviata (o rimandata): il clic apre il sito su quella news
-      const n = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 1`).first();
-      return json(n ? { ...n, url: `${SITO}?news=${n.id}` } : { titolo: "LVT Volley", testo: "Nuova comunicazione della squadra", url: SITO }, 200, cors);
+      const n = await env.DB.prepare(`SELECT id, ts, titolo, testo, url, tipo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 1`).first();
+      if (!n) return json({ titolo: "LVT Volley", testo: "Nuova comunicazione della squadra", url: SITO }, 200, cors);
+      return json({ id: n.id, ts: n.ts, titolo: n.titolo, testo: n.testo, url: n.tipo === "promemoria" ? (n.url || SITO) : `${SITO}?news=${n.id}` }, 200, cors);
     }
     if (path === "/push/news") {   // archivio pubblico delle news
-      const r = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 50`).all();
+      const r = await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche WHERE ${SOLO_NEWS} ORDER BY ts DESC, id DESC LIMIT 50`).all();
       return json({ news: r.results || [] }, 200, cors);
     }
     if (request.method !== "POST") return json({ error: "Metodo non consentito" }, 405, cors);
@@ -277,8 +290,10 @@ async function gestisciPush(request, env, cors, path) {
       const righe = (await env.DB.prepare(`SELECT dati, ts FROM iscrizioni ORDER BY ts DESC`).all()).results || [];
       const elenco = righe.map(r => { let d = {}; try { d = JSON.parse(r.dati || "{}"); } catch (e) {} return { disp: d.disp || "Sconosciuto", dal: d.dal || r.ts, ultimo: r.ts }; })
         .sort((a, b) => b.dal - a.dal);
-      const ultime = (await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche ORDER BY ts DESC, id DESC LIMIT 30`).all()).results || [];
-      return json({ iscritti: elenco.length, elenco, ultime }, 200, cors);
+      const ultime = (await env.DB.prepare(`SELECT id, ts, titolo, testo FROM notifiche WHERE ${SOLO_NEWS} ORDER BY ts DESC, id DESC LIMIT 30`).all()).results || [];
+      const promemoria = (await env.DB.prepare(`SELECT ts, testo FROM notifiche WHERE tipo = 'promemoria' ORDER BY ts DESC LIMIT 5`).all()).results || [];
+      const imp = await env.DB.prepare(`SELECT valore FROM impostazioni WHERE nome = 'promemoria'`).first();
+      return json({ iscritti: elenco.length, elenco, ultime, promemoria, promemoriaAttivi: !imp || imp.valore !== "off" }, 200, cors);
     }
     if (["/push/cancella", "/push/rimanda", "/push/modifica"].includes(path)) {
       const id = Number(b.id);
@@ -402,11 +417,151 @@ function ghHeaders(env) {
     "User-Agent": "lvt-volley-admin"
   };
 }
+// ================= PROMEMORIA AUTOMATICI DELLE PARTITE =================
+// Ogni 30 minuti (Cron Trigger): la sera prima (20–23) e circa due ore prima di ogni partita LVT senza risultato
+// parte una notifica. Ogni promemoria viene inviato una sola volta; i telefoni oltre il primo gruppo
+// vengono avvisati nei giri successivi.
+const GIORNI_IT = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
+function adessoRoma(d = new Date()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit",
+    day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d).map(x => [x.type, x.value]));
+  return { data: `${p.year}-${p.month}-${p.day}`, min: Number(p.hour) * 60 + Number(p.minute) };
+}
+const giorniTra = (a, b) => Math.round((Date.UTC(...b.split("-").map((n, i) => i === 1 ? n - 1 : +n)) - Date.UTC(...a.split("-").map((n, i) => i === 1 ? n - 1 : +n))) / 864e5);
+const minutiOra = o => { const m = String(o || "").match(/(\d{1,2})[.:](\d{2})/); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+async function datiSito() {
+  const r = await fetch(`${SITO}data/risultati.json?t=${Date.now()}`, { cf: { cacheTtl: 0 } });
+  if (!r.ok) throw new Error("risultati.json " + r.status);
+  return r.json();
+}
+async function giroPromemoria(env) {
+  if (!(await preparaTabelle(env))) return;
+  // 1) completo un invio rimasto a metà
+  const coda = await env.DB.prepare(`SELECT valore FROM impostazioni WHERE nome = 'coda_invio'`).first();
+  if (coda) {
+    const r = await inviaLotto(env, Number(JSON.parse(coda.valore).da) || 0);
+    if (r.prossimo === null) await env.DB.prepare(`DELETE FROM impostazioni WHERE nome = 'coda_invio'`).run();
+    else await env.DB.prepare(`UPDATE impostazioni SET valore = ? WHERE nome = 'coda_invio'`).bind(JSON.stringify({ da: r.prossimo })).run();
+    return;
+  }
+  const imp = await env.DB.prepare(`SELECT valore FROM impostazioni WHERE nome = 'promemoria'`).first();
+  if (imp && imp.valore === "off") return;
+  // 2) cerco la prossima partita che ha bisogno di un promemoria
+  const ora = adessoRoma(), dati = await datiSito();
+  for (const m of dati.partite || []) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(m.data || "") || Number(m.setCasa) || Number(m.setOspite)) continue;
+    const gg = giorniTra(ora.data, m.data), inizio = minutiOra(m.ora);
+    const mancano = inizio === null ? null : gg * 1440 + inizio - ora.min;
+    let tipo = null;
+    if (gg === 1 && ora.min >= 20 * 60 && ora.min < 23 * 60) tipo = "sera";
+    else if (mancano !== null && mancano > 60 && mancano <= 150) tipo = "prima";
+    if (!tipo) continue;
+    const chiave = `${m.id}-${m.data}-${m.ora}-${tipo}`;
+    if (await env.DB.prepare(`SELECT 1 FROM promemoria_inviati WHERE chiave = ?`).bind(chiave).first()) continue;
+    const d = new Date(m.data + "T12:00:00Z");
+    const quando = tipo === "sera" ? `Domani, ${GIORNI_IT[d.getUTCDay()]} ${m.data.slice(8)}/${m.data.slice(5, 7)}, ore ${String(m.ora).replace(":", ".")}`
+      : `Oggi alle ore ${String(m.ora).replace(":", ".")}`;
+    const testo = `${quando}: ${m.squadraCasa} – ${m.squadraOspite}${m.competizione ? ` (${m.competizione})` : ""}.${m.campo ? ` Palestra: ${m.campo}.` : ""}`;
+    await env.DB.prepare(`INSERT INTO promemoria_inviati (chiave, ts) VALUES (?, ?)`).bind(chiave, Date.now()).run();
+    await creaNotifica(env, "LVT · Promemoria partita", testo, "promemoria", `${SITO}?partita=${m.id}`);
+    const r = await inviaLotto(env, 0);
+    if (r.prossimo !== null) await env.DB.prepare(`INSERT OR REPLACE INTO impostazioni (nome, valore) VALUES ('coda_invio', ?)`).bind(JSON.stringify({ da: r.prossimo })).run();
+    return;   // un promemoria per giro
+  }
+}
+async function impostaPromemoria(request, env, cors) {
+  if (!(await preparaTabelle(env))) return json({ error: "archivio non configurato" }, 501, cors);
+  if (request.method !== "POST") return json({ error: "Metodo non consentito" }, 405, cors);
+  const b = await request.json().catch(() => ({}));
+  if (!passwordOk(env, b.password) && !passwordNotifiche(env, b.password)) return json({ error: "Password errata" }, 401, cors);
+  await env.DB.prepare(`INSERT OR REPLACE INTO impostazioni (nome, valore) VALUES ('promemoria', ?)`).bind(b.attivi ? "on" : "off").run();
+  return json({ ok: true, attivi: !!b.attivi }, 200, cors);
+}
+
+// ================= CALENDARIO PER IL TELEFONO (iCalendar) =================
+// webcal://lvt.cicciodesimone.workers.dev/calendario.ics  (?allenamenti=0 per le sole partite)
+const icsTesto = t => String(t || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+function icsPiega(riga) {   // righe al massimo di 75 byte
+  const out = []; let cur = "", len = 0;
+  for (const ch of riga) {
+    const b = new TextEncoder().encode(ch).length;
+    if (len + b > (out.length ? 74 : 75)) { out.push(cur); cur = ""; len = 0; }
+    cur += ch; len += b;
+  }
+  out.push(cur);
+  return out.join("\r\n ");
+}
+const icsData = (iso, min) => {   // "2026-11-21", 1020 -> 20261121T170000 (ora locale di Roma)
+  const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10), 0, min));
+  const z = n => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${z(d.getUTCMonth() + 1)}${z(d.getUTCDate())}T${z(d.getUTCHours())}${z(d.getUTCMinutes())}00`;
+};
+function espandiAllenamenti(cfg, da, a) {
+  const out = [], ecc = {};
+  (cfg.eccezioni || []).forEach(e => { ecc[`${e.data}|${e.serie}`] = e; });
+  for (let t = Date.UTC(...da.split("-").map((n, i) => i === 1 ? n - 1 : +n)); ; t += 864e5) {
+    const d = new Date(t), iso = d.toISOString().slice(0, 10);
+    if (iso > a) break;
+    (cfg.serie || []).forEach(s => {
+      if (Number(s.giorno) !== d.getUTCDay() || (s.dal && iso < s.dal) || (s.al && iso > s.al)) return;
+      const e = ecc[`${iso}|${s.id}`];
+      if (e && e.annullato) return;
+      out.push({ data: iso, serie: s.id, inizio: (e && e.inizio) || s.inizio, fine: (e && e.fine) || s.fine,
+        palestra: (e && e.palestra) || s.palestra, variato: !!e });
+    });
+  }
+  return out;
+}
+async function calendarioIcs(url) {
+  let dati;
+  try { dati = await datiSito(); } catch (e) { return new Response("Calendario non disponibile", { status: 502 }); }
+  const conAllen = url.searchParams.get("allenamenti") !== "0";
+  const adesso = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const righe = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LVT Lissone Volley Team//Calendario U15F//IT", "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH", `X-WR-CALNAME:${conAllen ? "LVT U15F" : "LVT U15F · Partite"}`, "X-WR-TIMEZONE:Europe/Rome",
+    "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H",
+    "BEGIN:VTIMEZONE", "TZID:Europe/Rome",
+    "BEGIN:DAYLIGHT", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "TZNAME:CEST", "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
+    "BEGIN:STANDARD", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "TZNAME:CET", "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD",
+    "END:VTIMEZONE"];
+  for (const m of dati.partite || []) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(m.data || "")) continue;
+    const inizio = minutiOra(m.ora), giocata = Number(m.setCasa) || Number(m.setOspite);
+    const titolo = giocata ? `${m.squadraCasa} ${m.setCasa}-${m.setOspite} ${m.squadraOspite}` : `${m.squadraCasa} – ${m.squadraOspite}`;
+    const desc = [`Campionato ${m.competizione || ""} U15F${m.gara ? ` · Gara n. ${m.gara}` : ""}`,
+      giocata && (m.punteggiSet || []).length ? `Parziali: ${m.punteggiSet.join(", ")}` : "", `Dettagli: ${SITO}`].filter(Boolean).join("\n");
+    righe.push("BEGIN:VEVENT", `UID:partita-${m.id}@lvt-volley`, `DTSTAMP:${adesso}`,
+      ...(inizio === null ? [`DTSTART;VALUE=DATE:${m.data.replace(/-/g, "")}`]
+        : [`DTSTART;TZID=Europe/Rome:${icsData(m.data, inizio)}`, `DTEND;TZID=Europe/Rome:${icsData(m.data, inizio + 120)}`]),
+      `SUMMARY:${icsTesto(`🏐 ${titolo}${m.competizione ? ` (${m.competizione})` : ""}`)}`,
+      ...(m.campo ? [`LOCATION:${icsTesto(m.campo)}`] : []), `DESCRIPTION:${icsTesto(desc)}`, `URL:${SITO}`);
+    if (!giocata && inizio !== null) righe.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsTesto(`Partita: ${titolo}`)}`, "TRIGGER:-PT2H", "END:VALARM");
+    righe.push("END:VEVENT");
+  }
+  if (conAllen && dati.allenamenti && Array.isArray(dati.allenamenti.serie)) {
+    const oggi = adessoRoma().data, d0 = new Date(oggi + "T00:00:00Z");
+    const da = new Date(d0 - 30 * 864e5).toISOString().slice(0, 10), a = new Date(+d0 + 150 * 864e5).toISOString().slice(0, 10);
+    for (const x of espandiAllenamenti(dati.allenamenti, da, a)) {
+      const i = minutiOra(x.inizio), f = minutiOra(x.fine);
+      if (i === null) continue;
+      righe.push("BEGIN:VEVENT", `UID:allenamento-${x.serie}-${x.data}@lvt-volley`, `DTSTAMP:${adesso}`,
+        `DTSTART;TZID=Europe/Rome:${icsData(x.data, i)}`, `DTEND;TZID=Europe/Rome:${icsData(x.data, f === null ? i + 120 : f)}`,
+        `SUMMARY:${icsTesto(`Allenamento LVT${x.variato ? " (variato)" : ""}`)}`, `LOCATION:${icsTesto(x.palestra)}`, "END:VEVENT");
+    }
+  }
+  righe.push("END:VCALENDAR");
+  return new Response(righe.map(icsPiega).join("\r\n") + "\r\n", { headers: {
+    "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": 'inline; filename="lvt.ics"',
+    "Cache-Control": "public, max-age=900", "Access-Control-Allow-Origin": "*" } });
+}
+
 async function githubFile(env) {
   const api = `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/contents/${JSON_PATH}?ref=${env.GH_BRANCH || "main"}`;
   const resp = await fetch(api, { headers: ghHeaders(env) });
   if (!resp.ok) throw new Error(`${resp.status} ${await resp.text()}`);
-  return await resp.json();
+  const file = await resp.json();
+  file._scadenza = resp.headers.get("github-authentication-token-expiration") || "";
+  return file;
 }
 function json(data, status, cors) {
   return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0", "CDN-Cache-Control": "no-store", "Pragma": "no-cache", "Expires": "0", ...cors } });

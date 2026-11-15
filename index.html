@@ -435,6 +435,27 @@
   .guida-app .azione { display: block; width: 100%; margin-top: 10px; padding: 11px; border-radius: 10px; border: 0;
     background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
   .guida-app .azione.sec { background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+  article.match.evidenzia { box-shadow: 0 0 0 3px var(--accent); transition: box-shadow .3s; }
+  /* calendario del telefono */
+  #box-cal-tel { margin: 14px 0 4px; }
+  #box-cal-tel[hidden] { display: none; }
+  .cal-tel { width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed var(--line); background: var(--card); color: var(--text);
+    font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; }
+  body.retro .cal-tel { background: transparent; border-radius: 4px; }
+  .cal-opz { display: block; width: 100%; box-sizing: border-box; text-align: left; margin-top: 10px; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; text-decoration: none; }
+  .cal-opz b { display: block; } .cal-opz small { color: var(--muted); }
+  /* dettaglio punti */
+  .pt-btn { all: unset; cursor: pointer; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.06); }
+  .pt-btn:focus-visible { outline: 2px solid var(--accent); }
+  .tab-punti { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: .9rem; }
+  .tab-punti th { text-align: left; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 4px 4px; }
+  .tab-punti td { padding: 7px 4px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .tab-punti td.avv { font-size: .82rem; }
+  .tab-punti td.vinta, .tab-punti td.persa { white-space: nowrap; }
+  .tab-punti td.vinta { color: #1f9d55; font-weight: 800; } .tab-punti td.persa { color: #d62828; font-weight: 800; }
+  .tab-punti .pti { text-align: right; font-weight: 800; }
+  .tab-punti tfoot td { border-top: 2px solid var(--text); font-weight: 800; }
   /* risultato provvisorio */
   sup.prov { color: #d62828; font-size: .6em; margin-left: 2px; cursor: help; }
   .nota-prov { margin-top: 6px; font-size: .75rem; color: var(--muted); text-align: center; }
@@ -574,6 +595,7 @@
     <div id="prossime"></div>
   </div>
   <div id="vista-calendario" hidden></div>
+  <div id="box-cal-tel"><button class="cal-tel" id="cal-tel">📅 Aggiungi partite e allenamenti al calendario del telefono</button></div>
   <div id="vista-classifica" hidden></div>
   <div id="vista-altre" hidden></div>
 </main>
@@ -772,7 +794,7 @@
       centro = `<div class="center time">ore ${esc(p.ora)}</div>`;
     }
     return `
-      <article class="match ${cls} ${isNext ? "next" : ""}">
+      <article class="match ${cls} ${isNext ? "next" : ""}" data-pid="${p.id}">
         <div class="meta">
           <span class="badge ${cls}">${p.camp}</span>
           ${isNext ? '<span class="badge next">PROSSIMA</span>' : ""}
@@ -1004,7 +1026,7 @@
       return `<tr class="${noi ? "noi" : ""}" data-camp="${c.camp}" data-sq="${esc(r.squadra)}" title="${noi ? "Apri l'agenda LVT" : "Vedi le partite di questa squadra"}">
           <td class="pos">${i + 1}</td>
           <td class="sq">${esc(r.squadra)}${r.societa && r.societa !== r.squadra ? `<small>${esc(r.societa)}</small>` : ""}</td>
-          <td class="pt">${esc(r.punti)}${r.provvisorio ? `<sup class="prov" title="Punteggio provvisorio">*</sup>` : ""}</td><td>${esc(r.giocate)}</td><td>${esc(r.vinte)}</td><td>${esc(r.perse)}</td>
+          <td class="pt"><button class="pt-btn" data-camp="${c.camp}" data-sq="${esc(r.squadra)}" data-punti="${esc(r.punti)}" aria-label="Dettaglio dei punti di ${esc(r.squadra)}">${esc(r.punti)}${r.provvisorio ? `<sup class="prov" title="Punteggio provvisorio">*</sup>` : ""}</button></td><td>${esc(r.giocate)}</td><td>${esc(r.vinte)}</td><td>${esc(r.perse)}</td>
           <td class="setcl">${esc(r.setVinti)}-${esc(r.setPersi)}<span class="vai">›</span></td>
         </tr>`;
     }).join("");
@@ -1016,7 +1038,7 @@
         </table>
       </div>
       ${dati.provvisorie ? `<p class="fonte ${c.camp.toLowerCase()}"><b style="color:#d62828">*</b> Classifica provvisoria: comprende ${dati.provvisorie.length > 1 ? "i risultati LVT" : "il risultato LVT"} del ${dati.provvisorie.join(", ")}, non ancora ${dati.provvisorie.length > 1 ? "pubblicati" : "pubblicato"} dal sito ufficiale ${c.camp}. Punti assegnati secondo il regolamento ${c.camp}.</p>` : ""}
-      <p class="fonte ${c.camp.toLowerCase()}">ℹ️ ${avviso}</p>`;
+      <p class="fonte ${c.camp.toLowerCase()}">ℹ️ Toccare i punti di una squadra per il dettaglio partita per partita. ${avviso}</p>`;
   }
   // aggiunge alla classifica ufficiale i risultati LVT che il sito ufficiale non ha ancora pubblicato
   function classificaProvvisoria(c, dati, tutte) {
@@ -1325,9 +1347,41 @@
     if (e.target.closest("#mostra-prossime")) { mostraTutteProssime = true; renderAltre(); }
   });
   document.getElementById("vista-classifica").addEventListener("click", e => {
+    const b = e.target.closest(".pt-btn");
+    if (b) { e.stopPropagation(); return dettaglioPunti(b.dataset.camp, b.dataset.sq, Number(b.dataset.punti)); }
     const r = e.target.closest("tr[data-sq]");
     if (r) apriSquadra(r.dataset.camp, r.dataset.sq);
   });
+  // ---------- DETTAGLIO PUNTI DI UNA SQUADRA ----------
+  const REGOLA_TESTO = {
+    FIPAV: "Regolamento FIPAV: vittoria 3-0 o 3-1 = 3 punti; vittoria 3-2 = 2 punti; sconfitta 2-3 = 1 punto; sconfitta 0-3 o 1-3 = 0 punti.",
+    PGS: "Regolamento PGS: vittoria (anche 3-2) = 3 punti; sconfitta 2-3 = 1 punto; sconfitta 0-3 o 1-3 = 0 punti.",
+  };
+  async function dettaglioPunti(camp, squadra, puntiClassifica) {
+    conta("funzioni", "dettaglio_punti");
+    const uff = await caricaPartiteUfficiali().catch(() => null);
+    const tutte = conRisultatiProvvisori((uff && uff.tutte) || []);
+    const sue = tutte.filter(u => u.camp === camp && u.ris && u.ris.finita && (norm(u.casa) === norm(squadra) || norm(u.ospite) === norm(squadra)))
+      .sort((a, b) => a.d - b.d);
+    let totale = 0;
+    const righe = sue.map(u => {
+      const casa = norm(u.casa) === norm(squadra), [a, b] = u.ris.score;
+      const v = casa ? a : b, pz = casa ? b : a, punti = REGOLE_PUNTI[camp](v, pz);
+      totale += punti;
+      return `<tr><td>${dataBreve(u.d)}</td><td class="avv">${casa ? "" : "@ "}${esc(casa ? u.ospite : u.casa)}</td>
+        <td class="${v > pz ? "vinta" : "persa"}">${v}-${pz}${u.provvisorio ? '<sup class="prov">*</sup>' : ""}</td><td class="pti">+${punti}</td></tr>`;
+    }).join("");
+    const diff = Number.isFinite(puntiClassifica) ? puntiClassifica - totale : 0;
+    apriModal(`<div class="eti">Classifica ${camp}</div><h3>${esc(squadra)}</h3>
+      ${sue.length ? `<table class="tab-punti"><thead><tr><th>Data</th><th>Avversario</th><th>Ris.</th><th>Pt</th></tr></thead>
+        <tbody>${righe}</tbody><tfoot><tr><td colspan="3">Totale</td><td class="pti">${totale}</td></tr></tfoot></table>`
+        : '<p class="fonte">Nessuna partita disputata.</p>'}
+      ${diff ? `<p class="fonte">La classifica riporta ${puntiClassifica} punti: la differenza di ${Math.abs(diff)} può dipendere da penalizzazioni o da partite non presenti nel calendario ufficiale.</p>` : ""}
+      ${sue.some(u => u.provvisorio) ? `<p class="fonte"><b style="color:#d62828">*</b> ${esc(TESTO_PROV(camp))}.</p>` : ""}
+      <p class="fonte">${REGOLA_TESTO[camp]} «@» indica le partite in trasferta.</p>
+      <div class="azioni" style="grid-template-columns:1fr"><button class="prim" id="news-ok">Chiudi</button></div>`);
+    document.getElementById("news-ok").onclick = chiudiModal;
+  }
 
   // partite LVT: il sito ufficiale (stesso numero gara) comanda. Se ha il risultato finale, vale quello e corregge
   // eventuali errori di inserimento; altrimenti uso il risultato salvato. Palestra: dal sito ufficiale se manca.
@@ -1360,6 +1414,7 @@
     document.getElementById("vista-calendario").hidden = stato.vista !== "calendario";
     document.getElementById("vista-classifica").hidden = stato.vista !== "classifica";
     document.getElementById("vista-altre").hidden = stato.vista !== "altre";
+    document.getElementById("box-cal-tel").hidden = !["agenda", "calendario"].includes(stato.vista);
     if (stato.vista === "classifica") return renderClassifica();
     if (stato.vista === "altre") return renderAltre();
     if (stato.vista === "agenda") { renderAgenda(lista); renderRetroAgenda(lista); } else renderCalendario();
@@ -1702,7 +1757,7 @@
   (async function invitoNotifiche() {
     let gia = null;
     try { gia = localStorage.getItem("lvt-invito-notifiche"); } catch (e) { return; }
-    if (gia || newsDaAprire) return;
+    if (gia || newsDaAprire || new URLSearchParams(location.search).get("partita")) return;
     if (!pushOk && !suIos) return;                                  // dispositivo senza notifiche: niente invito
     if (pushOk && Notification.permission === "denied") return;
     if (await iscrizioneAttuale().catch(() => null)) return;          // già attive
@@ -1720,6 +1775,42 @@
       document.getElementById("inv-si").onclick = () => { segna("si"); conta("funzioni", "invito_si"); chiudiModal(); btnAvvisi.click(); };
     }, 4000);
   })();
+
+  // ---------- CALENDARIO SUL TELEFONO (abbonamento iCalendar dal Worker) ----------
+  document.getElementById("cal-tel").addEventListener("click", () => {
+    conta("funzioni", "calendario_tel");
+    const host = WORKER.replace(/^https:\/\//, "");
+    const link = q => `webcal://${host}/calendario.ics${q}`, https = q => `${WORKER}/calendario.ics${q}`;
+    const google = q => `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(link(q))}`;
+    const android = /Android/i.test(navigator.userAgent);
+    const voce = (q, titolo, sotto) => android
+      ? `<a class="cal-opz" href="${google(q)}" target="_blank" rel="noopener"><b>${titolo}</b><small>${sotto} · Google Calendar</small></a>`
+      : `<a class="cal-opz" href="${link(q)}"><b>${titolo}</b><small>${sotto}</small></a>`;
+    apriModal(`<div class="eti">Calendario</div><h3>📅 Calendario LVT sul telefono</h3>
+      <div class="testo">Le partite (e, se scelti, gli allenamenti) compaiono nel calendario del telefono e si aggiornano automaticamente in caso di variazioni.</div>
+      ${voce("", "Partite e allenamenti", "Calendario completo")}
+      ${voce("?allenamenti=0", "Solo partite", "Con promemoria 2 ore prima")}
+      <p class="quando">${android ? "Su Android si apre Google Calendar: confermare con «Aggiungi»." : "Su iPhone confermare con «Iscriviti»."}
+        In alternativa, copiare l'indirizzo <span style="user-select:all;word-break:break-all">${https("")}</span> e aggiungerlo come calendario da URL.</p>
+      <div class="azioni" style="grid-template-columns:1fr"><button id="news-ok">Chiudi</button></div>`);
+    document.getElementById("news-ok").onclick = chiudiModal;
+  });
+
+  // ---------- APERTURA DA PROMEMORIA (…/?partita=8) ----------
+  const partitaDaAprire = new URLSearchParams(location.search).get("partita");
+  if (partitaDaAprire) {
+    const p = partite.find(x => String(x.id) === partitaDaAprire);
+    try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
+    if (p) {
+      conta("funzioni", "promemoria_aperto");
+      if (p.ris) sezioniAperte.risultati = true; else sezioniAperte.prossime = true;
+      vai({ vista: "agenda", filtro: "TUTTE" });
+      setTimeout(() => {
+        const el = document.querySelector(`#vista-agenda article[data-pid="${p.id}"]`);
+        if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("evidenzia"); }
+      }, 300);
+    }
+  }
 
   // ---------- PUNTEGGIO IN DIRETTA ----------
   // Il punteggio aggiornato dal campo viene letto dal Worker ogni 20 secondi durante la partita.

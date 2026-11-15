@@ -43,10 +43,14 @@ h2.apri .fr{color:#153b72;font-size:.8em;flex:none}h2.apri .conta{font-weight:60
 textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;width:100%;box-sizing:border-box;min-height:80px;resize:vertical}
 .proposta{position:fixed;left:12px;right:12px;bottom:12px;z-index:9000;max-width:560px;margin:auto;background:#fff;border:2px solid #153b72;border-radius:14px;padding:14px;box-shadow:0 8px 30px #15223840}
 .proposta[hidden]{display:none}.proposta strong{display:block;margin-bottom:6px}.proposta textarea{min-height:70px}
+.check-riga{display:flex;gap:10px;align-items:flex-start;font-weight:400}.check-riga input{width:20px;height:20px;flex:none;margin-top:2px}
 .notif-item{border-bottom:1px solid #e5e9f0;padding:10px 0;font-size:14px}
 .notif-item .actions{margin-top:8px}.notif-item .actions button{width:auto;padding:7px 10px;font-size:13px}
 .notif-item input,.notif-item textarea{margin-top:6px}.notif-item small{color:#647086}
 .cifra{font-size:28px;font-weight:800}
+.avviso-admin{margin:0 0 12px;padding:12px 14px;border-radius:10px;background:#fff6e0;border:1px solid #e8b400;font-size:14px}
+.avviso-admin.grave{background:#fdecec;border-color:#d62828}.avviso-admin a{font-weight:700}.avviso-admin button{width:auto;margin:8px 0 0;padding:8px 12px}
+.variazione{margin:8px 0;padding:10px;border-radius:8px;background:#eaf1ff;border:1px solid #1e5bd8;font-size:14px}.variazione .actions button{margin-top:8px}
 .btn-diretta{display:block;width:100%;margin:8px 0 0;background:#d62828;border-color:#d62828}
 .diverso{margin:8px 0;padding:10px;border-radius:8px;background:#fff6e0;border:1px solid #e8b400;font-size:14px}.diverso button{margin-top:8px;width:auto;padding:8px 12px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
@@ -63,6 +67,7 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 </section>
 <div class="barra-admin" id="barraAdmin" hidden><span class="muted" id="ruoloInfo"></span>
 <button class="secondary" id="logoutBtn">Esci</button></div>
+<div id="avvisiAdmin"></div>
 <section class="panel" id="matchesPanel" hidden>
 <div class="section-heading"><h2>Partite</h2></div>
 <div id="matches"></div>
@@ -86,6 +91,9 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 <p><span class="cifra" id="iscritti">–</span> <span class="muted">dispositivi iscritti alle notifiche</span></p>
 <details id="iscrittiBox"><summary class="muted" style="cursor:pointer">Elenco dispositivi</summary><div id="iscrittiLista"></div>
 <p class="muted" style="font-size:13px">Iscrizioni anonime: sono registrati solo il tipo di dispositivo e le date.</p></details>
+<h3 class="sub">Promemoria automatici</h3>
+<label class="check-riga"><input type="checkbox" id="promAttivi" checked> Inviare un promemoria la sera prima (ore 20) e circa due ore prima di ogni partita</label>
+<div id="promLista" class="muted" style="font-size:13px"></div>
 <h3 class="sub">Nuova comunicazione</h3>
 <label for="notifTitolo">Titolo</label><input id="notifTitolo" value="LVT · Comunicazione" maxlength="80">
 <label for="notifTesto" style="margin-top:10px">Testo</label><textarea id="notifTesto" maxlength="300" placeholder="Es. Sabato ritrovo alle ore 14.15 in palestra, divisa blu."></textarea>
@@ -175,6 +183,7 @@ async function usaUfficiale(id,r){
   catch(e){matches=old;render();showStatus("Salvataggio non riuscito: "+e.message,true);}
 }
 function render(){
+ try{aggiornaAvvisiAdmin();}catch{}
  const box=$("matches"), editor=$("editor"), home=$("editorHome");
  // Riporta temporaneamente il modulo nella sua sede prima di ricostruire l'elenco.
  home.append(editor);
@@ -190,6 +199,13 @@ function render(){
   const uffK=ufficiali[`${String(m.competizione||"").toUpperCase()}-${m.gara}`];
   const uffFinita=uffK&&uffK.setCasa!=null&&Math.max(+uffK.setCasa,+uffK.setOspite)===3;
   if(gg>=-1&&gg<=1&&!uffFinita){const lb=document.createElement("button");lb.className="btn-diretta";lb.textContent=gg===0?"🔴 Aggiorna punteggio in diretta":"🔴 Tabellone punteggio";lb.onclick=()=>apriTabellone(m.id);div.append(lb);}
+  const vr=variazioneUfficiale(m);
+  if(vr){const w=document.createElement("div");w.className="variazione";
+    const qv=`${GIORNI[new Date(vr.data+"T12:00").getDay()].toLowerCase()} ${itData(vr.data)}${vr.ora?` ore ${vr.ora}`:""}`;
+    w.innerHTML=`📅 Il calendario ufficiale ${esc(m.competizione)} indica <b>${esc(qv)}</b>; qui è registrato ${esc(descriviQuando(m))}.<div class="actions"></div>`;
+    const ok=document.createElement("button");ok.textContent="Aggiorna e invia comunicazione";ok.onclick=()=>applicaVariazione(m.id,vr);
+    const no=document.createElement("button");no.className="secondary";no.textContent="Ignora";no.onclick=()=>{try{localStorage.setItem(vr.chiave,"1");}catch{}render();};
+    w.querySelector(".actions").append(ok,no);div.append(w);}
   const uff=confrontoUfficiale(m);
   if(uff){const w=document.createElement("div");w.className="diverso";
     w.innerHTML=`⚠️ Risultato ufficiale ${esc(m.competizione)}: <b>${uff.setCasa}-${uff.setOspite}</b> (${esc(uff.punteggiSet.join(", "))}). ${isCompleted(m)?`Risultato registrato: <b>${m.setCasa}-${m.setOspite}</b> (${esc((m.punteggiSet||[]).join(", "))}).`:"Nessun risultato registrato."} Sul sito è pubblicato il risultato ufficiale.<br>`;
@@ -220,6 +236,7 @@ async function loginWithPassword(candidate, automatic=false){
   }
   ruolo="admin";$("ruoloInfo").textContent="";
   const [d]=await Promise.all([request("results"),caricaUfficiali()]);
+  aggiornaAvvisiAdmin.scadenza=d._tokenScadenza||"";
   matches=Array.isArray(d.partite)?d.partite:[];
   allen=d.allenamenti&&Array.isArray(d.allenamenti.serie)?d.allenamenti:JSON.parse(JSON.stringify(ALLENAMENTI_PREDEFINITI));
   if(!Array.isArray(allen.eccezioni)) allen.eccezioni=[];
@@ -235,6 +252,7 @@ async function loginWithPassword(candidate, automatic=false){
   password="";
   try{sessionStorage.removeItem("lvtAdminPassword");}catch{}
   $("loginStatus").textContent=(automatic?"Sessione scaduta, inserisci nuovamente la password. ":"Accesso non riuscito: ")+e.message;
+  if(/GH_TOKEN/.test(e.message))$("loginStatus").innerHTML=`Accesso non riuscito: la chiave di salvataggio GitHub (GH_TOKEN) è scaduta o non valida.<br>1. Rigenerarla da <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">GitHub → Personal access tokens</a> («Regenerate»).<br>2. Incollarla in GH_TOKEN su <a href="https://dash.cloudflare.com/?to=/:account/workers/services/view/lvt/production/settings" target="_blank" rel="noopener">Cloudflare → Variables and Secrets</a> e premere Deploy.`;
   return false;
  }finally{$("loginBtn").disabled=false;}
 }
@@ -425,7 +443,7 @@ const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Cl
 const NOMI_FUNZ = { naviga: "Naviga (Google Maps)", locandina: "Locandina aperta", condividi: "Locandina condivisa", copia: "Locandina copiata",
   scarica: "Locandina scaricata", retro: "Modalità Retro", crea_app: "Pulsante Crea app", app_installata: "App installata",
   apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV",
-  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato", news: "Archivio news aperto", news_notifica: "News aperta da notifica",
+  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato", dettaglio_punti: "Dettaglio punti classifica", calendario_tel: "Calendario sul telefono", promemoria_aperto: "Promemoria aperto", news: "Archivio news aperto", news_notifica: "News aperta da notifica",
   invito: "Invito notifiche mostrato", invito_si: "Invito notifiche accettato", invito_no: "Invito notifiche rifiutato" };
 const NOMI_ERR = { avvisi: "Attivazione notifiche fallita", risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
 const somma = (dest, json) => { let o = {}; try { o = JSON.parse(json || "{}"); } catch {} for (const [k, v] of Object.entries(o)) dest[k] = (dest[k] || 0) + v; };
@@ -576,6 +594,41 @@ function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)
  $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");
  const t=old.find(x=>String(x.id)===String(id));if(t&&!isCompleted(t)&&(t.data||"")>=isoData(new Date()))proponiNotifica("LVT · Partita annullata",`Partita annullata: ${t.squadraCasa} – ${t.squadraOspite} di ${descriviQuando(t)}.`);}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+$("promAttivi").onchange=async e=>{const att=e.target.checked;
+  try{await request("promemoria",{method:"POST",body:JSON.stringify({password,attivi:att})});$("notifStatus").textContent=att?"Promemoria automatici attivati.":"Promemoria automatici disattivati.";}
+  catch(err){e.target.checked=!att;$("notifStatus").textContent="Impostazione non salvata: "+err.message;}};
+// ================= VARIAZIONI DAL CALENDARIO UFFICIALE E AVVISI =================
+const isoDaIt=t=>{const m=String(t||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:String(t||"");};
+const oraN=o=>String(o||"").replace(":",".").replace(/^(\d)\./,"0$1.");
+function variazioneUfficiale(m){   // data/ora diverse tra calendario ufficiale e admin (solo partite non giocate)
+  const u=ufficiali[`${String(m.competizione||"").toUpperCase()}-${m.gara}`];
+  if(!u||isCompleted(m)||(u.setCasa!=null&&Math.max(+u.setCasa,+u.setOspite)===3))return null;
+  const data=isoDaIt(u.data),ora=oraN(u.ora);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(data))return null;
+  if(data===(m.data||"")&&(!ora||ora===oraN(m.ora)))return null;
+  const chiave=`lvt-var-ignora-${m.gara}-${data}-${ora}`;
+  try{if(localStorage.getItem(chiave))return null;}catch{}
+  return {data,ora:ora||m.ora,chiave};
+}
+async function applicaVariazione(id,v){
+  const old=JSON.parse(JSON.stringify(matches)),m=matches.find(x=>String(x.id)===String(id));if(!m)return;
+  m.data=v.data;m.ora=v.ora;
+  try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});render();showStatus("Data e orario aggiornati dal calendario ufficiale.");
+    proponiNotifica("LVT · Variazione calendario",`Variazione partita${m.competizione?" "+m.competizione:""}: ${m.squadraCasa} – ${m.squadraOspite}, ${descriviQuando(m)}${m.campo?", "+m.campo:""}.`);}
+  catch(e){matches=old;render();showStatus("Salvataggio non riuscito: "+e.message,true);}
+}
+function aggiornaAvvisiAdmin(scadenza){
+  const box=$("avvisiAdmin");let html="";
+  if(scadenza!==undefined)aggiornaAvvisiAdmin.scadenza=scadenza;
+  const sc=aggiornaAvvisiAdmin.scadenza;
+  if(sc){const d=new Date(String(sc).replace(" ","T").replace(/ ([+-]\d{2})(\d{2})$/,"$1:$2"));
+    const gg=Math.floor((d-Date.now())/864e5);
+    if(!isNaN(d)&&gg<=30)html+=`<div class="avviso-admin ${gg<=7?"grave":""}">🔑 La chiave di salvataggio GitHub (GH_TOKEN) scade il <b>${d.toLocaleDateString("it-IT")}</b>${gg>=0?` (tra ${gg} giorni)`:""}. Rinnovarla da <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">GitHub → Personal access tokens</a> (pulsante «Regenerate») e aggiornare GH_TOKEN su <a href="https://dash.cloudflare.com/?to=/:account/workers/services/view/lvt/production/settings" target="_blank" rel="noopener">Cloudflare</a>.</div>`;}
+  const nVar=matches.filter(m=>variazioneUfficiale(m)).length;
+  if(nVar)html+=`<div class="avviso-admin">📅 ${nVar===1?"Una partita ha":`${nVar} partite hanno`} data o orario diversi dal calendario ufficiale. <button class="secondary" id="vediVar">Vedi le partite</button></div>`;
+  box.innerHTML=html;
+  const b=$("vediVar");if(b)b.onclick=()=>{impostaSezione("matchesPanel",true);const el=document.querySelector("#matches .variazione");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});};
+}
 // ================= DIRETTA =================
 // l'amministratore apre il tabellone senza inserire di nuovo la password
 function apriTabellone(id){try{sessionStorage.setItem("lvt-live-pw",password);sessionStorage.setItem("lvt-live-da-admin","1");}catch{}
@@ -645,11 +698,14 @@ async function caricaNotifiche(){
     const conti={};(r.elenco||[]).forEach(x=>conti[x.disp]=(conti[x.disp]||0)+1);
     $("iscrittiLista").innerHTML=(r.elenco||[]).length?`<p style="margin:8px 0">${Object.entries(conti).map(([k,v])=>`<b>${v}</b> ${esc(k)}`).join(" · ")}</p>`+
       r.elenco.map(x=>`<div class="notif-item">${ico[x.disp]||"❔"} <b>${esc(x.disp)}</b> · iscritto il ${gg(x.dal)} · ultima apertura ${gg(x.ultimo)}</div>`).join(""):'<p class="muted">Nessun dispositivo iscritto.</p>';
-    newsAdmin=r.ultime||[];disegnaNews();}
+    newsAdmin=r.ultime||[];disegnaNews();
+    $("promAttivi").checked=r.promemoriaAttivi!==false;
+    const qd=t=>{const d=new Date(t);return `${d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})} ${d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`;};
+    $("promLista").innerHTML=(r.promemoria||[]).length?"Ultimi promemoria inviati:<br>"+r.promemoria.map(x=>`${qd(x.ts)} — ${esc(x.testo)}`).join("<br>"):"Nessun promemoria inviato finora.";}
   catch(e){$("notifLista").innerHTML=`<p class="status">Servizio comunicazioni non disponibile: ${esc(e.message)}.</p>`;}
 }
 function resetFields(){$("matchForm").reset();$("matchId").value="";$("formTitle").textContent="Aggiungi partita";}
 function resetForm(){activeEditId=null;resetFields();render();showStatus("");$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 $("resetBtn").onclick=resetForm;
-$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("notifPanel").hidden=true;$("proposta").hidden=true;$("barraAdmin").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
+$("logoutBtn").onclick=()=>{password="";try{sessionStorage.removeItem("lvtAdminPassword");}catch{}matches=[];activeEditId=null;$("password").value="";$("editor").hidden=true;$("matchesPanel").hidden=true;$("allenPanel").hidden=true;$("statPanel").hidden=true;$("notifPanel").hidden=true;$("avvisiAdmin").innerHTML="";$("proposta").hidden=true;$("barraAdmin").hidden=true;$("loginPanel").hidden=false;$("editorHome").append($("editor"));showStatus("");};
 </script></body></html>
