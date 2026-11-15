@@ -1,10 +1,19 @@
 {
-  "aggiornato": "2026-11-11T18:48:06.082Z",
+  "aggiornato": "2026-11-15T20:28:08.060Z",
   "classifica": {
-    "aggiornato": "2026-11-11T10:03:45.676Z",
+    "aggiornato": "2026-11-15T19:58:30.533Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
+      {
+        "squadra": "PLESIOS VOLLEY",
+        "punti": 15,
+        "giocate": 6,
+        "vinte": 5,
+        "perse": 1,
+        "setVinti": 16,
+        "setPersi": 5
+      },
       {
         "squadra": "NET VOLLEY CINISELLO BLU",
         "punti": 13,
@@ -13,15 +22,6 @@
         "perse": 2,
         "setVinti": 15,
         "setPersi": 7
-      },
-      {
-        "squadra": "PLESIOS VOLLEY",
-        "punti": 12,
-        "giocate": 5,
-        "vinte": 4,
-        "perse": 1,
-        "setVinti": 13,
-        "setPersi": 4
       },
       {
         "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
@@ -44,11 +44,11 @@
       {
         "squadra": "PGS DOMANI",
         "punti": 3,
-        "giocate": 5,
+        "giocate": 6,
         "vinte": 1,
-        "perse": 4,
-        "setVinti": 3,
-        "setPersi": 13
+        "perse": 5,
+        "setVinti": 4,
+        "setPersi": 16
       },
       {
         "squadra": "PAL. CONCOREZZO SSD",
@@ -301,9 +301,14 @@
       "ora": "18.00",
       "casa": "PGS DOMANI",
       "ospite": "PLESIOS VOLLEY",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "17-25",
+        "24-26",
+        "25-18",
+        "17-25"
+      ],
       "campo": "ORATORIO S. LUIGI, VIA DELLA FORNACE 2, PESSANO C/B."
     },
     {
