@@ -418,8 +418,8 @@ function ghHeaders(env) {
   };
 }
 // ================= PROMEMORIA AUTOMATICI DELLE PARTITE =================
-// Ogni 30 minuti (Cron Trigger): la sera prima (20–23) e circa due ore prima di ogni partita LVT senza risultato
-// parte una notifica. Ogni promemoria viene inviato una sola volta; i telefoni oltre il primo gruppo
+// Ogni 30 minuti (Cron Trigger): circa un'ora e mezza prima di ogni partita LVT senza risultato parte una notifica
+// (inviata dal controllo che cade tra 90 e 60 minuti prima dell'inizio). Ogni promemoria viene inviato una sola volta; i telefoni oltre il primo gruppo
 // vengono avvisati nei giri successivi.
 const GIORNI_IT = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 function adessoRoma(d = new Date()) {
@@ -452,15 +452,11 @@ async function giroPromemoria(env) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(m.data || "") || Number(m.setCasa) || Number(m.setOspite)) continue;
     const gg = giorniTra(ora.data, m.data), inizio = minutiOra(m.ora);
     const mancano = inizio === null ? null : gg * 1440 + inizio - ora.min;
-    let tipo = null;
-    if (gg === 1 && ora.min >= 20 * 60 && ora.min < 23 * 60) tipo = "sera";
-    else if (mancano !== null && mancano > 60 && mancano <= 150) tipo = "prima";
-    if (!tipo) continue;
+    if (mancano === null || mancano <= 60 || mancano > 90) continue;
+    const tipo = "prima";
     const chiave = `${m.id}-${m.data}-${m.ora}-${tipo}`;
     if (await env.DB.prepare(`SELECT 1 FROM promemoria_inviati WHERE chiave = ?`).bind(chiave).first()) continue;
-    const d = new Date(m.data + "T12:00:00Z");
-    const quando = tipo === "sera" ? `Domani, ${GIORNI_IT[d.getUTCDay()]} ${m.data.slice(8)}/${m.data.slice(5, 7)}, ore ${String(m.ora).replace(":", ".")}`
-      : `Oggi alle ore ${String(m.ora).replace(":", ".")}`;
+    const quando = `Oggi alle ore ${String(m.ora).replace(":", ".")}`;
     const testo = `${quando}: ${m.squadraCasa} – ${m.squadraOspite}${m.competizione ? ` (${m.competizione})` : ""}.${m.campo ? ` Palestra: ${m.campo}.` : ""}`;
     await env.DB.prepare(`INSERT INTO promemoria_inviati (chiave, ts) VALUES (?, ?)`).bind(chiave, Date.now()).run();
     await creaNotifica(env, "LVT · Promemoria partita", testo, "promemoria", `${SITO}?partita=${m.id}`);
@@ -535,7 +531,7 @@ async function calendarioIcs(url) {
         : [`DTSTART;TZID=Europe/Rome:${icsData(m.data, inizio)}`, `DTEND;TZID=Europe/Rome:${icsData(m.data, inizio + 120)}`]),
       `SUMMARY:${icsTesto(`🏐 ${titolo}${m.competizione ? ` (${m.competizione})` : ""}`)}`,
       ...(m.campo ? [`LOCATION:${icsTesto(m.campo)}`] : []), `DESCRIPTION:${icsTesto(desc)}`, `URL:${SITO}`);
-    if (!giocata && inizio !== null) righe.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsTesto(`Partita: ${titolo}`)}`, "TRIGGER:-PT2H", "END:VALARM");
+    if (!giocata && inizio !== null) righe.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsTesto(`Partita: ${titolo}`)}`, "TRIGGER:-PT90M", "END:VALARM");
     righe.push("END:VEVENT");
   }
   if (conAllen && dati.allenamenti && Array.isArray(dati.allenamenti.serie)) {
