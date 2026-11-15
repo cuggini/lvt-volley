@@ -53,11 +53,13 @@
   .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-top: 12px; font-size: .9rem; }
   .check input { width: 22px; height: 22px; flex: none; }
   .riga-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .indietro { background: none; border: 0; color: var(--blu); font-weight: 700; padding: 0; margin-bottom: 8px; }
+  .indietro { display: inline-block; background: none; border: 0; color: var(--blu); font-weight: 700; padding: 0; margin-bottom: 8px; text-decoration: none; font-size: .95rem; }
+  .indietro[hidden] { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <a class="indietro" id="ad-admin" href="../admin/" hidden>‹ Torna all'amministrazione</a>
   <h1>🏐 Punteggio in diretta</h1>
   <p class="sub">Aggiornamento del punteggio dal campo, pubblicato in tempo reale sul sito LVT.</p>
 
@@ -123,6 +125,9 @@
       try { sessionStorage.setItem("lvt-live-pw", pw); } catch (e) {}
       $("login").hidden = true;
       await caricaPartite();
+      const daAprire = new URLSearchParams(location.search).get("id");   // arrivo dall'admin su una partita precisa
+      const p = daAprire && partite.find(x => String(x.id) === daAprire);
+      if (p) { history.replaceState(null, "", location.pathname); apriPartita(p); }
     } catch (e) {
       password = "";
       $("msg-login").className = "msg err";
@@ -256,6 +261,7 @@
     corrente = null; $("partita").hidden = true; caricaPartite();
   };
 
+  try { if (sessionStorage.getItem("lvt-live-da-admin")) $("ad-admin").hidden = false; } catch (e) {}
   if (password) { $("pw").value = ""; entra(); }
 })();
 </script>

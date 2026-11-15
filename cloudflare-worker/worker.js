@@ -310,7 +310,8 @@ async function gestisciPush(request, env, cors, path) {
 // ================= PUNTEGGIO IN DIRETTA =================
 // Il punteggio viene aggiornato dal campo con la password della diretta (variabile LIVE_PASSWORD);
 // il sito legge /live ogni 20 secondi quando c'è una partita LVT in giornata.
-const DURATA_LIVE = 5 * 3600 * 1000;   // dopo 5 ore senza aggiornamenti la diretta sparisce
+const DURATA_LIVE = 5 * 3600 * 1000;        // una diretta in corso senza aggiornamenti da 5 ore sparisce
+const DURATA_FINALE = 14 * 24 * 3600 * 1000; // un risultato finale resta visibile (finché il sito ufficiale non lo pubblica) al massimo 14 giorni
 function pulisciLive(b) {
   const set = (Array.isArray(b.set) ? b.set : []).slice(0, 5)
     .map(x => [Math.max(0, Math.min(99, Number(x && x[0]) || 0)), Math.max(0, Math.min(99, Number(x && x[1]) || 0))]);
@@ -320,8 +321,10 @@ async function gestisciLive(request, env, cors, path) {
   if (!(await preparaTabelle(env))) return json({ error: "archivio non configurato: collega al Worker un database D1 con il nome DB" }, 501, cors);
   try {
     if (path === "/live" && request.method === "GET") {
-      const r = await env.DB.prepare(`SELECT dati, ts FROM live WHERE ts > ? ORDER BY ts DESC`).bind(Date.now() - DURATA_LIVE).all();
-      return json({ dirette: (r.results || []).map(x => ({ ...JSON.parse(x.dati), ts: x.ts })) }, 200, cors);
+      const r = await env.DB.prepare(`SELECT dati, ts FROM live WHERE ts > ? ORDER BY ts DESC`).bind(Date.now() - DURATA_FINALE).all();
+      const dirette = (r.results || []).map(x => ({ ...JSON.parse(x.dati), ts: x.ts }))
+        .filter(x => x.finita || x.ts > Date.now() - DURATA_LIVE);
+      return json({ dirette }, 200, cors);
     }
     if (request.method !== "POST") return json({ error: "Metodo non consentito" }, 405, cors);
     const b = await request.json().catch(() => ({}));
@@ -349,7 +352,9 @@ async function gestisciLive(request, env, cors, path) {
         partita.punteggiSet = chiusi.map(([x, y]) => `${x}-${y}`);
         return "Risultato finale dal campo";
       });
-      await env.DB.prepare(`DELETE FROM live WHERE id = ?`).bind(d.id).run();
+      // la diretta resta come "risultato finale provvisorio" finché il sito ufficiale non pubblica il risultato
+      await env.DB.prepare(`INSERT INTO live (id, dati, ts) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET dati = excluded.dati, ts = excluded.ts`)
+        .bind(d.id, JSON.stringify({ id: d.id, set: chiusi, finita: true }), Date.now()).run();
       let notifica = null;
       if (b.notifica) {
         await creaNotifica(env, `LVT · Risultato finale ${partita.competizione || ""}`.trim(),

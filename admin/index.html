@@ -47,6 +47,7 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 .notif-item .actions{margin-top:8px}.notif-item .actions button{width:auto;padding:7px 10px;font-size:13px}
 .notif-item input,.notif-item textarea{margin-top:6px}.notif-item small{color:#647086}
 .cifra{font-size:28px;font-weight:800}
+.btn-diretta{display:block;width:100%;margin:8px 0 0;background:#d62828;border-color:#d62828}
 .diverso{margin:8px 0;padding:10px;border-radius:8px;background:#fff6e0;border:1px solid #e8b400;font-size:14px}.diverso button{margin-top:8px;width:auto;padding:8px 12px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}body{padding:12px}.panel{padding:16px}.actions button{flex:1 1 100%}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
@@ -93,7 +94,8 @@ textarea{font:inherit;padding:11px;border-radius:8px;border:1px solid #cbd2df;wi
 <h3 class="sub">Comunicazioni inviate</h3>
 <div id="notifLista"><p class="muted">–</p></div>
 <h3 class="sub">Punteggio in diretta</h3>
-<p class="muted">Aggiornamento del punteggio dal campo: <a href="/lvt-volley/live/" target="_blank">cuggini.github.io/lvt-volley/live/</a> (password dedicata).</p>
+<button id="apriTabellone">🔴 Apri il tabellone del punteggio</button>
+<p class="muted" style="font-size:13px">Per chi segue la partita dal campo senza accesso amministratore: <a href="/lvt-volley/live/" target="_blank">cuggini.github.io/lvt-volley/live/</a> (password dedicata).</p>
 </section>
 <section class="panel" id="statPanel" hidden>
 <div class="section-heading"><h2>Statistiche del sito</h2>
@@ -184,6 +186,10 @@ function render(){
   if(isCompleted(m)){const badge=document.createElement("span");badge.className="completed-label";badge.textContent="PARTITA CONCLUSA";div.append(badge);}
   const title=document.createElement("strong");title.className="match-title";title.textContent=`${m.data||"Data da definire"} · ${m.ora||"Ora da definire"} — ${m.squadraCasa} ${m.setCasa} - ${m.setOspite} ${m.squadraOspite}`;div.append(title);
   const info=document.createElement("p");info.className="muted";info.textContent=[m.gara?"Gara "+m.gara:"",m.competizione,(m.punteggiSet||[]).join(" · "),m.campo].filter(Boolean).join(" | ");div.append(info);
+  const gg=m.data?Math.round((new Date(m.data+"T12:00")-new Date(isoData(new Date())+"T12:00"))/864e5):99;
+  const uffK=ufficiali[`${String(m.competizione||"").toUpperCase()}-${m.gara}`];
+  const uffFinita=uffK&&uffK.setCasa!=null&&Math.max(+uffK.setCasa,+uffK.setOspite)===3;
+  if(gg>=-1&&gg<=1&&!uffFinita){const lb=document.createElement("button");lb.className="btn-diretta";lb.textContent=gg===0?"🔴 Aggiorna punteggio in diretta":"🔴 Tabellone punteggio";lb.onclick=()=>apriTabellone(m.id);div.append(lb);}
   const uff=confrontoUfficiale(m);
   if(uff){const w=document.createElement("div");w.className="diverso";
     w.innerHTML=`⚠️ Risultato ufficiale ${esc(m.competizione)}: <b>${uff.setCasa}-${uff.setOspite}</b> (${esc(uff.punteggiSet.join(", "))}). ${isCompleted(m)?`Risultato registrato: <b>${m.setCasa}-${m.setOspite}</b> (${esc((m.punteggiSet||[]).join(", "))}).`:"Nessun risultato registrato."} Sul sito è pubblicato il risultato ufficiale.<br>`;
@@ -419,7 +425,8 @@ const NOMI_VISTE = { agenda: "Agenda", calendario: "Calendario", classifica: "Cl
 const NOMI_FUNZ = { naviga: "Naviga (Google Maps)", locandina: "Locandina aperta", condividi: "Locandina condivisa", copia: "Locandina copiata",
   scarica: "Locandina scaricata", retro: "Modalità Retro", crea_app: "Pulsante Crea app", app_installata: "App installata",
   apri_sezione: "Sezioni Agenda aperte", squadra: "Squadra toccata", dettaglio: "Dettaglio giorno/partita", grafico: "Grafico toccato", filtro: "Filtro PGS/FIPAV",
-  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato", news: "Archivio news aperto", news_notifica: "News aperta da notifica" };
+  avvisi: "Pulsante Avvisi", avvisi_on: "Notifiche attivate", avvisi_off: "Notifiche disattivate", diretta: "Riquadro diretta toccato", news: "Archivio news aperto", news_notifica: "News aperta da notifica",
+  invito: "Invito notifiche mostrato", invito_si: "Invito notifiche accettato", invito_no: "Invito notifiche rifiutato" };
 const NOMI_ERR = { avvisi: "Attivazione notifiche fallita", risultati: "Calendario non caricato", pgs: "Dati PGS non caricati", fipav: "Classifica FIPAV non caricata" };
 const somma = (dest, json) => { let o = {}; try { o = JSON.parse(json || "{}"); } catch {} for (const [k, v] of Object.entries(o)) dest[k] = (dest[k] || 0) + v; };
 const giorniDa = (dal, n) => { const [y, m, d] = dal.split("-").map(Number); return [...Array(n)].map((_, i) => isoData(new Date(y, m - 1, d + i))); };
@@ -569,6 +576,11 @@ function editMatch(id){const m=matches.find(x=>String(x.id)===String(id));if(!m)
  $("matchId").value=m.id;$("date").value=m.data||"";$("time").value=m.ora||"";$("game").value=m.gara||"";$("venue").value=m.campo||"";$("competition").value=m.competizione||"";$("home").value=m.squadraCasa||"";$("away").value=m.squadraOspite||"";$("homeSets").value=m.setCasa??0;$("awaySets").value=m.setOspite??0;$("setScores").value=(m.punteggiSet||[]).join(", ");$("formTitle").textContent="Modifica partita";activeEditId=String(id);showStatus("");render();$("editor").scrollIntoView({behavior:"smooth",block:"start"});}
 async function deleteMatch(id){if(!confirm("Eliminare questa partita?"))return;const old=JSON.parse(JSON.stringify(matches));matches=matches.filter(x=>String(x.id)!==String(id));try{await request("results",{method:"PUT",body:JSON.stringify({password,partite:matches,allenamenti:allen})});if(String(activeEditId)===String(id)){activeEditId=null;resetFields();}render();showStatus("Partita eliminata.");
  const t=old.find(x=>String(x.id)===String(id));if(t&&!isCompleted(t)&&(t.data||"")>=isoData(new Date()))proponiNotifica("LVT · Partita annullata",`Partita annullata: ${t.squadraCasa} – ${t.squadraOspite} di ${descriviQuando(t)}.`);}catch(e){matches=old;render();showStatus("Errore: "+e.message);}}
+// ================= DIRETTA =================
+// l'amministratore apre il tabellone senza inserire di nuovo la password
+function apriTabellone(id){try{sessionStorage.setItem("lvt-live-pw",password);sessionStorage.setItem("lvt-live-da-admin","1");}catch{}
+  location.href="../live/"+(id?`?id=${encodeURIComponent(id)}`:"");}
+$("apriTabellone").onclick=()=>apriTabellone();
 // ================= NOTIFICHE =================
 function descriviQuando(m){const d=m.data?new Date(m.data+"T12:00"):null;return (d&&!isNaN(d)?`${GIORNI[d.getDay()].toLowerCase()} ${itData(m.data)}`:"data da definire")+(m.ora?` ore ${m.ora}`:"");}
 let propostaTitolo="";
