@@ -1,7 +1,7 @@
 {
-  "aggiornato": "2026-11-15T20:28:08.060Z",
+  "aggiornato": "2026-11-17T17:57:57.868Z",
   "classifica": {
-    "aggiornato": "2026-11-15T19:58:30.533Z",
+    "aggiornato": "2026-11-17T10:07:12.681Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
@@ -24,6 +24,15 @@
         "setPersi": 7
       },
       {
+        "squadra": "MOTTASTAMPI AGRATE",
+        "punti": 12,
+        "giocate": 6,
+        "vinte": 4,
+        "perse": 2,
+        "setVinti": 13,
+        "setPersi": 9
+      },
+      {
         "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
         "punti": 9,
         "giocate": 4,
@@ -31,15 +40,6 @@
         "perse": 1,
         "setVinti": 9,
         "setPersi": 5
-      },
-      {
-        "squadra": "MOTTASTAMPI AGRATE",
-        "punti": 9,
-        "giocate": 5,
-        "vinte": 3,
-        "perse": 2,
-        "setVinti": 10,
-        "setPersi": 8
       },
       {
         "squadra": "PGS DOMANI",
@@ -53,11 +53,11 @@
       {
         "squadra": "PAL. CONCOREZZO SSD",
         "punti": 0,
-        "giocate": 5,
+        "giocate": 6,
         "vinte": 0,
-        "perse": 5,
-        "setVinti": 2,
-        "setPersi": 15
+        "perse": 6,
+        "setVinti": 3,
+        "setPersi": 18
       }
     ]
   },
@@ -317,9 +317,14 @@
       "ora": "19.00",
       "casa": "MOTTASTAMPI AGRATE",
       "ospite": "PAL. CONCOREZZO SSD",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 3,
+      "setOspite": 1,
+      "parziali": [
+        "25-21",
+        "25-13",
+        "20-25",
+        "25-21"
+      ],
       "campo": "PALESTRA SCUOLA ELEMENTARE, VIA BATTISTI, AGRATE BRIANZA"
     },
     {
