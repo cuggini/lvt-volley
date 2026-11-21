@@ -1,18 +1,18 @@
 {
-  "aggiornato": "2026-11-17T17:57:57.868Z",
+  "aggiornato": "2026-11-21T00:25:25.947Z",
   "classifica": {
-    "aggiornato": "2026-11-17T10:07:12.681Z",
+    "aggiornato": "2026-11-21T00:27:36.639Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
       {
         "squadra": "PLESIOS VOLLEY",
         "punti": 15,
-        "giocate": 6,
+        "giocate": 7,
         "vinte": 5,
-        "perse": 1,
+        "perse": 2,
         "setVinti": 16,
-        "setPersi": 5
+        "setPersi": 8
       },
       {
         "squadra": "NET VOLLEY CINISELLO BLU",
@@ -24,6 +24,15 @@
         "setPersi": 7
       },
       {
+        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
+        "punti": 12,
+        "giocate": 5,
+        "vinte": 4,
+        "perse": 1,
+        "setVinti": 12,
+        "setPersi": 5
+      },
+      {
         "squadra": "MOTTASTAMPI AGRATE",
         "punti": 12,
         "giocate": 6,
@@ -31,15 +40,6 @@
         "perse": 2,
         "setVinti": 13,
         "setPersi": 9
-      },
-      {
-        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
-        "punti": 9,
-        "giocate": 4,
-        "vinte": 3,
-        "perse": 1,
-        "setVinti": 9,
-        "setPersi": 5
       },
       {
         "squadra": "PGS DOMANI",
@@ -333,9 +333,13 @@
       "ora": "20.30",
       "casa": "PLESIOS VOLLEY",
       "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "20-25",
+        "17-25",
+        "22-25"
+      ],
       "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
     },
     {
