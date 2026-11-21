@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-16T16:34:25.735Z",
+  "aggiornato": "2026-11-21T21:16:06.963Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -260,10 +260,14 @@
       "ora": "19.00",
       "casa": "VOLLEY CUSANO",
       "ospite": "ASD POLISPORTIVA DI NOVA",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 0,
+      "setOspite": 3,
+      "parziali": [
+        "19-25",
+        "22-25",
+        "19-25"
+      ],
+      "provvisorio": true,
       "campo": "CENTRO POLISPORTIVO COMUNALE, CUSANO MILANINO - VIALE ROMA 2"
     },
     {
