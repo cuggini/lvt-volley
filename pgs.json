@@ -1,7 +1,7 @@
 {
-  "aggiornato": "2026-11-21T00:25:25.947Z",
+  "aggiornato": "2026-11-22T16:29:42.942Z",
   "classifica": {
-    "aggiornato": "2026-11-21T00:27:36.639Z",
+    "aggiornato": "2026-11-22T12:26:07.009Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
@@ -43,21 +43,21 @@
       },
       {
         "squadra": "PGS DOMANI",
-        "punti": 3,
-        "giocate": 6,
-        "vinte": 1,
+        "punti": 6,
+        "giocate": 7,
+        "vinte": 2,
         "perse": 5,
-        "setVinti": 4,
-        "setPersi": 16
+        "setVinti": 7,
+        "setPersi": 17
       },
       {
         "squadra": "PAL. CONCOREZZO SSD",
         "punti": 0,
-        "giocate": 6,
+        "giocate": 7,
         "vinte": 0,
-        "perse": 6,
-        "setVinti": 3,
-        "setPersi": 18
+        "perse": 7,
+        "setVinti": 4,
+        "setPersi": 21
       }
     ]
   },
@@ -348,9 +348,14 @@
       "ora": "10.00",
       "casa": "PAL. CONCOREZZO SSD",
       "ospite": "PGS DOMANI",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "24-26",
+        "25-15",
+        "23-25",
+        "18-25"
+      ],
       "campo": "SCUOLA ELEMENTERE, VIA OZANAM 10, CONCOREZZO"
     },
     {
