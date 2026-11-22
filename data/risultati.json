@@ -186,9 +186,13 @@
       "competizione": "PGS",
       "squadraCasa": "LVT LISSONE VOLLEY TEAM",
       "squadraOspite": "MOTTASTAMPI AGRATE",
-      "setCasa": 0,
+      "setCasa": 3,
       "setOspite": 0,
-      "punteggiSet": [],
+      "punteggiSet": [
+        "25-21",
+        "25-17",
+        "25-21"
+      ],
       "campo": "Scuola Media, Via G. B. Vico 4, 20851 Lissone"
     },
     {
