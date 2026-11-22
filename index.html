@@ -1425,8 +1425,7 @@
   }
   function apriSquadra(camp, nome, gara) {
     conta("funzioni", "squadra");
-    if (eNoi(nome) || isMe(nome)) vai({ vista: "agenda", filtro: camp });
-    else vai({ vista: "altre", filtro: camp, squadra: { camp, nome, gara } });
+    vai({ vista: "altre", filtro: camp, squadra: { camp, nome, gara } });   // anche LVT: statistiche, risultati e prossime partite
   }
   document.getElementById("vista-altre").addEventListener("click", e => {
     if (apriChiudiSezione(e)) return;
