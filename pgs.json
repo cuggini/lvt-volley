@@ -1,10 +1,19 @@
 {
-  "aggiornato": "2026-11-22T16:29:42.942Z",
+  "aggiornato": "2026-11-22T21:56:20.751Z",
   "classifica": {
-    "aggiornato": "2026-11-22T12:26:07.009Z",
+    "aggiornato": "2026-11-22T22:00:51.090Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
+      {
+        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
+        "punti": 15,
+        "giocate": 6,
+        "vinte": 5,
+        "perse": 1,
+        "setVinti": 15,
+        "setPersi": 5
+      },
       {
         "squadra": "PLESIOS VOLLEY",
         "punti": 15,
@@ -24,22 +33,13 @@
         "setPersi": 7
       },
       {
-        "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
-        "punti": 12,
-        "giocate": 5,
-        "vinte": 4,
-        "perse": 1,
-        "setVinti": 12,
-        "setPersi": 5
-      },
-      {
         "squadra": "MOTTASTAMPI AGRATE",
         "punti": 12,
-        "giocate": 6,
+        "giocate": 7,
         "vinte": 4,
-        "perse": 2,
+        "perse": 3,
         "setVinti": 13,
-        "setPersi": 9
+        "setPersi": 12
       },
       {
         "squadra": "PGS DOMANI",
@@ -364,9 +364,13 @@
       "ora": "15.00",
       "casa": "NUOVA LAVANDERIA BAREGGIA LVT",
       "ospite": "MOTTASTAMPI AGRATE",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-21",
+        "25-17",
+        "25-18"
+      ],
       "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
     },
     {
@@ -375,17 +379,6 @@
       "ora": "21.00",
       "casa": "NET VOLLEY CINISELLO BLU",
       "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
-    },
-    {
-      "gara": "1464",
-      "data": "29/11/2026",
-      "ora": "18.00",
-      "casa": "NET VOLLEY CINISELLO BLU",
-      "ospite": "PLESIOS VOLLEY",
       "setCasa": null,
       "setOspite": null,
       "parziali": [],
@@ -401,6 +394,17 @@
       "setOspite": null,
       "parziali": [],
       "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1464",
+      "data": "29/11/2026",
+      "ora": "18.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "PLESIOS VOLLEY",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
     },
     {
       "gara": "1448",
@@ -447,17 +451,6 @@
       "campo": "PALAZZETTO VIMODRONE, VIA PIAVE 62, VIMODRONE"
     },
     {
-      "gara": "1470",
-      "data": "20/12/2026",
-      "ora": "18.00",
-      "casa": "NET VOLLEY CINISELLO BLU",
-      "ospite": "PAL. CONCOREZZO SSD",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
-    },
-    {
       "gara": "1468",
       "data": "20/12/2026",
       "ora": "18.00",
@@ -467,6 +460,17 @@
       "setOspite": null,
       "parziali": [],
       "campo": "SCUOLA MEDIA VICO, VIA G.B. VICO, BAREGGIA DI LISSONE"
+    },
+    {
+      "gara": "1470",
+      "data": "20/12/2026",
+      "ora": "18.00",
+      "casa": "NET VOLLEY CINISELLO BLU",
+      "ospite": "PAL. CONCOREZZO SSD",
+      "setCasa": null,
+      "setOspite": null,
+      "parziali": [],
+      "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
     },
     {
       "gara": "1467",

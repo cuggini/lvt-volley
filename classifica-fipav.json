@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-22T01:27:56.978Z",
+  "aggiornato": "2026-11-22T21:56:32.069Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
@@ -55,13 +55,25 @@
       "squadra": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
       "societa": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
       "punti": "6",
-      "giocate": "5",
+      "giocate": "6",
       "vinte": "2",
-      "perse": "3",
+      "perse": "4",
       "setVinti": "9",
-      "setPersi": "10",
-      "puntiFatti": "421",
-      "puntiSubiti": "423"
+      "setPersi": "13",
+      "puntiFatti": "473",
+      "puntiSubiti": "498"
+    },
+    {
+      "squadra": "PRO VICTORIA PALLAVOLO FUCSIA",
+      "societa": "PRO VICTORIA PALLAVOLO S.R.L.",
+      "punti": "4",
+      "giocate": "6",
+      "vinte": "1",
+      "perse": "5",
+      "setVinti": "8",
+      "setPersi": "15",
+      "puntiFatti": "483",
+      "puntiSubiti": "527"
     },
     {
       "squadra": "VOLLEY CUSANO",
@@ -74,18 +86,6 @@
       "setPersi": "13",
       "puntiFatti": "305",
       "puntiSubiti": "393"
-    },
-    {
-      "squadra": "PRO VICTORIA PALLAVOLO FUCSIA",
-      "societa": "PRO VICTORIA PALLAVOLO S.R.L.",
-      "punti": "1",
-      "giocate": "5",
-      "vinte": "0",
-      "perse": "5",
-      "setVinti": "5",
-      "setPersi": "15",
-      "puntiFatti": "408",
-      "puntiSubiti": "475"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-22T01:27:56.980Z",
+  "aggiornato": "2026-11-22T21:56:32.071Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -353,10 +353,14 @@
       "ora": "18.00",
       "casa": "PRO VICTORIA PALLAVOLO FUCSIA",
       "ospite": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 3,
+      "setOspite": 0,
+      "parziali": [
+        "25-17",
+        "25-16",
+        "25-19"
+      ],
+      "provvisorio": true,
       "campo": "SCUOLA MEDIA E. SALA, MONZA - VIA CLEMENTI 30"
     },
     {
