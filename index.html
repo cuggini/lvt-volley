@@ -499,6 +499,33 @@
   }
   /* statistiche */
   #statistiche h2 { margin-top: 30px; }
+  /* indicatori: stato di forma e valore della squadra */
+  em.nuovo { font-style: normal; font-size: .62rem; font-weight: 900; letter-spacing: .06em; color: #fff; background: #d62828;
+    padding: 2px 6px; border-radius: 999px; vertical-align: 2px; margin-left: 4px; }
+  .kpi-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 10px; }
+  @media (max-width: 560px) { .kpi-2 { grid-template-columns: 1fr; } }
+  .kpi { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .kpi h4 { margin: 0 0 2px; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .kpi b { font-size: 1.05rem; }
+  .kpi small { display: block; margin-top: 6px; font-size: .72rem; color: var(--muted); line-height: 1.3; }
+  .anello { width: 78px; height: 78px; flex: none; }
+  .anello .fondo { fill: none; stroke: var(--line); stroke-width: 8; }
+  .anello .valore { fill: none; stroke-width: 8; stroke-linecap: round; }
+  .anello text { font-size: 22px; font-weight: 900; fill: var(--text); }
+  .anello.ottimo .valore { stroke: #1f9d55; } .anello.buono .valore { stroke: #1e5bd8; }
+  .anello.discreto .valore { stroke: #e8a400; } .anello.basso .valore { stroke: #d62828; }
+  .tend { display: inline-block; margin-left: 6px; font-size: .75rem; font-weight: 700; color: var(--muted); }
+  .tend.su { color: #1f9d55; } .tend.giu { color: #d62828; }
+  .strip { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .strip .esito { display: inline-flex; flex-direction: column; align-items: center; min-width: 30px; padding: 3px 4px; border-radius: 6px;
+    font-weight: 900; font-size: .8rem; color: #fff; line-height: 1.1; }
+  .strip .esito small { display: block; margin: 0; font-size: .6rem; color: rgba(255,255,255,.9); font-weight: 700; }
+  .strip .esito.w { background: #1f9d55; } .strip .esito.l { background: #d62828; }
+  .tipi-ris { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 0 0 6px; }
+  .tipi-ris span { text-align: center; padding: 6px 2px; border-radius: 8px; font-size: .72rem; font-weight: 700; border: 1px solid var(--line); background: var(--card); }
+  .tipi-ris span b { display: block; font-size: 1.1rem; }
+  .tipi-ris span.w b { color: #1f9d55; } .tipi-ris span.l b { color: #d62828; }
+  body.retro .kpi, body.retro .tipi-ris span { background: transparent; border-radius: 4px; }
   .stat-griglia { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .stat-box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 4px; text-align: center; }
   .stat-box .n { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
@@ -837,9 +864,10 @@
   }
 
   // sezioni dell'Agenda apribili/chiudibili (chiuse all'apertura del sito)
-  const sezioniAperte = { risultati: false, prossime: false, tutteRisultati: false, tutteProssime: false, sqRisultati: true, sqProssime: true };
-  const testataSezione = (id, titolo, n) => `<h2 class="toggle"><button type="button" data-sezione="${id}" aria-expanded="${sezioniAperte[id]}">
-      <span>${titolo} <small>(${n})</small></span><span class="freccia" aria-hidden="true">${sezioniAperte[id] ? "▲" : "▼"}</span></button></h2>`;
+  const sezioniAperte = { risultati: false, prossime: false, tutteRisultati: false, tutteProssime: false, sqRisultati: false, sqProssime: false, sqStatistiche: false };
+  const STAT_SQUADRA_NUOVE = Date.now() < new Date("2026-12-13T23:59:59+01:00").getTime();   // etichetta NEW per tre settimane
+  const testataSezione = (id, titolo, n, nuovo) => `<h2 class="toggle"><button type="button" data-sezione="${id}" aria-expanded="${sezioniAperte[id]}">
+      <span>${titolo}${n === null || n === undefined ? "" : ` <small>(${n})</small>`}${nuovo ? ' <em class="nuovo">NEW</em>' : ""}</span><span class="freccia" aria-hidden="true">${sezioniAperte[id] ? "▲" : "▼"}</span></button></h2>`;
   function renderAgenda(lista) {
     const giocate = lista.filter(p => p.ris).reverse();
     const daGiocare = lista.filter(p => !p.ris);
@@ -1090,7 +1118,7 @@
   const perc = (a, b) => b ? Math.round(100 * a / b) : 0;
   const media = (a, b) => b ? (a / b).toFixed(1).replace(".", ",") : "–";
 
-  function datiStatistiche(camp, tutte) {
+  function datiStatistiche(camp, tutte, eQuesta = eNoi) {   // eQuesta: riconosce la squadra analizzata (default LVT)
     // partite del girone; se il sito ufficiale non ha ancora il risultato LVT, uso quello dell'admin
     const girone = conRisultatiProvvisori(tutte).filter(p => p.camp === camp);
     const giocate = girone.filter(p => p.ris && p.ris.finita).sort((a, b) => a.d - b.d);
@@ -1099,7 +1127,7 @@
       const set = (p.ris.parziali || []).filter(s => !s.live).map(([x, y]) => casa ? [x, y] : [y, x]);
       return { p, casa, v: casa ? a : b, s: casa ? b : a, set, avv: casa ? p.ospite : p.casa };
     };
-    const noi = giocate.filter(p => eNoi(p.casa) || eNoi(p.ospite)).map(p => vista(p, eNoi(p.casa) ? p.casa : p.ospite))
+    const noi = giocate.filter(p => eQuesta(p.casa) || eQuesta(p.ospite)).map(p => vista(p, eQuesta(p.casa) ? p.casa : p.ospite))
       .map(x => ({ ...x, vinta: x.v > x.s }));
     const squadre = [...new Set(girone.flatMap(p => [p.casa, p.ospite]))];
 
@@ -1114,7 +1142,7 @@
         (b.sv / (b.sp || .5)) - (a.sv / (a.sp || .5)) || (b.pf / (b.ps || .5)) - (a.pf / (a.ps || .5)) || a.n.localeCompare(b.n));
     }
     const andamento = noi.map(x => {
-      const tab = classificaAl(x.p.d), i = tab.findIndex(r => eNoi(r.n));
+      const tab = classificaAl(x.p.d), i = tab.findIndex(r => eQuesta(r.n));
       return { x, pos: i + 1, pt: tab[i].pt };
     });
     // attacco e difesa del girone: media punti per set
@@ -1125,11 +1153,44 @@
     }).filter(r => r.f !== null);
     // testa a testa con ogni avversaria (anche le partite ancora da giocare)
     const scontri = {};
-    girone.filter(p => eNoi(p.casa) || eNoi(p.ospite)).sort((a, b) => a.d - b.d).forEach(p => {
-      const avv = eNoi(p.casa) ? p.ospite : p.casa;
-      (scontri[avv] = scontri[avv] || []).push(p.ris && p.ris.finita ? { ...vista(p, eNoi(p.casa) ? p.casa : p.ospite), giocata: true } : { p, giocata: false });
+    girone.filter(p => eQuesta(p.casa) || eQuesta(p.ospite)).sort((a, b) => a.d - b.d).forEach(p => {
+      const avv = eQuesta(p.casa) ? p.ospite : p.casa;
+      (scontri[avv] = scontri[avv] || []).push(p.ris && p.ris.finita ? { ...vista(p, eQuesta(p.casa) ? p.casa : p.ospite), giocata: true } : { p, giocata: false });
     });
-    return { camp, noi, andamento, squadre, resa, scontri };
+    // ---- indicatori: rendimento di ogni partita (0–1) in base a risultato, scarto e forza dell'avversaria ----
+    const finale = classificaAl(new Date(8.64e15));
+    const forza = Object.fromEntries(finale.map(r => { const g = giocate.filter(p => p.casa === r.n || p.ospite === r.n).length; return [r.n, g ? r.pt / (3 * g) : .5]; }));
+    const BASE = { "3-0": 1, "3-1": .85, "3-2": .65, "2-3": .4, "1-3": .2, "0-3": .05 };
+    const rendimento = (x, squadra) => {
+      const nset = x.set.length, diff = nset ? x.set.reduce((a, [f, sb]) => a + f - sb, 0) / nset : 0;   // scarto medio per set
+      const b = BASE[`${x.v}-${x.s}`] ?? (x.v > x.s ? .8 : .2);
+      const avv = forza[x.avv] ?? .5;
+      return Math.max(0, Math.min(1, b + Math.max(-.1, Math.min(.1, diff / 60)) + (avv - .5) * .2));
+    };
+    function indicatori(lista, squadra) {
+      if (!lista.length) return null;
+      const perf = lista.map(x => rendimento(x, squadra));
+      const pt = lista.reduce((a, x) => a + REGOLE_PUNTI[camp](x.v, x.s), 0);
+      const sv = lista.reduce((a, x) => a + x.v, 0), sp = lista.reduce((a, x) => a + x.s, 0);
+      const set = lista.flatMap(x => x.set), pf = set.reduce((a, z) => a + z[0], 0), ps = set.reduce((a, z) => a + z[1], 0);
+      const quotaPunti = pf + ps ? pf / (pf + ps) : .5;
+      const valore = 100 * (.45 * perf.reduce((a, b) => a + b, 0) / perf.length + .25 * pt / (3 * lista.length)
+        + .15 * (sv + sp ? sv / (sv + sp) : .5) + .15 * Math.max(0, Math.min(1, (quotaPunti - .4) / .2)));
+      const ultime = perf.slice(-5), pesi = ultime.map((_, i) => i + 1);   // la più recente pesa di più
+      const forma = 100 * ultime.reduce((a, v, i) => a + v * pesi[i], 0) / pesi.reduce((a, b) => a + b, 0);
+      const prima = perf.slice(-8, -5), tendenza = prima.length ? forma - 100 * prima.reduce((a, b) => a + b, 0) / prima.length : 0;
+      return { valore: Math.round(valore), forma: Math.round(forma), tendenza: Math.round(tendenza), ultime: lista.slice(-5) };
+    }
+    const kpi = indicatori(noi);
+    // valore di tutte le squadre del girone, per la posizione
+    const valori = squadre.map(n => {
+      const l = giocate.filter(p => p.casa === n || p.ospite === n).map(p => ({ ...vista(p, n) }));
+      const k = indicatori(l, n); return k ? { n, v: k.valore } : null;
+    }).filter(Boolean).sort((a, b) => b.v - a.v);
+    const posValore = valori.findIndex(r => eQuesta(r.n)) + 1;
+    // set persi di misura (2 punti di scarto) e set vinti di misura
+    const misura = { persi: noi.flatMap(x => x.set).filter(([f, sb]) => sb - f === 2).length, vinti: noi.flatMap(x => x.set).filter(([f, sb]) => f - sb === 2).length };
+    return { camp, noi, andamento, squadre, resa, scontri, kpi, posValore, nValori: valori.length, misura, eQuesta };
   }
 
   function graficoAndamento(and, nSquadre) {
@@ -1155,10 +1216,33 @@
       <p class="nota-stat">Pallino pieno = vittoria, vuoto = sconfitta. Selezionare un punto per i dettagli.</p>`;
   }
 
-  function bloccoStatistiche(d) {
+  function bloccoKpi(d) {
+    const { kpi, posValore, nValori, misura, noi } = d;
+    if (!kpi) return "";
+    const giudizio = v => v >= 75 ? ["Ottimo", "ottimo"] : v >= 55 ? ["Buono", "buono"] : v >= 40 ? ["Discreto", "discreto"] : ["In difficoltà", "basso"];
+    const gf = giudizio(kpi.forma), gv = giudizio(kpi.valore);
+    const anello = (v, cls) => { const c = 2 * Math.PI * 34, l = c * v / 100;
+      return `<svg viewBox="0 0 80 80" class="anello ${cls}" aria-hidden="true"><circle cx="40" cy="40" r="34" class="fondo"/>
+        <circle cx="40" cy="40" r="34" class="valore" stroke-dasharray="${l} ${c}" transform="rotate(-90 40 40)"/>
+        <text x="40" y="47" text-anchor="middle">${v}</text></svg>`; };
+    const freccia = kpi.tendenza >= 8 ? '<span class="tend su">▲ in crescita</span>' : kpi.tendenza <= -8 ? '<span class="tend giu">▼ in calo</span>' : '<span class="tend">● stabile</span>';
+    const strip = kpi.ultime.map(x => `<span class="esito ${x.v > x.s ? "w" : "l"}" title="${esc(`${dataBreve(x.p.d)} ${x.casa ? "vs" : "@"} ${x.avv} ${x.v}-${x.s}`)}">${x.v > x.s ? "V" : "P"}<small>${x.v}-${x.s}</small></span>`).join("");
+    const t = { "3-0": 0, "3-1": 0, "3-2": 0, "2-3": 0, "1-3": 0, "0-3": 0 }; noi.forEach(x => { const k = `${x.v}-${x.s}`; if (k in t) t[k]++; });
+    return `<div class="kpi-2">
+        <div class="kpi ${gf[1]}">${anello(kpi.forma, gf[1])}<div><h4>Stato di forma</h4><b>${gf[0]}</b> ${noi.length > 1 ? freccia : ""}
+          <div class="strip">${strip}</div><small>Ultime ${kpi.ultime.length} partite, le più recenti pesano di più.</small></div></div>
+        <div class="kpi ${gv[1]}">${anello(kpi.valore, gv[1])}<div><h4>Valore della squadra</h4><b>${gv[0]}</b>
+          ${nValori > 1 ? `<span class="tend">${posValore}ª su ${nValori} nel girone</span>` : ""}
+          <small>Tutta la stagione: punti, set e punti vinti, nettezza delle vittorie, forza delle avversarie.</small></div></div>
+      </div>
+      <div class="tipi-ris">${Object.entries(t).map(([k, n]) => `<span class="${+k[0] === 3 ? "w" : "l"}"><b>${n}</b>${k}</span>`).join("")}</div>
+      <p class="nota-stat">Set vinti con 2 punti di scarto: ${misura.vinti} · set persi con 2 punti di scarto: ${misura.persi}</p>`;
+  }
+  function bloccoStatistiche(d, opz = {}) {
     const { noi, andamento, squadre, resa, scontri, camp } = d;
-    const testa = `<h2>Statistiche ${camp} · ${GIRONE_DI[camp]}</h2>`;
-    if (!noi.length) return testa + '<div class="empty">Nessuna partita LVT giocata in questo campionato.</div>';
+    const eQuesta = d.eQuesta || eNoi, chi = opz.nome ? nomeBreve(opz.nome) : "LVT";
+    const testa = opz.senzaTitolo ? "" : `<h2>Statistiche ${camp} · ${GIRONE_DI[camp]}</h2>`;
+    if (!noi.length) return testa + `<div class="empty">Nessuna partita ${opz.nome ? "" : "LVT "}giocata in questo campionato.</div>`;
     const V = noi.filter(x => x.vinta).length, sv = noi.reduce((a, x) => a + x.v, 0), sp = noi.reduce((a, x) => a + x.s, 0);
     const set = noi.flatMap(x => x.set), pf = set.reduce((a, s) => a + s[0], 0), ps = set.reduce((a, s) => a + s[1], 0);
     const casa = noi.filter(x => x.casa), fuori = noi.filter(x => !x.casa);
@@ -1191,11 +1275,11 @@
     ].filter(Boolean).map(([t, v]) => `<li><span>${t}</span><b>${v}</b></li>`).join("");
     // girone
     const att = [...resa].sort((a, b) => b.f - a.f), dif = [...resa].sort((a, b) => a.s - b.s);
-    const posNoi = l => l.findIndex(r => eNoi(r.n)) + 1;
-    const classifica3 = (l, k) => l.slice(0, 3).map((r, i) => `<li class="${eNoi(r.n) ? "noi" : ""}">${i + 1}. ${esc(nomeBreve(r.n))} <b>${media(r[k], 1)}</b></li>`).join("");
+    const posNoi = l => l.findIndex(r => eQuesta(r.n)) + 1;
+    const classifica3 = (l, k) => l.slice(0, 3).map((r, i) => `<li class="${eQuesta(r.n) ? "noi" : ""}">${i + 1}. ${esc(nomeBreve(r.n))} <b>${media(r[k], 1)}</b></li>`).join("");
     const tt = Object.entries(scontri).map(([avv, l]) => `<tr><td>${esc(nomeBreve(avv))}</td>${l.map((m, i) => `<td>${i ? "R" : "A"} ${m.giocata
       ? `<b class="${m.v > m.s ? "w" : "l"}">${m.v}-${m.s}</b>` : `<small>${dataBreve(m.p.d)}</small>`}</td>`).join("")}${l.length < 2 ? "<td></td>" : ""}</tr>`).join("");
-    return testa + `
+    return testa + bloccoKpi(d) + `
       <div class="stat-griglia">
         <div class="stat-box"><div class="n">${noi.length}</div><div class="l">Giocate</div></div>
         <div class="stat-box"><div class="n w">${V}</div><div class="l">Vinte</div></div>
@@ -1206,12 +1290,12 @@
       </div>
       <p class="nota-stat">🏠 In casa ${vp(casa)} · 🚌 In trasferta ${vp(fuori)} · Punti totali ${pf}–${ps}</p>
       <h3 class="sotto">Posizione in classifica dopo ogni partita</h3>${graficoAndamento(andamento, squadre.length)}
-      <h3 class="sotto">Come giochiamo i set (% vinti)</h3><div class="barre">${barre}</div>
+      <h3 class="sotto">Rendimento nei set (% vinti)</h3><div class="barre">${barre}</div>
       <p class="nota-stat">Tie-break ${tb.filter(x => x.vinta).length}–${tb.filter(x => !x.vinta).length} · Set ai vantaggi vinti ${van.filter(z => z.s[0] > z.s[1]).length}, persi ${van.filter(z => z.s[0] < z.s[1]).length}</p>
       <h3 class="sotto">Record e curiosità</h3><ul class="record">${record}</ul>
       <h3 class="sotto">Il girone (media punti per set)</h3>
-      <div class="girone-2"><div><h4>⚔️ Miglior attacco</h4><ol>${classifica3(att, "f")}</ol>${posNoi(att) > 3 ? `<small>LVT ${posNoi(att)}ª su ${att.length}</small>` : ""}</div>
-        <div><h4>🛡️ Miglior difesa</h4><ol>${classifica3(dif, "s")}</ol>${posNoi(dif) > 3 ? `<small>LVT ${posNoi(dif)}ª su ${dif.length}</small>` : ""}</div></div>
+      <div class="girone-2"><div><h4>⚔️ Miglior attacco</h4><ol>${classifica3(att, "f")}</ol>${posNoi(att) > 3 ? `<small>${esc(chi)} ${posNoi(att)}ª su ${att.length}</small>` : ""}</div>
+        <div><h4>🛡️ Miglior difesa</h4><ol>${classifica3(dif, "s")}</ol>${posNoi(dif) > 3 ? `<small>${esc(chi)} ${posNoi(dif)}ª su ${dif.length}</small>` : ""}</div></div>
       <h3 class="sotto">Testa a testa (A = andata, R = ritorno)</h3>
       <div class="tab-classifica"><table class="classifica tt"><tbody>${tt}</tbody></table></div>`;
   }
@@ -1228,6 +1312,7 @@
   document.getElementById("vista-classifica").addEventListener("pointerover", mostraTip);
   document.getElementById("vista-classifica").addEventListener("click", mostraTip);
   document.getElementById("vista-classifica").addEventListener("focusin", mostraTip);
+  ["pointerover", "click", "focusin"].forEach(ev => document.getElementById("vista-altre").addEventListener(ev, mostraTip));
   function mostraTip(e) {
     const pt = e.target.closest && e.target.closest(".punto");
     const graf = e.target.closest && e.target.closest(".grafico");
@@ -1308,6 +1393,10 @@
           : `<p class="fonte">ℹ️ Partite dei gironi LVT secondo i siti ufficiali <b>FIPAV</b> e <b>PGS</b>, aggiornate più volte al giorno.
               Selezionando una squadra si visualizzano solo le sue partite.</p>`}
         ${mancano.length ? `<div class="empty">Partite ${mancano.join(" e ")} non disponibili in questo momento.</div>` : ""}
+        ${sq ? `${testataSezione("sqStatistiche", "Statistiche", null, STAT_SQUADRA_NUOVE)}
+        <div class="corpo-sezione stat-squadra" ${sezioniAperte.sqStatistiche ? "" : "hidden"}>
+          ${bloccoStatistiche(datiStatistiche(sq.camp, tutte, n => norm(n) === norm(sq.nome)), { senzaTitolo: true, nome: sq.nome })}
+        </div>` : ""}
         ${testataSezione(kR, "Risultati", giocate.length)}
         <div class="corpo-sezione" ${sezioniAperte[kR] ? "" : "hidden"}>
         ${giocate.length ? giocate.map(p => card(p, false, opt)).join("") : '<div class="empty">Nessun risultato ancora.</div>'}
@@ -1327,7 +1416,7 @@
     if (filtro) stato.filtro = filtro;
     if (vista) stato.vista = vista;
     stato.squadra = squadra;
-    if (squadra) sezioniAperte.sqRisultati = sezioniAperte.sqProssime = true;   // squadra scelta: partite subito visibili
+    if (squadra) sezioniAperte.sqStatistiche = sezioniAperte.sqRisultati = sezioniAperte.sqProssime = false;   // squadra scelta: sezioni chiuse
     mostraTutteProssime = false;
     document.querySelectorAll("#filters button").forEach(x => x.classList.toggle("active", x.dataset.f === stato.filtro));
     document.querySelectorAll("#views button").forEach(x => x.classList.toggle("active", x.dataset.v === stato.vista));
