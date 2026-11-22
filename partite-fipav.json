@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-21T21:16:06.963Z",
+  "aggiornato": "2026-11-22T01:27:56.980Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -288,10 +288,15 @@
       "ora": "18.00",
       "casa": "NUOVA LAVANDERIA BAREGGIA SERVICE",
       "ospite": "POLISPORTIVA ARDOR BOLLATE A.S.D.",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 3,
+      "setOspite": 1,
+      "parziali": [
+        "26-24",
+        "24-26",
+        "25-18",
+        "25-16"
+      ],
+      "provvisorio": true,
       "campo": "SCUOLA MEDIA, LISSONE - BAREGGIA - Via G. B. Vico 4"
     },
     {
