@@ -1178,15 +1178,36 @@
       const pt = lista.reduce((a, x) => a + REGOLE_PUNTI[camp](x.v, x.s), 0);
       const sv = lista.reduce((a, x) => a + x.v, 0), sp = lista.reduce((a, x) => a + x.s, 0);
       const set = lista.flatMap(x => x.set), pf = set.reduce((a, z) => a + z[0], 0), ps = set.reduce((a, z) => a + z[1], 0);
-      const quotaPunti = pf + ps ? pf / (pf + ps) : .5;
-      const valore = 100 * (.45 * perf.reduce((a, b) => a + b, 0) / perf.length + .25 * pt / (3 * lista.length)
-        + .15 * (sv + sp ? sv / (sv + sp) : .5) + .15 * Math.max(0, Math.min(1, (quotaPunti - .4) / .2)));
+      const valore = squadra && rating[squadra] !== undefined ? rating[squadra] : 50;
       const ultime = perf.slice(-5), pesi = ultime.map((_, i) => i + 1);   // la più recente pesa di più
       const forma = 100 * ultime.reduce((a, v, i) => a + v * pesi[i], 0) / pesi.reduce((a, b) => a + b, 0);
       const prima = perf.slice(-8, -5), tendenza = prima.length ? forma - 100 * prima.reduce((a, b) => a + b, 0) / prima.length : 0;
       return { valore: Math.round(valore), forma: Math.round(forma), tendenza: Math.round(tendenza), ultime: lista.slice(-5) };
     }
-    const kpi = indicatori(noi);
+    // Valore della squadra: rating tipo Elo. Ogni partita vale "rating dell'avversaria + 100 × (voto − 0,5)",
+    // dove il voto dipende dal risultato (3-0 = 1 … 0-3 = 0) e di poco dallo scarto di punti; la forza delle
+    // avversarie si calcola nello stesso modo, a catena. Con poche partite il valore viene avvicinato alla media;
+    // infine la scala è allargata sul girone (migliore ≈ 90, peggiore ≈ 10).
+    const RIS_VAL = { "3-0": 1, "3-1": .85, "3-2": .65, "2-3": .35, "1-3": .15, "0-3": 0 };
+    const rating = (() => {
+      const T = {};
+      giocate.forEach(p => [p.casa, p.ospite].forEach(n => (T[n] = T[n] || []).push(vista(p, n))));
+      const nomi = Object.keys(T);
+      if (!nomi.length) return {};
+      const voto = x => { const d = x.set.length ? x.set.reduce((a, [f, sb]) => a + f - sb, 0) / x.set.length : 0;
+        return Math.max(0, Math.min(1, (RIS_VAL[`${x.v}-${x.s}`] ?? (x.v > x.s ? .8 : .2)) + Math.max(-.05, Math.min(.05, d / 100)))); };
+      let R = Object.fromEntries(nomi.map(n => [n, 50]));
+      for (let k = 0; k < 60; k++) {
+        const N = {};
+        nomi.forEach(n => { N[n] = T[n].reduce((a, x) => a + (R[x.avv] ?? 50) + 100 * (voto(x) - .5), 0) / T[n].length; });
+        const m = nomi.reduce((a, n) => a + N[n], 0) / nomi.length;
+        R = Object.fromEntries(nomi.map(n => [n, N[n] - m + 50]));
+      }
+      const aff = Object.fromEntries(nomi.map(n => [n, Math.max(0, Math.min(100, 50 + (R[n] - 50) * T[n].length / (T[n].length + 2)))]));
+      const v = Object.values(aff), lo = Math.min(...v), hi = Math.max(...v);
+      return Object.fromEntries(nomi.map(n => [n, hi > lo ? Math.round(10 + 80 * (aff[n] - lo) / (hi - lo)) : 50]));
+    })();
+    const kpi = indicatori(noi, squadre.find(n => eQuesta(n)));
     // valore di tutte le squadre del girone, per la posizione
     const valori = squadre.map(n => {
       const l = giocate.filter(p => p.casa === n || p.ospite === n).map(p => ({ ...vista(p, n) }));
@@ -1238,7 +1259,7 @@
           <div class="strip">${strip}</div><small>Ultime ${kpi.ultime.length} partite, le più recenti pesano di più.</small></div></div>
         <div class="kpi ${gv[1]}">${anello(kpi.valore, gv[1])}<div><h4>Valore della squadra</h4><b>${gv[0]}</b>
           ${nValori > 1 ? `<span class="tend">${posValore}ª su ${nValori} nel girone</span>` : ""}
-          <small>Tutta la stagione: punti, set e punti vinti, nettezza delle vittorie, forza delle avversarie.</small></div></div>
+          <small>Tutta la stagione, con ogni risultato pesato sulla forza dell'avversaria. Scala relativa al girone: migliore ≈ 90, peggiore ≈ 10.</small></div></div>
       </div>
       <div class="tipi-ris">${Object.entries(t).map(([k, n]) => `<span class="${+k[0] === 3 ? "w" : "l"}"><b>${n}</b>${k}</span>`).join("")}</div>
       <p class="nota-stat">Set vinti con 2 punti di scarto: ${misura.vinti} · set persi con 2 punti di scarto: ${misura.persi}</p>`;
@@ -1360,7 +1381,7 @@
       <h3 class="sotto">Stato di forma e valore delle squadre</h3>
       <div class="tab-classifica"><table class="classifica kpi-tab"><thead><tr><th></th><th>Squadra</th><th class="c">Forma</th><th class="c">Valore</th></tr></thead>
         <tbody>${tabella}</tbody></table></div>
-      <p class="nota-stat">Indici da 0 a 100. <b>Forma</b>: ultime 5 partite, le più recenti pesano di più. <b>Valore</b>: tutta la stagione (risultati, nettezza delle vittorie, set e punti vinti, forza delle avversarie). Ordinate per valore; selezionare una squadra per le sue statistiche.</p>
+      <p class="nota-stat">Indici da 0 a 100. <b>Forma</b>: ultime 5 partite, le più recenti pesano di più. <b>Valore</b>: tutta la stagione, con ogni risultato pesato sulla forza dell'avversaria (vincere contro le prime vale più che contro le ultime); scala relativa al girone, migliore ≈ 90 e peggiore ≈ 10. Ordinate per valore; selezionare una squadra per le sue statistiche.</p>
       <h3 class="sotto">Record del girone</h3><ul class="record">${record}</ul>
       <h3 class="sotto">Attacco e difesa (media punti per set)</h3>
       <div class="girone-2"><div><h4>⚔️ Miglior attacco</h4><ol>${top3(att, "f")}</ol></div>
