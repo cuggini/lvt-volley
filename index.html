@@ -521,6 +521,11 @@
     font-weight: 900; font-size: .8rem; color: #fff; line-height: 1.1; }
   .strip .esito small { display: block; margin: 0; font-size: .6rem; color: rgba(255,255,255,.9); font-weight: 700; }
   .strip .esito.w { background: #1f9d55; } .strip .esito.l { background: #d62828; }
+  .kpi-tab td.c, .kpi-tab th.c { text-align: center; width: 64px; }
+  .kpi-tab td.pos { width: 22px; color: var(--muted); font-weight: 700; }
+  .pill { display: inline-block; min-width: 34px; padding: 3px 6px; border-radius: 999px; font-weight: 800; font-size: .82rem; color: #fff; }
+  .pill.ottimo { background: #1f9d55; } .pill.buono { background: #1e5bd8; } .pill.discreto { background: #e8a400; } .pill.basso { background: #d62828; }
+  .stat-box .n small { font-size: .6em; color: var(--muted); font-weight: 700; }
   .tipi-ris { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 0 0 6px; }
   .tipi-ris span { text-align: center; padding: 6px 2px; border-radius: 8px; font-size: .72rem; font-weight: 700; border: 1px solid var(--line); background: var(--card); }
   .tipi-ris span b { display: block; font-size: 1.1rem; }
@@ -1300,11 +1305,72 @@
       <div class="tab-classifica"><table class="classifica tt"><tbody>${tt}</tbody></table></div>`;
   }
 
+  // statistiche dell'intero girone (non di una squadra): sotto le classifiche
+  function bloccoGirone(camp, tutte) {
+    const titolo = `<h2>Statistiche del girone · ${camp} ${GIRONE_DI[camp]}</h2>`;
+    const girone = conRisultatiProvvisori(tutte).filter(p => p.camp === camp);
+    const giocate = girone.filter(p => p.ris && p.ris.finita);
+    if (!giocate.length) return titolo + '<div class="empty">Nessuna partita giocata nel girone.</div>';
+    const base = datiStatistiche(camp, tutte, () => false);
+    // indicatori di ogni squadra
+    const squadre = base.squadre.map(n => {
+      const d = datiStatistiche(camp, tutte, x => norm(x) === norm(n));
+      if (!d.kpi) return null;
+      let serie = 0; for (let i = d.noi.length - 1; i >= 0 && d.noi[i].vinta; i--) serie++;
+      return { n, kpi: d.kpi, g: d.noi.length, v: d.noi.filter(x => x.vinta).length, serie };
+    }).filter(Boolean).sort((a, b) => b.kpi.valore - a.kpi.valore);
+    // numeri del girone
+    const set = giocate.flatMap(p => (p.ris.parziali || []).filter(z => !z.live));
+    const nSet = giocate.reduce((a, p) => a + p.ris.score[0] + p.ris.score[1], 0);
+    const tb = giocate.filter(p => p.ris.score[0] + p.ris.score[1] === 5).length;
+    const puntiTot = set.reduce((a, z) => a + z[0] + z[1], 0);
+    const vCasa = giocate.filter(p => p.ris.score[0] > p.ris.score[1]).length;
+    const vantaggi = set.filter((z, i) => Math.max(...z) > 25).length;
+    const nelSet = p => (p.ris.parziali || []).filter(z => !z.live);
+    const scartoP = p => nelSet(p).reduce((a, [x, y]) => a + Math.abs(x - y), 0);
+    const desc = p => `${esc(nomeBreve(p.casa))} ${p.ris.score[0]}-${p.ris.score[1]} ${esc(nomeBreve(p.ospite))} <small>(${dataBreve(p.d)})</small>`;
+    const netta = [...giocate].sort((a, b) => Math.abs(b.ris.score[0] - b.ris.score[1]) - Math.abs(a.ris.score[0] - a.ris.score[1]) || scartoP(b) - scartoP(a))[0];
+    const combattuta = [...giocate].sort((a, b) => (b.ris.score[0] + b.ris.score[1]) - (a.ris.score[0] + a.ris.score[1]) || scartoP(a) - scartoP(b))[0];
+    const setLunghi = giocate.flatMap(p => nelSet(p).map(z => ({ z, p }))).sort((a, b) => (b.z[0] + b.z[1]) - (a.z[0] + a.z[1]));
+    const lungo = setLunghi[0];
+    const serieTop = [...squadre].sort((a, b) => b.serie - a.serie)[0];
+    const imbattute = squadre.filter(x => x.g && x.v === x.g).map(x => esc(nomeBreve(x.n)));
+    const record = [
+      netta && ["💪 Vittoria più netta", desc(netta)],
+      combattuta && ["🔥 Partita più combattuta", desc(combattuta)],
+      lungo && ["⏱️ Set più lungo", `${lungo.z[0]}-${lungo.z[1]} · ${desc(lungo.p)}`],
+      serieTop && serieTop.serie > 1 && ["📈 Serie di vittorie in corso", `${esc(nomeBreve(serieTop.n))} · ${serieTop.serie} di fila`],
+      ["🛡️ Squadre imbattute", imbattute.length ? imbattute.join(", ") : "nessuna"],
+    ].filter(Boolean).map(([t, v]) => `<li><span>${t}</span><b>${v}</b></li>`).join("");
+    const giudizio = v => v >= 75 ? "ottimo" : v >= 55 ? "buono" : v >= 40 ? "discreto" : "basso";
+    const pill = v => `<span class="pill ${giudizio(v)}">${v}</span>`;
+    const tabella = squadre.map((x, i) => `<tr class="${eNoi(x.n) ? "noi" : ""}" data-camp="${camp}" data-sq="${esc(x.n)}">
+        <td class="pos">${i + 1}</td><td class="sq">${esc(x.n)}</td><td class="c">${pill(x.kpi.forma)}</td><td class="c">${pill(x.kpi.valore)}</td></tr>`).join("");
+    const att = [...base.resa].sort((a, b) => b.f - a.f), dif = [...base.resa].sort((a, b) => a.s - b.s);
+    const top3 = (l, k) => l.slice(0, 3).map((r, i) => `<li class="${eNoi(r.n) ? "noi" : ""}">${i + 1}. ${esc(nomeBreve(r.n))} <b>${media(r[k], 1)}</b></li>`).join("");
+    return titolo + `
+      <div class="stat-griglia">
+        <div class="stat-box"><div class="n">${giocate.length}<small>/${girone.length}</small></div><div class="l">Partite giocate</div></div>
+        <div class="stat-box"><div class="n">${nSet}</div><div class="l">Set giocati</div></div>
+        <div class="stat-box"><div class="n">${tb}</div><div class="l">Tie-break (${perc(tb, giocate.length)}%)</div></div>
+        <div class="stat-box"><div class="n">${media(puntiTot, set.length * 2)}</div><div class="l">Punti per set (media squadra)</div></div>
+        <div class="stat-box"><div class="n">${perc(vCasa, giocate.length)}%</div><div class="l">Vittorie in casa</div></div>
+        <div class="stat-box"><div class="n">${vantaggi}</div><div class="l">Set ai vantaggi</div></div>
+      </div>
+      <h3 class="sotto">Stato di forma e valore delle squadre</h3>
+      <div class="tab-classifica"><table class="classifica kpi-tab"><thead><tr><th></th><th>Squadra</th><th class="c">Forma</th><th class="c">Valore</th></tr></thead>
+        <tbody>${tabella}</tbody></table></div>
+      <p class="nota-stat">Indici da 0 a 100. <b>Forma</b>: ultime 5 partite, le più recenti pesano di più. <b>Valore</b>: tutta la stagione (risultati, nettezza delle vittorie, set e punti vinti, forza delle avversarie). Ordinate per valore; selezionare una squadra per le sue statistiche.</p>
+      <h3 class="sotto">Record del girone</h3><ul class="record">${record}</ul>
+      <h3 class="sotto">Attacco e difesa (media punti per set)</h3>
+      <div class="girone-2"><div><h4>⚔️ Miglior attacco</h4><ol>${top3(att, "f")}</ol></div>
+        <div><h4>🛡️ Miglior difesa</h4><ol>${top3(dif, "s")}</ol></div></div>`;
+  }
   function renderStatistiche(camps) {
     caricaPartiteUfficiali().then(({ tutte }) => {
       const box = document.getElementById("statistiche");
       if (!box || stato.vista !== "classifica") return;
-      box.innerHTML = camps.map(c => bloccoStatistiche(datiStatistiche(c, tutte))).join("");
+      box.innerHTML = camps.map(c => bloccoGirone(c, tutte)).join("");
       if (document.body.classList.contains("retro")) box.querySelectorAll("h2, h3, .grafico svg, .barre, .stat-griglia").forEach(x => x.classList.add("matita"));
     });
   }
