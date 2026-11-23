@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-23T10:58:57.225Z",
+  "aggiornato": "2026-11-23T22:21:50.623Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -276,10 +276,16 @@
       "ora": "15.00",
       "casa": "CA GROUP NET VOLLEY",
       "ospite": "COOP LA VIGNETTA VOLLEY CORMANO",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
-      "provvisorio": false,
+      "setCasa": 2,
+      "setOspite": 3,
+      "parziali": [
+        "23-25",
+        "25-18",
+        "15-25",
+        "25-16",
+        "14-16"
+      ],
+      "provvisorio": true,
       "campo": "PALACOOPER, CINISELLO BALSAMO - VIA DIAZ 39/41"
     },
     {

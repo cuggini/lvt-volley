@@ -1,8 +1,20 @@
 {
-  "aggiornato": "2026-11-22T21:56:32.069Z",
+  "aggiornato": "2026-11-23T22:21:50.622Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "righe": [
+    {
+      "squadra": "CA GROUP NET VOLLEY",
+      "societa": "NET VOLLEY CINISELLO A.S.D.",
+      "punti": "12",
+      "giocate": "5",
+      "vinte": "4",
+      "perse": "1",
+      "setVinti": "14",
+      "setPersi": "7",
+      "puntiFatti": "489",
+      "puntiSubiti": "423"
+    },
     {
       "squadra": "NUOVA LAVANDERIA BAREGGIA SERVICE",
       "societa": "LISSONE VOLLEY TEAM",
@@ -16,28 +28,16 @@
       "puntiSubiti": "443"
     },
     {
-      "squadra": "CA GROUP NET VOLLEY",
-      "societa": "NET VOLLEY CINISELLO A.S.D.",
-      "punti": "11",
-      "giocate": "4",
-      "vinte": "4",
-      "perse": "0",
-      "setVinti": "12",
-      "setPersi": "4",
-      "puntiFatti": "387",
-      "puntiSubiti": "323"
-    },
-    {
       "squadra": "COOP LA VIGNETTA VOLLEY CORMANO",
       "societa": "ASD VOLLEY CORMANO",
-      "punti": "9",
-      "giocate": "4",
-      "vinte": "3",
+      "punti": "11",
+      "giocate": "5",
+      "vinte": "4",
       "perse": "1",
-      "setVinti": "10",
-      "setPersi": "3",
-      "puntiFatti": "309",
-      "puntiSubiti": "241"
+      "setVinti": "13",
+      "setPersi": "5",
+      "puntiFatti": "409",
+      "puntiSubiti": "343"
     },
     {
       "squadra": "ASD POLISPORTIVA DI NOVA",
