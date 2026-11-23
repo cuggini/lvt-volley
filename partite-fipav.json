@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-11-22T21:56:32.071Z",
+  "aggiornato": "2026-11-23T10:58:57.225Z",
   "girone": "Girone J",
   "url": "https://www.sol.milano.federvolley.it/calendarioris/1001242/2026",
   "partite": [
@@ -337,15 +337,15 @@
     },
     {
       "gara": "50589",
-      "data": "05/12/2026",
-      "ora": "18.30",
+      "data": "10/12/2026",
+      "ora": "21.00",
       "casa": "ASD POLISPORTIVA DI NOVA",
       "ospite": "CA GROUP NET VOLLEY",
       "setCasa": null,
       "setOspite": null,
       "parziali": [],
       "provvisorio": false,
-      "campo": "PALESTRA SCUOLA ELEMENTARE, NOVA MILANESE - VIA VENEZIA"
+      "campo": "IC GIOVANNI XXIII, NOVA MILANESE - VIA BIONDI 12"
     },
     {
       "gara": "50590",
