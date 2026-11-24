@@ -147,9 +147,14 @@
       "competizione": "PGS",
       "squadraCasa": "NET VOLLEY CINISELLO BLU",
       "squadraOspite": "LVT LISSONE VOLLEY TEAM",
-      "setCasa": 0,
-      "setOspite": 0,
-      "punteggiSet": [],
+      "setCasa": 1,
+      "setOspite": 3,
+      "punteggiSet": [
+        "21-25",
+        "25-19",
+        "15-25",
+        "19-25"
+      ],
       "campo": "PalaCooper, Via Diaz 39/41, 20092 Cinisello Balsamo"
     },
     {
