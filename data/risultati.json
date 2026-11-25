@@ -383,6 +383,11 @@
         "data": "2026-11-20",
         "serie": "ven",
         "annullato": true
+      },
+      {
+        "data": "2026-11-25",
+        "serie": "mer",
+        "annullato": true
       }
     ]
   }
