@@ -1,18 +1,18 @@
 {
-  "aggiornato": "2026-11-22T21:56:20.751Z",
+  "aggiornato": "2026-11-25T10:42:15.346Z",
   "classifica": {
-    "aggiornato": "2026-11-22T22:00:51.090Z",
+    "aggiornato": "2026-11-25T09:42:34.839Z",
     "girone": "Girone 8",
     "url": "https://volley.pgsmilano.org/classifiche",
     "righe": [
       {
         "squadra": "NUOVA LAVANDERIA BAREGGIA LVT",
-        "punti": 15,
-        "giocate": 6,
-        "vinte": 5,
+        "punti": 18,
+        "giocate": 7,
+        "vinte": 6,
         "perse": 1,
-        "setVinti": 15,
-        "setPersi": 5
+        "setVinti": 18,
+        "setPersi": 6
       },
       {
         "squadra": "PLESIOS VOLLEY",
@@ -26,11 +26,11 @@
       {
         "squadra": "NET VOLLEY CINISELLO BLU",
         "punti": 13,
-        "giocate": 6,
+        "giocate": 7,
         "vinte": 4,
-        "perse": 2,
-        "setVinti": 15,
-        "setPersi": 7
+        "perse": 3,
+        "setVinti": 16,
+        "setPersi": 10
       },
       {
         "squadra": "MOTTASTAMPI AGRATE",
@@ -379,9 +379,14 @@
       "ora": "21.00",
       "casa": "NET VOLLEY CINISELLO BLU",
       "ospite": "NUOVA LAVANDERIA BAREGGIA LVT",
-      "setCasa": null,
-      "setOspite": null,
-      "parziali": [],
+      "setCasa": 1,
+      "setOspite": 3,
+      "parziali": [
+        "22-25",
+        "25-19",
+        "15-25",
+        "19-25"
+      ],
       "campo": "PALACOOPER, VIA DIAZ 39, CINISELLO BALSAMO"
     },
     {
