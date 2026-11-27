@@ -330,6 +330,37 @@
   .tab-classifica { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
     border-left: 5px solid var(--line); }
   .tab-classifica.fipav { border-left-color: var(--fipav); }
+  /* classifica estesa */
+  h2.h2-cl { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .estesa-btn { flex: none; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+    font: inherit; font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
+  .estesa-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .classifica.estesa th, .classifica.estesa td { padding-left: 3px; padding-right: 3px; font-variant-numeric: tabular-nums; }
+  .classifica.estesa td.sq { font-size: .82rem; }
+  .classifica.estesa .sep { border-left: 1px solid var(--line); }
+  .classifica.estesa td.q { font-size: .78rem; }
+  .classifica.estesa td.w { color: #1f9d55; font-weight: 700; } .classifica.estesa td.l { color: #d62828; font-weight: 700; }
+  .classifica.estesa th { line-height: 1.15; white-space: nowrap; letter-spacing: 0; }
+  .pag-estesa { display: none; gap: 6px; margin: 0 0 8px; }
+  .pag-estesa button { flex: 1; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+    font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+  .pag-estesa button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .legenda-estesa { font-size: .72rem; color: var(--muted); margin: 6px 2px 10px; line-height: 1.4; }
+  @media (max-width: 720px) {
+    .pag-estesa { display: flex; }
+    .classifica.estesa.pag1 .p2, .classifica.estesa.pag2 .p1 { display: none; }
+    .classifica.estesa.pag2 td.sep:first-of-type { border-left: 0; }
+    .classifica.estesa th, .classifica.estesa td { padding-left: 2px; padding-right: 2px; font-size: .84rem; }
+    .classifica.estesa th { font-size: .62rem; }
+    .classifica.estesa td.q { font-size: .7rem; }
+    .classifica.estesa td.sq { font-size: .76rem; }
+  }
+  @media (max-width: 345px) {
+    .classifica.estesa th, .classifica.estesa td { font-size: .76rem; padding-left: 1px; padding-right: 1px; }
+    .classifica.estesa td.sq { font-size: .7rem; word-break: break-word; }
+  }
+  body.retro .estesa-btn, body.retro .pag-estesa button { background: transparent; border-radius: 4px; color: var(--blu); border-color: var(--blu); }
+  body.retro .estesa-btn[aria-pressed="true"], body.retro .pag-estesa button[aria-selected="true"] { background: var(--blu); color: #fff; }
   .tab-classifica.pgs { border-left-color: var(--pgs); }
   .classifica { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .9rem; }
   .classifica th { font-size: .7rem; text-transform: uppercase; letter-spacing: .4px; color: var(--muted);
@@ -1044,7 +1075,57 @@
     cacheClassifiche[k] = { t: Date.now(), p };
     return p;
   }
-  function tabellaClassifica(c, dati) {
+  // ---------- classifica estesa: set, punti, quozienti e tipo di risultati ----------
+  let classificaEstesa = false, paginaEstesa = 1;
+  try { classificaEstesa = localStorage.getItem("lvt-cl-estesa") === "1"; } catch (e) {}
+  const fmtQ = (a, b) => b ? (a / b).toLocaleString("it-IT", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : (a ? "max" : "–");
+  function datiEstesi(camp, righe, tutte) {
+    const gioc = conRisultatiProvvisori(tutte || []).filter(u => u.camp === camp && u.ris && u.ris.finita);
+    return righe.map(r => {
+      const x = { sv: 0, sp: 0, pf: 0, ps: 0, w3: 0, w32: 0, l23: 0, l3: 0 };
+      gioc.forEach(u => {
+        const casa = norm(u.casa) === norm(r.squadra); if (!casa && norm(u.ospite) !== norm(r.squadra)) return;
+        const [a, b] = u.ris.score, v = casa ? a : b, sb = casa ? b : a;
+        x.sv += v; x.sp += sb;
+        (u.ris.parziali || []).filter(z => !z.live).forEach(([p1, p2]) => { x.pf += casa ? p1 : p2; x.ps += casa ? p2 : p1; });
+        if (v === 3) { if (sb === 2) x.w32++; else x.w3++; } else if (v === 2) x.l23++; else x.l3++;
+      });
+      // dove il sito ufficiale li riporta, uso i suoi set e punti (coincidono con il calcolo dalle partite)
+      const n = k => r[k] !== undefined && r[k] !== "" && !r.provvisorio ? Number(r[k]) : null;
+      if (n("setVinti") !== null) { x.sv = n("setVinti"); x.sp = n("setPersi"); }
+      if (n("puntiFatti") !== null) { x.pf = n("puntiFatti"); x.ps = n("puntiSubiti"); }
+      return { ...r, ...x };
+    });
+  }
+  function tabellaEstesa(c, dati, tutte) {
+    const righe = datiEstesi(c.camp, dati.righe, tutte).map((r, i) => {
+      const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
+      return `<tr class="${noi ? "noi" : ""}" data-camp="${c.camp}" data-sq="${esc(r.squadra)}">
+          <td class="pos">${i + 1}</td><td class="sq">${esc(r.squadra)}</td>
+          <td class="pt p1"><button class="pt-btn" data-camp="${c.camp}" data-sq="${esc(r.squadra)}" data-punti="${esc(r.punti)}" aria-label="Dettaglio dei punti di ${esc(r.squadra)}">${esc(r.punti)}${r.provvisorio ? `<sup class="prov">*</sup>` : ""}</button></td>
+          <td class="p1">${esc(r.giocate)}</td><td class="p1">${esc(r.vinte)}</td><td class="p1">${esc(r.perse)}</td>
+          <td class="p1 sep">${r.sv}</td><td class="p1">${r.sp}</td><td class="p1 q">${fmtQ(r.sv, r.sp)}</td>
+          <td class="p2 sep">${r.pf}</td><td class="p2">${r.ps}</td><td class="p2 q">${fmtQ(r.pf, r.ps)}</td>
+          <td class="p2 sep w">${r.w3}</td><td class="p2 w">${r.w32}</td><td class="p2 l">${r.l23}</td><td class="p2 l">${r.l3}</td>
+        </tr>`;
+    }).join("");
+    return `<div class="pag-estesa" role="tablist" aria-label="Pagine della classifica estesa">
+        <button role="tab" data-pag="1" aria-selected="${paginaEstesa === 1}">1 · Partite e set</button>
+        <button role="tab" data-pag="2" aria-selected="${paginaEstesa === 2}">2 · Punti e risultati</button></div>
+      <div class="tab-classifica ${c.camp.toLowerCase()}">
+        <table class="classifica estesa pag${paginaEstesa}">
+          <thead><tr><th>#</th><th class="sq">Squadra</th>
+            <th class="p1" title="Punti">Pt</th><th class="p1" title="Giocate">G</th><th class="p1" title="Vinte">V</th><th class="p1" title="Perse">P</th>
+            <th class="p1 sep" title="Set vinti">SV</th><th class="p1" title="Set persi">SP</th><th class="p1" title="Quoziente set">QS</th>
+            <th class="p2 sep" title="Punti fatti">PF</th><th class="p2" title="Punti subiti">PS</th><th class="p2" title="Quoziente punti">QP</th>
+            <th class="p2 sep" title="Vittorie 3-0 o 3-1">3-0<br>3-1</th><th class="p2" title="Vittorie 3-2">3-2</th><th class="p2" title="Sconfitte 2-3">2-3</th><th class="p2" title="Sconfitte 1-3 o 0-3">1-3<br>0-3</th>
+          </tr></thead>
+          <tbody>${righe}</tbody>
+        </table>
+      </div>
+      <p class="legenda-estesa">Pt punti · G giocate · V vinte · P perse · SV/SP set vinti/persi · QS quoziente set · PF/PS punti fatti/subiti · QP quoziente punti · 3-0 3-1 / 3-2 vittorie · 2-3 / 1-3 0-3 sconfitte.</p>`;
+  }
+  function tabellaClassifica(c, dati, tutte) {
     if (!dati || !dati.righe || !dati.righe.length)
       return `<h2>Classifica ${c.camp}</h2><div class="empty">Classifica ${c.camp} non ancora disponibile.</div>`;
     const quando = new Date(dati.aggiornato);
@@ -1063,13 +1144,14 @@
           <td class="setcl">${esc(r.setVinti)}-${esc(r.setPersi)}<span class="vai">›</span></td>
         </tr>`;
     }).join("");
-    return `<h2>Classifica ${c.camp}${dati.girone ? ` · ${esc(dati.girone)}` : ""}</h2>
-      <div class="tab-classifica ${c.camp.toLowerCase()}">
+    return `<h2 class="h2-cl"><span>Classifica ${c.camp}${dati.girone ? ` · ${esc(dati.girone)}` : ""}</span>
+        <button class="estesa-btn" aria-pressed="${classificaEstesa}" title="Mostra set, punti e quozienti">${classificaEstesa ? "Ridotta" : "Estesa"}</button></h2>
+      ${classificaEstesa ? tabellaEstesa(c, dati, tutte) : `<div class="tab-classifica ${c.camp.toLowerCase()}">
         <table class="classifica">
           <thead><tr><th>#</th><th class="sq">Squadra</th><th>Pt</th><th>G</th><th>V</th><th>P</th><th>Set</th></tr></thead>
           <tbody>${righe}</tbody>
         </table>
-      </div>
+      </div>`}
       ${dati.provvisorie ? `<p class="fonte ${c.camp.toLowerCase()}"><b style="color:#d62828">*</b> Classifica provvisoria: comprende ${dati.provvisorie.length > 1 ? "i risultati LVT" : "il risultato LVT"} del ${dati.provvisorie.join(", ")}, non ancora ${dati.provvisorie.length > 1 ? "pubblicati" : "pubblicato"} dal sito ufficiale ${c.camp}. Punti assegnati secondo il regolamento ${c.camp}.</p>` : ""}
       <p class="fonte ${c.camp.toLowerCase()}">ℹ️ Toccare i punti di una squadra per il dettaglio partita per partita. ${avviso}</p>`;
   }
@@ -1103,7 +1185,7 @@
     box.innerHTML = '<div class="empty">Caricamento classifica…</div>';
     Promise.all([Promise.all(scelte.map(caricaClassifica)), caricaPartiteUfficiali().catch(() => null)]).then(([tutti, uff]) => {
       if (stato.vista !== "classifica") return;
-      box.innerHTML = scelte.map((c, i) => tabellaClassifica(c, classificaProvvisoria(c, tutti[i], uff && uff.tutte))).join("") +
+      box.innerHTML = scelte.map((c, i) => tabellaClassifica(c, classificaProvvisoria(c, tutti[i], uff && uff.tutte), uff && uff.tutte)).join("") +
         '<section id="statistiche"><div class="empty">Calcolo le statistiche…</div></section>';
       if (document.body.classList.contains("retro")) box.querySelectorAll("table, h2").forEach(x => x.classList.add("matita"));
       renderStatistiche(scelte.map(c => c.camp));
@@ -1525,6 +1607,19 @@
     if (e.target.closest("#mostra-prossime")) { mostraTutteProssime = true; renderAltre(); }
   });
   document.getElementById("vista-classifica").addEventListener("click", e => {
+    if (e.target.closest(".estesa-btn")) {
+      classificaEstesa = !classificaEstesa;
+      try { localStorage.setItem("lvt-cl-estesa", classificaEstesa ? "1" : "0"); } catch (err) {}
+      conta("funzioni", classificaEstesa ? "classifica_estesa" : "classifica_ridotta");
+      return render();
+    }
+    const pg = e.target.closest(".pag-estesa button");
+    if (pg) {   // su telefono: pagina 1 o 2 per tutte le classifiche, il nome della squadra resta fisso
+      paginaEstesa = Number(pg.dataset.pag);
+      document.querySelectorAll("#vista-classifica table.estesa").forEach(t => { t.classList.toggle("pag1", paginaEstesa === 1); t.classList.toggle("pag2", paginaEstesa === 2); });
+      document.querySelectorAll("#vista-classifica .pag-estesa button").forEach(x => x.setAttribute("aria-selected", String(Number(x.dataset.pag) === paginaEstesa)));
+      return;
+    }
     const b = e.target.closest(".pt-btn");
     if (b) { e.stopPropagation(); return dettaglioPunti(b.dataset.camp, b.dataset.sq, Number(b.dataset.punti)); }
     const r = e.target.closest("tr[data-sq]");
