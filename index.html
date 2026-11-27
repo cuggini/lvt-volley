@@ -345,6 +345,13 @@
   .pag-estesa button { flex: 1; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text);
     font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
   .pag-estesa button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  th.sigla { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-color: rgba(0,0,0,.35); }
+  th.sigla.attiva { color: var(--accent); }
+  .tip-cl { position: absolute; z-index: 30000; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; background: #172033; color: #fff;
+    font-size: .8rem; line-height: 1.4; box-shadow: 0 10px 30px rgba(0,0,0,.3); pointer-events: none; text-transform: none; letter-spacing: 0; }
+  .tip-cl b { display: block; margin-bottom: 3px; font-size: .85rem; }
+  .tip-cl span { display: block; color: rgba(255,255,255,.88); }
+  .tip-cl[hidden] { display: none; }
   .legenda-estesa { font-size: .72rem; color: var(--muted); margin: 6px 2px 10px; line-height: 1.4; }
   @media (max-width: 720px) {
     .pag-estesa { display: flex; }
@@ -1097,8 +1104,34 @@
       return { ...r, ...x };
     });
   }
+  // spiegazione delle sigle (passaggio del mouse su computer, tocco su telefono), con esempio sui numeri LVT
+  function aiutoSigle(camp, es) {
+    const n = x => Number(x).toLocaleString("it-IT");
+    const p32 = camp === "PGS" ? 3 : 2, chi = es ? nomeBreve(es.squadra) : "";
+    return {
+      pos: ["Posizione", "Posizione in classifica."],
+      sq: ["Squadra", "Toccare il nome per le statistiche della squadra."],
+      pt: ["Punti in classifica", `${camp}: vittoria 3-0 o 3-1 = 3 punti; vittoria 3-2 = ${p32} punti; sconfitta 2-3 = 1 punto; sconfitta 1-3 o 0-3 = 0 punti. Toccare i punti di una squadra per il dettaglio partita per partita.`],
+      g: ["G · Giocate", "Numero di partite giocate."],
+      v: ["V · Vinte", "Numero di partite vinte."],
+      p: ["P · Perse", "Numero di partite perse."],
+      sv: ["SV · Set vinti", "Somma dei set vinti in tutte le partite giocate."],
+      sp: ["SP · Set persi", "Somma dei set persi in tutte le partite giocate."],
+      qs: ["QS · Quoziente set", `Set vinti diviso set persi.${es ? ` Esempio ${chi}: ${n(es.sv)} ÷ ${n(es.sp)} = ${fmtQ(es.sv, es.sp)}.` : ""} Sopra 1 significa più set vinti che persi; «max» se non ha perso nessun set. Serve a ordinare le squadre a parità di punti.`],
+      pf: ["PF · Punti fatti", "Somma dei punti fatti in tutti i set giocati."],
+      ps: ["PS · Punti subiti", "Somma dei punti subiti in tutti i set giocati."],
+      qp: ["QP · Quoziente punti", `Punti fatti diviso punti subiti.${es ? ` Esempio ${chi}: ${n(es.pf)} ÷ ${n(es.ps)} = ${fmtQ(es.pf, es.ps)}.` : ""} Sopra 1 significa più punti fatti che subiti. Si usa dopo il quoziente set per ordinare le squadre a parità di punti.`],
+      w3: ["Vittorie 3-0 / 3-1", "Numero di partite vinte con il risultato di 3-0 o 3-1 (3 punti in classifica)."],
+      w32: ["Vittorie 3-2", `Numero di partite vinte con il risultato di 3-2, cioè al tie-break (${p32} punti in classifica).`],
+      l23: ["Sconfitte 2-3", "Numero di partite perse con il risultato di 2-3, cioè al tie-break (1 punto in classifica)."],
+      l3: ["Sconfitte 1-3 / 0-3", "Numero di partite perse con il risultato di 1-3 o 0-3 (nessun punto in classifica)."],
+    };
+  }
   function tabellaEstesa(c, dati, tutte) {
-    const righe = datiEstesi(c.camp, dati.righe, tutte).map((r, i) => {
+    const estesi = datiEstesi(c.camp, dati.righe, tutte);
+    const aiuto = aiutoSigle(c.camp, estesi.find(r => MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`)) || estesi[0]);
+    const th = (k, cls, testo) => `<th class="${cls} sigla" tabindex="0" data-tit="${esc(aiuto[k][0])}" data-aiuto="${esc(aiuto[k][1])}">${testo}</th>`;
+    const righe = estesi.map((r, i) => {
       const noi = MIA_SOCIETA.test(`${r.squadra} ${r.societa || ""}`);
       return `<tr class="${noi ? "noi" : ""}" data-camp="${c.camp}" data-sq="${esc(r.squadra)}">
           <td class="pos">${i + 1}</td><td class="sq">${esc(r.squadra)}</td>
@@ -1114,16 +1147,16 @@
         <button role="tab" data-pag="2" aria-selected="${paginaEstesa === 2}">2 · Punti e risultati</button></div>
       <div class="tab-classifica ${c.camp.toLowerCase()}">
         <table class="classifica estesa pag${paginaEstesa}">
-          <thead><tr><th>#</th><th class="sq">Squadra</th>
-            <th class="p1" title="Punti">Pt</th><th class="p1" title="Giocate">G</th><th class="p1" title="Vinte">V</th><th class="p1" title="Perse">P</th>
-            <th class="p1 sep" title="Set vinti">SV</th><th class="p1" title="Set persi">SP</th><th class="p1" title="Quoziente set">QS</th>
-            <th class="p2 sep" title="Punti fatti">PF</th><th class="p2" title="Punti subiti">PS</th><th class="p2" title="Quoziente punti">QP</th>
-            <th class="p2 sep" title="Vittorie 3-0 o 3-1">3-0<br>3-1</th><th class="p2" title="Vittorie 3-2">3-2</th><th class="p2" title="Sconfitte 2-3">2-3</th><th class="p2" title="Sconfitte 1-3 o 0-3">1-3<br>0-3</th>
+          <thead><tr>${th("pos", "", "#")}${th("sq", "sq", "Squadra")}
+            ${th("pt", "p1", "Pt")}${th("g", "p1", "G")}${th("v", "p1", "V")}${th("p", "p1", "P")}
+            ${th("sv", "p1 sep", "SV")}${th("sp", "p1", "SP")}${th("qs", "p1", "QS")}
+            ${th("pf", "p2 sep", "PF")}${th("ps", "p2", "PS")}${th("qp", "p2", "QP")}
+            ${th("w3", "p2 sep", "3-0<br>3-1")}${th("w32", "p2", "3-2")}${th("l23", "p2", "2-3")}${th("l3", "p2", "1-3<br>0-3")}
           </tr></thead>
           <tbody>${righe}</tbody>
         </table>
       </div>
-      <p class="legenda-estesa">Pt punti · G giocate · V vinte · P perse · SV/SP set vinti/persi · QS quoziente set · PF/PS punti fatti/subiti · QP quoziente punti · 3-0 3-1 / 3-2 vittorie · 2-3 / 1-3 0-3 sconfitte.</p>`;
+      <p class="legenda-estesa"><b>Passare con il mouse o toccare le sigle per la spiegazione.</b> Pt punti · G giocate · V vinte · P perse · SV/SP set vinti/persi · QS quoziente set · PF/PS punti fatti/subiti · QP quoziente punti · 3-0 3-1 / 3-2 vittorie · 2-3 / 1-3 0-3 sconfitte.</p>`;
   }
   function tabellaClassifica(c, dati, tutte) {
     if (!dati || !dati.righe || !dati.righe.length)
@@ -1625,6 +1658,41 @@
     const r = e.target.closest("tr[data-sq]");
     if (r) apriSquadra(r.dataset.camp, r.dataset.sq);
   });
+  // ---------- SPIEGAZIONE DELLE SIGLE DELLA CLASSIFICA ESTESA ----------
+  const tipCl = document.createElement("div");
+  tipCl.className = "tip-cl"; tipCl.setAttribute("role", "tooltip"); tipCl.hidden = true;
+  document.body.append(tipCl);
+  let tipAncora = null;
+  function mostraSigla(th) {
+    tipAncora = th;
+    tipCl.innerHTML = `<b>${esc(th.dataset.tit)}</b><span>${esc(th.dataset.aiuto)}</span>`;
+    tipCl.hidden = false;
+    const r = th.getBoundingClientRect(), w = Math.min(300, innerWidth - 24);
+    tipCl.style.width = w + "px";
+    const left = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+    tipCl.style.left = (left + scrollX) + "px";
+    const h = tipCl.offsetHeight, sotto = r.bottom + 8 + h < innerHeight;
+    tipCl.style.top = ((sotto ? r.bottom + 8 : r.top - h - 8) + scrollY) + "px";
+    document.querySelectorAll("th.sigla.attiva").forEach(x => x.classList.remove("attiva"));
+    th.classList.add("attiva");
+  }
+  function nascondiSigla() { tipCl.hidden = true; tipAncora = null; document.querySelectorAll("th.sigla.attiva").forEach(x => x.classList.remove("attiva")); }
+  const vc = document.getElementById("vista-classifica");
+  vc.addEventListener("pointerover", e => { const t = e.target.closest("th.sigla"); if (t && e.pointerType === "mouse") mostraSigla(t); });
+  vc.addEventListener("pointerout", e => { const t = e.target.closest("th.sigla"); if (t && e.pointerType === "mouse" && !t.contains(e.relatedTarget)) nascondiSigla(); });
+  let ultimoTocco = 0;   // il focus da tastiera apre la spiegazione; quello causato da un tocco no (ci pensa il click)
+  vc.addEventListener("pointerdown", () => { ultimoTocco = Date.now(); }, true);
+  vc.addEventListener("focusin", e => { const t = e.target.closest("th.sigla"); if (t && Date.now() - ultimoTocco > 600) mostraSigla(t); });
+  vc.addEventListener("click", e => {   // tocco su telefono: apre e chiude
+    const t = e.target.closest("th.sigla"); if (!t) return;
+    e.stopPropagation();
+    if (tipAncora === t && !tipCl.hidden) nascondiSigla(); else { mostraSigla(t); conta("funzioni", "sigla_classifica"); }
+  }, true);
+  document.addEventListener("click", e => { if (!tipCl.hidden && !e.target.closest("th.sigla") && !tipCl.contains(e.target)) nascondiSigla(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") nascondiSigla(); });
+  addEventListener("scroll", () => { if (!tipCl.hidden) nascondiSigla(); }, { passive: true });
+  addEventListener("resize", nascondiSigla);
+
   // ---------- DETTAGLIO PUNTI DI UNA SQUADRA ----------
   const REGOLA_TESTO = {
     FIPAV: "Regolamento FIPAV: vittoria 3-0 o 3-1 = 3 punti; vittoria 3-2 = 2 punti; sconfitta 2-3 = 1 punto; sconfitta 0-3 o 1-3 = 0 punti.",
